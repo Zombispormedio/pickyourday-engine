@@ -17,6 +17,7 @@
     "tests"
   ],
   "dependencies": {
-    "gl-matrix": "^1.2.4"
+    "gl-matrix": "^1.2.4",
+    "angular": "angularjs#^1.4.9"
   }
 }
