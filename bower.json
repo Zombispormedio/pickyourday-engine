@@ -17,6 +17,6 @@
     "tests"
   ],
   "dependencies": {
-    "
+    "gl-matrix": "^1.2.4"
   }
 }
