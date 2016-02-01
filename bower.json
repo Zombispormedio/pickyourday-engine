@@ -1,0 +1,22 @@
+{
+  "name": "pickyourday-engine",
+  "description": "pickyourday Engine",
+  "main": "server.js",
+  "authors": [
+    "Xavier Serrano <zombispormedio007@gmail.com>"
+  ],
+  "license": "ISC",
+  "homepage": "https://github.com/Zombispormedio/pickyourday-admin",
+  "moduleType": [],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "public//bower_components/",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "
+  }
+}
