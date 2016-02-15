@@ -1,3 +1,0 @@
-class OrbitCameraEntity extends CameraEntity{
-   
-}
