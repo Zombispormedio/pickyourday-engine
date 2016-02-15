@@ -1,0 +1,3 @@
+class TextureEntity extends Entity{
+   
+}

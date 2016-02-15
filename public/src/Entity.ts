@@ -1,8 +1,8 @@
 class Entity implements IEntity{
-    beginDraw(): void{
+    beginDraw(matrixStack?: MatrixStack): void{
         
     }
-    endDraw(): void{
+    endDraw(matrixStack?: MatrixStack): void{
         
     }
 }

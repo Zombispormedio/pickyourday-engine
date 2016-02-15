@@ -2,14 +2,17 @@ class NodeElement implements INodeElement {
     _entity: Entity;
     _childNodes: NodeElement[];
     _parentNode: NodeElement;
+    _type: string;
     _oid: string;
 
 
-    constructor(parent: NodeElement) {
+    constructor(parent?: NodeElement, type?: string, entity?: Entity) {
         this._parentNode = parent;
         if (this._parentNode) this._parentNode.addChildNode(this);
         this._childNodes = [];
-        this._oid = utils.uuid(this.constructor.name);
+        this._type = type;
+        this._oid = utils.uuid(this._type || this.constructor.name);
+        this._entity = entity;
     }
 
     get oid(): string {
@@ -55,8 +58,8 @@ class NodeElement implements INodeElement {
         this._parentNode.removeChildNode(this);
     }
 
-    createChildNode(): NodeElement {
-        return new NodeElement(this);
+    createChildNode(type?:string, entity?:Entity): NodeElement {
+        return new NodeElement(this, type, entity);
     }
 
     isRoot(): boolean {
@@ -110,26 +113,28 @@ class NodeElement implements INodeElement {
 
         return sibling;
     }
-    
-    firstChild(): NodeElement{
+
+    firstChild(): NodeElement {
         return this.getChildNodeByIndex(0);
     }
-    
-    lastChild(): NodeElement{
-        return this.getChildNodeByIndex(this._childNodes.length-1);
-    }
-    
-    removeChildNodes(){
-        this._childNodes=[];
+
+    lastChild(): NodeElement {
+        return this.getChildNodeByIndex(this._childNodes.length - 1);
     }
 
-    draw(): void {
-        this._entity.beginDraw();
-        this._childNodes.forEach(child=>{
-            child.draw();
-        });
+    removeChildNodes() {
+        this._childNodes = [];
+    }
+
+    draw(matrixStack: MatrixStack): void {
+        console.log("Drawing: "+this._oid);
         
-        this._entity.endDraw();
+        if (this._entity) this._entity.beginDraw(matrixStack);
+        this._childNodes.forEach(child=> {
+            child.draw(matrixStack);
+        });
+
+        if (this._entity) this._entity.endDraw(matrixStack);
 
     }
 }

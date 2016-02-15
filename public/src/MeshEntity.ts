@@ -1,0 +1,3 @@
+class MeshEntity extends Entity{
+   
+}

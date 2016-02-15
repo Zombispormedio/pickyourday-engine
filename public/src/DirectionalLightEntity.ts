@@ -1,0 +1,3 @@
+class DirectionalLightEntity extends LightEntity{
+   
+}

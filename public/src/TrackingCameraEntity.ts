@@ -1,0 +1,3 @@
+class TrackingCameraEntity extends CameraEntity{
+   
+}

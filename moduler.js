@@ -1,9 +1,10 @@
 var fs=require("fs");
 var async=require("async");
-const CONFIG="./config_modules.json";
-const SRC_DIR="./public/src/";
-const DST_DIR="./public/dist/";
-const MODULE_NAME="Engine";
+const CONFIG="config_modules.json";
+const PUBLIC="./public/";
+const SRC_DIR=PUBLIC+"src/";
+const DST_DIR=PUBLIC+"dist/";
+const MODULE_NAME="BlazeEngine";
 const DST_FILE="pickyourday-engine";
 
 
@@ -20,7 +21,7 @@ function run_cmd(cmd, args, cb,end) {
 
 async.waterfall([
     function getConfig(next){
-        fs.readFile(SRC_DIR+CONFIG, function(err, result){
+        fs.readFile(PUBLIC+CONFIG, function(err, result){
             if(err)return next(err);
             var str=result.toString();
             var seq=JSON.parse(str);
@@ -44,7 +45,7 @@ async.waterfall([
         });
     }, 
     function writeModule(src, next){
-        fs.writeFile(SRC_DIR+MODULE_NAME+".ts", src, function(err){
+        fs.writeFile( DST_DIR+MODULE_NAME+".ts", src, function(err){
            if(err)next(err);
            next(); 
         });
@@ -53,7 +54,7 @@ async.waterfall([
       
     console.log('Building DIST');
     
-        run_cmd("tsc.cmd", ["--out", DST_DIR+DST_FILE+".js", SRC_DIR+MODULE_NAME+".ts", "--target", "ES5"], function(me, buffer){
+        run_cmd("tsc.cmd", ["--out", DST_DIR+DST_FILE+".js",  DST_DIR+MODULE_NAME+".ts", "--target", "ES5"], function(me, buffer){
           console.log( buffer.toString());
             
         },function(){

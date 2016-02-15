@@ -26,10 +26,15 @@ module utils {
             .substring(1);
     }
     export function uuid(name) {
-        return name + s4()+s4();
+        return name + s4() + s4();
     }
-
-
+    export interface Rotation {
+        angle: number;
+        axis: Array<number>;
+    }
+    export function normalizeNaN(vec){
+        return vec.map(a=>{if(Number.isNaN(a))a=0; return a;})
+    }
 
 }
 
