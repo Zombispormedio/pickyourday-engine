@@ -18,6 +18,7 @@
   ],
   "dependencies": {
     "gl-matrix": "^1.2.4",
-    "angular": "angularjs#^1.4.9"
+    "angular": "angularjs#^1.4.9",
+    "lodash": "^4.3.0"
   }
 }

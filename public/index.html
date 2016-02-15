@@ -6,16 +6,15 @@
     <title>3D Stats</title>
     <script type="text/javascript" src="/bower_components/angular/angular.min.js"></script>
     <script type="text/javascript" src="/bower_components/gl-matrix/gl-matrix-min.js"></script>
-    <script type="text/javascript" src="/lib/engine.js"></script>
+        <script type="text/javascript" src="bower_components/lodash/dist/lodash.min.js"></script>
+    <script type="text/javascript" src="/dist/pickyourday-engine.js"></script>
     <script type="text/javascript" src="/app.js"></script>
-    <script type="text/javascript" src="/app/controllers.js"></script>
-    <script type="text/javascript" src="/app/directives.js"></script>
-    <script type="text/javascript" src="/app/services.js"></script>
+    
 </head>
 
 <body ng-app="_3dApp">
 
-    <div ng-controller="_3dController">
+    <div>
         <canvas id="3dView" width="600" height="600" canvas-events></canvas>
     </div>
 
