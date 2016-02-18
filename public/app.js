@@ -9,8 +9,6 @@ var app = angular.module("_3dApp", [])
     .filter(filter)
     .directive(directive);*/
 
-
-
 var Tree = new BlazeEngine.SceneGraph();
 
 Tree.buildDefaultGraph();
@@ -22,6 +20,8 @@ Tree.draw();
 var repeat = function (num, char) {
     return Array(num).join(char);
 };
+
+
 
 
 

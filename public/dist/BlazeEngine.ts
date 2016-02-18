@@ -232,12 +232,6 @@ export class PositionalLightEntity extends LightEntity{
 export class CameraEntity extends Entity{
    
 }
-export class OrbitCameraEntity extends CameraEntity{
-   
-}
-export class TrackingCameraEntity extends CameraEntity{
-   
-}
 export interface INodeElement {
     _entity: IEntity;
     _childNodes: INodeElement[];
@@ -482,4 +476,3 @@ export module utils {
 
 
 }
-

@@ -7,6 +7,7 @@ class SceneGraph {
         this._scene = new NodeElement(void 0, "Scene");
         this._matrixStack= new MatrixStack();
         this._isDrawing = false;
+        
 
     }
 

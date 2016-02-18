@@ -257,22 +257,6 @@ var BlazeEngine;
         return CameraEntity;
     })(Entity);
     BlazeEngine.CameraEntity = CameraEntity;
-    var OrbitCameraEntity = (function (_super) {
-        __extends(OrbitCameraEntity, _super);
-        function OrbitCameraEntity() {
-            _super.apply(this, arguments);
-        }
-        return OrbitCameraEntity;
-    })(CameraEntity);
-    BlazeEngine.OrbitCameraEntity = OrbitCameraEntity;
-    var TrackingCameraEntity = (function (_super) {
-        __extends(TrackingCameraEntity, _super);
-        function TrackingCameraEntity() {
-            _super.apply(this, arguments);
-        }
-        return TrackingCameraEntity;
-    })(CameraEntity);
-    BlazeEngine.TrackingCameraEntity = TrackingCameraEntity;
     var NodeElement = (function () {
         function NodeElement(parent, type, entity) {
             this._parentNode = parent;
@@ -486,4 +470,5 @@ var BlazeEngine;
         utils.normalizeNaN = normalizeNaN;
     })(utils = BlazeEngine.utils || (BlazeEngine.utils = {}));
 })(BlazeEngine || (BlazeEngine = {}));
+
 
