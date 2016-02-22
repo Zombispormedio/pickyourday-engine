@@ -46,6 +46,20 @@ var BlazeEngine;
                 a = 0; return a; });
         }
         utils.normalizeNaN = normalizeNaN;
+        function load(url, callback) {
+            var request = new XMLHttpRequest();
+            request.open('GET', url, true);
+            request.addEventListener('load', function () {
+                callback(request.responseText);
+            });
+            request.send();
+        }
+        utils.load = load;
+        function getExtension(str) {
+            var elems = str.split(".");
+            return elems[elems.length - 1];
+        }
+        utils.getExtension = getExtension;
     })(utils = BlazeEngine.utils || (BlazeEngine.utils = {}));
     var Entity = (function () {
         function Entity() {
@@ -115,12 +129,32 @@ var BlazeEngine;
             });
             Object.defineProperty(MeshBuffers.prototype, "src", {
                 set: function (src) {
-                    if (this._onload)
-                        this._onload();
+                    var self = this;
+                    var ext = utils.getExtension(src);
+                    utils.load(src, function (data) {
+                        var obj;
+                        switch (ext) {
+                            case "obj":
+                                obj = self.parseOBJ(data);
+                                break;
+                            case "json":
+                                obj = self.parseJSON(data);
+                                break;
+                        }
+                        self.createBuffers(obj);
+                        if (this._onload)
+                            this._onload();
+                    });
                 },
                 enumerable: true,
                 configurable: true
             });
+            MeshBuffers.prototype.parseJSON = function (data) {
+            };
+            MeshBuffers.prototype.parseOBJ = function (data) {
+            };
+            MeshBuffers.prototype.createBuffers = function (obj) {
+            };
             return MeshBuffers;
         })();
         Resources.MeshBuffers = MeshBuffers;

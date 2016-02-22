@@ -37,10 +37,26 @@ export module utils {
     export function uuid(name) {
         return name + s4() + s4();
     }
-    
-    export function normalizeNaN(vec){
-        return vec.map(a=>{if(Number.isNaN(a))a=0; return a;})
+
+    export function normalizeNaN(vec) {
+        return vec.map(a=> { if (Number.isNaN(a)) a = 0; return a; })
     }
+
+    export function load(url, callback) {
+        var request = new XMLHttpRequest();
+        request.open('GET', url, true);
+        request.addEventListener('load', function() {
+            callback(request.responseText);
+        });
+        request.send();
+    }
+    
+    export function getExtension(str:string){
+        var elems=str.split(".");
+        return elems[elems.length-1];
+    }
+
+
 
 }
 
@@ -120,9 +136,36 @@ export module Resources {
         
         
         public set src(src : string) {
+            var self=this;
+            var ext=utils.getExtension(src);
+            
+            utils.load(src, function(data){
+                var obj;
+                switch(ext){
+                    case "obj": obj=self.parseOBJ(data);
+                    break;
+                    
+                    case "json": obj=self.parseJSON(data);
+                    break;
+                    
+                }
+                self.createBuffers(obj);
+                if(this._onload)this._onload();
+            });
          
-         
-            if(this._onload)this._onload();
+            
+        }
+        
+       private parseJSON(data:string):any{
+            
+        }
+        
+        private parseOBJ(data:string):any{
+            
+        }
+        
+        private createBuffers(obj:any):void{
+            
         }
         
         
