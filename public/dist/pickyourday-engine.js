@@ -59,6 +59,86 @@ var BlazeEngine;
         return MatrixStack;
     })();
     BlazeEngine.MatrixStack = MatrixStack;
+    var Resources;
+    (function (Resources) {
+        var MeshBuffers = (function () {
+            function MeshBuffers() {
+            }
+            return MeshBuffers;
+        })();
+        Resources.MeshBuffers = MeshBuffers;
+        var MeshTexture = (function () {
+            function MeshTexture() {
+                //this._object=gl.createTexture();
+                this._image = new Image();
+                this._image.onload = this.loadTextureImage();
+            }
+            MeshTexture.prototype.setImage = function (filename) {
+                this._image.src = filename;
+            };
+            MeshTexture.prototype.loadTextureImage = function () {
+            };
+            Object.defineProperty(MeshTexture.prototype, "texture", {
+                get: function () {
+                    return this._texture;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            return MeshTexture;
+        })();
+        Resources.MeshTexture = MeshTexture;
+        var MeshMaterial = (function () {
+            function MeshMaterial(ambient, diffuse, specular, shininess) {
+                this._ambient = ambient ? vec4.create(ambient) : vec4.create();
+                this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
+                this._specular = specular ? vec4.create(specular) : vec4.create();
+                this._shininess = shininess || 200.0;
+            }
+            Object.defineProperty(MeshMaterial.prototype, "ambient", {
+                get: function () {
+                    return this._ambient;
+                },
+                set: function (ambient) {
+                    this._ambient = utils.normalizeNaN(vec4.create(ambient));
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(MeshMaterial.prototype, "diffuse", {
+                get: function () {
+                    return this._diffuse;
+                },
+                set: function (diffuse) {
+                    this._diffuse = utils.normalizeNaN(vec4.create(diffuse));
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(MeshMaterial.prototype, "specular", {
+                get: function () {
+                    return this._specular;
+                },
+                set: function (specular) {
+                    this._specular = utils.normalizeNaN(vec4.create(specular));
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(MeshMaterial.prototype, "shininess", {
+                get: function () {
+                    return this._shininess;
+                },
+                set: function (v) {
+                    this._shininess = v;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            return MeshMaterial;
+        })();
+        Resources.MeshMaterial = MeshMaterial;
+    })(Resources = BlazeEngine.Resources || (BlazeEngine.Resources = {}));
     var AnimationEntity = (function (_super) {
         __extends(AnimationEntity, _super);
         function AnimationEntity() {
@@ -70,19 +150,11 @@ var BlazeEngine;
     var MeshEntity = (function (_super) {
         __extends(MeshEntity, _super);
         function MeshEntity() {
-            _super.apply(this, arguments);
+            _super.call(this);
         }
         return MeshEntity;
     })(Entity);
     BlazeEngine.MeshEntity = MeshEntity;
-    var TextureEntity = (function (_super) {
-        __extends(TextureEntity, _super);
-        function TextureEntity() {
-            _super.apply(this, arguments);
-        }
-        return TextureEntity;
-    })(Entity);
-    BlazeEngine.TextureEntity = TextureEntity;
     var TransformEntity = (function (_super) {
         __extends(TransformEntity, _super);
         function TransformEntity() {
@@ -194,11 +266,12 @@ var BlazeEngine;
     BlazeEngine.TransformEntity = TransformEntity;
     var LightEntity = (function (_super) {
         __extends(LightEntity, _super);
-        function LightEntity(ambient, diffuse, position) {
+        function LightEntity(ambient, diffuse, position, specular) {
             _super.call(this);
             this._ambient = ambient ? vec4.create(ambient) : vec4.create();
             this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
             this._position = position ? vec4.create(position) : vec4.create();
+            this._specular = specular ? vec4.create(specular) : vec4.create();
         }
         Object.defineProperty(LightEntity.prototype, "ambient", {
             get: function () {
@@ -220,6 +293,16 @@ var BlazeEngine;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(LightEntity.prototype, "specular", {
+            get: function () {
+                return this._specular;
+            },
+            set: function (specular) {
+                this._specular = utils.normalizeNaN(vec4.create(specular));
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(LightEntity.prototype, "position", {
             get: function () {
                 return this._diffuse;
@@ -230,25 +313,47 @@ var BlazeEngine;
             enumerable: true,
             configurable: true
         });
+        LightEntity.prototype.beginDraw = function (matrixStack) {
+        };
+        LightEntity.prototype.endDraw = function (matrixStack) {
+        };
         return LightEntity;
     })(Entity);
     BlazeEngine.LightEntity = LightEntity;
     var DirectionalLightEntity = (function (_super) {
         __extends(DirectionalLightEntity, _super);
-        function DirectionalLightEntity() {
-            _super.apply(this, arguments);
+        function DirectionalLightEntity(ambient, diffuse, position, direction, cutoff) {
+            _super.call(this, ambient, diffuse, position);
+            this._direction = direction ? vec3.create(direction) : vec3.create();
+            this._cutoff = cutoff || 0.5;
         }
+        Object.defineProperty(DirectionalLightEntity.prototype, "direction", {
+            get: function () {
+                return this._direction;
+            },
+            set: function (direction) {
+                this._direction = utils.normalizeNaN(vec3.create(direction));
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(DirectionalLightEntity.prototype, "cutOff", {
+            get: function () {
+                return this._cutoff;
+            },
+            set: function (cutoff) {
+                this._cutoff = cutoff;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        DirectionalLightEntity.prototype.beginDraw = function (matrixStack) {
+        };
+        DirectionalLightEntity.prototype.endDraw = function (matrixStack) {
+        };
         return DirectionalLightEntity;
     })(LightEntity);
     BlazeEngine.DirectionalLightEntity = DirectionalLightEntity;
-    var PositionalLightEntity = (function (_super) {
-        __extends(PositionalLightEntity, _super);
-        function PositionalLightEntity() {
-            _super.apply(this, arguments);
-        }
-        return PositionalLightEntity;
-    })(LightEntity);
-    BlazeEngine.PositionalLightEntity = PositionalLightEntity;
     var CameraEntity = (function (_super) {
         __extends(CameraEntity, _super);
         function CameraEntity() {
@@ -424,8 +529,7 @@ var BlazeEngine;
             var LightNode = TrLightNode.createChildNode("Light", new LightEntity());
             var CameraNode = TrCameraNode.createChildNode("Camera", new CameraEntity());
             var MeshNode1 = TrMeshNode.createChildNode("Mesh", new MeshEntity());
-            var TextureNode = TrMeshNode.createChildNode("Texture", new TextureEntity());
-            var MeshNode2 = TextureNode.createChildNode("Mesh", new MeshEntity());
+            var MeshNode2 = TrMeshNode.createChildNode("Texture", new MeshEntity());
         };
         return SceneGraph;
     })();
@@ -470,5 +574,3 @@ var BlazeEngine;
         utils.normalizeNaN = normalizeNaN;
     })(utils = BlazeEngine.utils || (BlazeEngine.utils = {}));
 })(BlazeEngine || (BlazeEngine = {}));
-
-

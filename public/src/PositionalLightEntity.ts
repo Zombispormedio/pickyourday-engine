@@ -1,3 +1,0 @@
-class PositionalLightEntity extends LightEntity{
-   
-}

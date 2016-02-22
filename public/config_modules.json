@@ -1,7 +1,7 @@
 [
-   "IEntity.ts","Entity.ts","MatrixStack.ts",
-   "AnimationEntity.ts",  "MeshEntity.ts", "TextureEntity.ts", "TransformEntity.ts", 
-   "LightEntity.ts", "DirectionalLightEntity.ts", "PositionalLightEntity.ts", 
+   "IEntity.ts","Entity.ts","MatrixStack.ts", "Resources.ts",
+   "AnimationEntity.ts",  "MeshEntity.ts", "TransformEntity.ts", 
+   "LightEntity.ts", "DirectionalLightEntity.ts", 
    "CameraEntity.ts","OrbitCameraEntity.ts", "TrackingCameraEntity.ts",
     "INodeElement.ts", "NodeElement.ts",  "SceneGraph.ts", 
    "utils.ts"

@@ -54,14 +54,109 @@ export class MatrixStack {
     }
 
 }
+export module Resources {
+
+    export class MeshBuffers {
+        private _vbo; //Vertex Buffer Object;
+        private _nbo; //Normal Buffer Object;
+        private _ibo; //Index Buffer Object;
+        private _tbo; //Texture Coords Buffer Object;
+        constructor() {
+
+        }
+    }
+
+
+
+    export class MeshTexture {
+        private _texture;
+        private _image;
+        constructor() {
+            //this._object=gl.createTexture();
+            this._image = new Image();
+            this._image.onload = this.loadTextureImage();
+        }
+
+        setImage(filename: string) {
+            this._image.src = filename;
+        }
+
+        loadTextureImage() {
+
+        }
+
+
+        public get texture(): string {
+            return this._texture;
+        }
+    }
+
+    export class MeshMaterial {
+        private _ambient: Array<number>;
+        private _diffuse: Array<number>;
+        private _specular: Array<number>;
+        private _shininess: number;
+        constructor(ambient?: Array<number>, diffuse?: Array<number>, specular?: Array<number>, shininess?: number) {
+            this._ambient = ambient ? vec4.create(ambient) : vec4.create();
+            this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
+            this._specular = specular ? vec4.create(specular) : vec4.create();
+            this._shininess = shininess || 200.0;
+        }
+
+        get ambient(): Array<number> {
+            return this._ambient;
+        }
+
+
+        set ambient(ambient: Array<number>) {
+            this._ambient = utils.normalizeNaN(vec4.create(ambient));
+        }
+
+
+        get diffuse(): Array<number> {
+            return this._diffuse;
+        }
+
+
+        set diffuse(diffuse: Array<number>) {
+            this._diffuse = utils.normalizeNaN(vec4.create(diffuse));
+        }
+
+
+        get specular(): Array<number> {
+            return this._specular;
+        }
+
+
+        set specular(specular: Array<number>) {
+            this._specular = utils.normalizeNaN(vec4.create(specular));
+        }
+
+
+        public get shininess(): number {
+            return this._shininess;
+        }
+
+
+        public set shininess(v: number) {
+            this._shininess = v;
+        }
+
+    }
+
+}
 export class AnimationEntity extends Entity{
    
 }
 export class MeshEntity extends Entity{
-   
-}
-export class TextureEntity extends Entity{
-   
+   private _meshFilename: string;
+   private _material:Resources.MeshMaterial;
+   private _texture: Resouces.MeshTexture;
+   private _buffers: Resouces.MeshBuffers;
+
+   constructor(){
+       super();
+   }
 }
 export class TransformEntity extends Entity {
     private _matrix: Array<number>;
@@ -183,13 +278,14 @@ export class TransformEntity extends Entity {
 export class LightEntity extends Entity {
     private _ambient: Array<number>;
     private _diffuse: Array<number>;
+    private _specular: Array<number>;
     private _position: Array<number>;
-    constructor(ambient?: Array<number>, diffuse?: Array<number>, position?: Array<number>) {
+    constructor(ambient?: Array<number>, diffuse?: Array<number>, position?: Array<number>, specular?:Array<number>) {
         super();
         this._ambient = ambient ? vec4.create(ambient) : vec4.create();
         this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
         this._position = position ? vec4.create(position) : vec4.create();
-
+        this._specular = specular ? vec4.create(specular) : vec4.create();
     }
 
 
@@ -211,6 +307,17 @@ export class LightEntity extends Entity {
     set diffuse(diffuse: Array<number>) {
         this._diffuse = utils.normalizeNaN(vec4.create(diffuse));
     }
+    
+    
+    get specular(): Array<number> {
+        return this._specular;
+    }
+
+
+    set specular(specular: Array<number>) {
+        this._specular = utils.normalizeNaN(vec4.create(specular));
+    }
+
 
     get position(): Array<number> {
         return this._diffuse;
@@ -220,14 +327,59 @@ export class LightEntity extends Entity {
     set position(position: Array<number>) {
         this._position = utils.normalizeNaN(vec3.create(position));
     }
+    
+    beginDraw(matrixStack: MatrixStack){
+        
+    }
+    
+    endDraw(matrixStack: MatrixStack){
+        
+    }
+    
+   
 
 
 }
 export class DirectionalLightEntity extends LightEntity{
-   
-}
-export class PositionalLightEntity extends LightEntity{
-   
+    private _direction: Array<number>;
+    private _cutoff: number;
+   constructor(ambient?: Array<number>, diffuse?: Array<number>, position?: Array<number>, direction?:Array<number>, cutoff?:number) {
+        super(ambient, diffuse, position);
+        this._direction=direction ? vec3.create(direction) : vec3.create();
+        this._cutoff=cutoff || 0.5;
+
+    }
+    
+    
+    public set direction(direction : Array<number>) {
+        this._direction = utils.normalizeNaN(vec3.create(direction));
+    }
+    
+    public get direction() : Array<number> {
+        return this._direction;
+    }
+    
+    
+    public set cutOff(cutoff : number) {
+        this._cutoff = cutoff;
+    }
+    
+    
+    public get cutOff() : number {
+        return this._cutoff;
+    }
+    
+    beginDraw(matrixStack: MatrixStack){
+        
+    }
+    
+    endDraw(matrixStack: MatrixStack){
+        
+    }
+    
+    
+    
+    
 }
 export class CameraEntity extends Entity{
    
@@ -389,6 +541,7 @@ export class SceneGraph {
         this._scene = new NodeElement(void 0, "Scene");
         this._matrixStack= new MatrixStack();
         this._isDrawing = false;
+        
 
     }
 
@@ -424,9 +577,9 @@ export class SceneGraph {
         var CameraNode = TrCameraNode.createChildNode("Camera", new CameraEntity());
 
         var MeshNode1 = TrMeshNode.createChildNode("Mesh", new MeshEntity());
-        var TextureNode = TrMeshNode.createChildNode("Texture", new TextureEntity());
+        var MeshNode2 = TrMeshNode.createChildNode("Texture", new MeshEntity());
 
-        var MeshNode2 = TextureNode.createChildNode("Mesh", new MeshEntity());
+  
 
 
     }

@@ -43,9 +43,9 @@ class SceneGraph {
         var CameraNode = TrCameraNode.createChildNode("Camera", new CameraEntity());
 
         var MeshNode1 = TrMeshNode.createChildNode("Mesh", new MeshEntity());
-        var TextureNode = TrMeshNode.createChildNode("Texture", new TextureEntity());
+        var MeshNode2 = TrMeshNode.createChildNode("Texture", new MeshEntity());
 
-        var MeshNode2 = TextureNode.createChildNode("Mesh", new MeshEntity());
+  
 
 
     }
