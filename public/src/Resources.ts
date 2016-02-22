@@ -5,9 +5,24 @@ module Resources {
         private _nbo; //Normal Buffer Object;
         private _ibo; //Index Buffer Object;
         private _tbo; //Texture Coords Buffer Object;
+        private _onload;
+        private _src:string;
         constructor() {
 
         }
+        
+        public set onload(cb) {
+            this._onload = cb;
+        }
+        
+        
+        public set src(src : string) {
+         
+         
+            if(this._onload)this._onload();
+        }
+        
+        
     }
 
 
@@ -15,18 +30,29 @@ module Resources {
     export class MeshTexture {
         private _texture;
         private _image;
+        private _onload;
         constructor() {
             //this._object=gl.createTexture();
             this._image = new Image();
-            this._image.onload = this.loadTextureImage();
+            
         }
 
-        setImage(filename: string) {
-            this._image.src = filename;
+
+        
+        public set onload(cb) {
+            this._onload = cb;
+        }
+        
+        public set src(filename: string) {
+            this._image.onload = this.loadTextureImage(this._onload);
         }
 
-        loadTextureImage() {
-
+        loadTextureImage(cb) {
+            return function(){
+                
+                
+                if(cb)cb();
+            }
         }
 
 
@@ -40,12 +66,27 @@ module Resources {
         private _diffuse: Array<number>;
         private _specular: Array<number>;
         private _shininess: number;
+        private _onload;
+        private _src:string;
         constructor(ambient?: Array<number>, diffuse?: Array<number>, specular?: Array<number>, shininess?: number) {
             this._ambient = ambient ? vec4.create(ambient) : vec4.create();
             this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
             this._specular = specular ? vec4.create(specular) : vec4.create();
             this._shininess = shininess || 200.0;
         }
+        
+        public set onload(cb) {
+            this._onload = cb;
+        }
+        
+        
+        public set src(src : string) {
+         
+         
+            if(this._onload)this._onload();
+        }
+        
+        
 
         get ambient(): Array<number> {
             return this._ambient;

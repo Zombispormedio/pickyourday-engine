@@ -1,34 +1,42 @@
 class MeshEntity extends Entity{
-   private _meshFilename: string;
-   private _textureFilename:string;
    private _material:Resources.MeshMaterial;
-   private _texture: Resouces.MeshTexture;
-   private _buffers: Resouces.MeshBuffers;
+   private _texture: Resources.MeshTexture;
+   private _buffers: Resources.MeshBuffers;
 
-   constructor(meshFilename:string, textureFilename:string){
+   constructor(){
        super();
-       this._meshFilename=meshFilename;
-       this._textureFilename=textureFilename;
        this._material=null;
        this._texture=null;
        this._buffers=null;  
    }
-   
-   
-   public set meshFilename(v : string) {
-       this._meshFilename = v;
-   }
-   
-   
-   public set textureFilename(v : string) {
-       this._textureFilename = v;
-   }
-   
-   loadBuffers(cb){
+    
+   loadBuffers(filename, cb){
        this._buffers=new Resources.MeshBuffers();
        this._buffers.onload=cb;
-       this._buffers.src=this._meshFilename;
+       this._buffers.src=filename;
    }
+   
+   loadTexture(filename, cb){
+       this._texture= new Resources.MeshTexture();
+       this._texture.onload=cb;
+       this._texture.src=filename;
+   }
+   
+   
+   public set material(v : Resources.MeshMaterial) {
+       this._material = v;
+   }
+   
+   loadMaterial(filename, cb){
+        this._material= new Resources.MeshMaterial();
+       this._material.onload=cb;
+       this._material.src=filename;
+   }
+   
+   loadMesh(filesConfig, cb){
+       
+   }
+   
    
    
 }

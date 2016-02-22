@@ -5,6 +5,48 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 var BlazeEngine;
 (function (BlazeEngine) {
+    var WebGLUtils;
+    (function (WebGLUtils) {
+        function getGLContext(canvas) {
+            var ctx = null;
+            var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+            for (var i = 0; i < names.length; ++i) {
+                try {
+                    ctx = canvas.getContext(names[i]);
+                }
+                catch (e) { }
+                if (ctx) {
+                    break;
+                }
+            }
+            if (ctx === null) {
+                alert("Could not initialise WebGL");
+                return null;
+            }
+            else {
+                return ctx;
+            }
+        }
+        WebGLUtils.getGLContext = getGLContext;
+    })(WebGLUtils = BlazeEngine.WebGLUtils || (BlazeEngine.WebGLUtils = {}));
+    var utils;
+    (function (utils) {
+        function s4() {
+            return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
+        }
+        utils.s4 = s4;
+        function uuid(name) {
+            return name + s4() + s4();
+        }
+        utils.uuid = uuid;
+        function normalizeNaN(vec) {
+            return vec.map(function (a) { if (Number.isNaN(a))
+                a = 0; return a; });
+        }
+        utils.normalizeNaN = normalizeNaN;
+    })(utils = BlazeEngine.utils || (BlazeEngine.utils = {}));
     var Entity = (function () {
         function Entity() {
         }
@@ -64,6 +106,21 @@ var BlazeEngine;
         var MeshBuffers = (function () {
             function MeshBuffers() {
             }
+            Object.defineProperty(MeshBuffers.prototype, "onload", {
+                set: function (cb) {
+                    this._onload = cb;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(MeshBuffers.prototype, "src", {
+                set: function (src) {
+                    if (this._onload)
+                        this._onload();
+                },
+                enumerable: true,
+                configurable: true
+            });
             return MeshBuffers;
         })();
         Resources.MeshBuffers = MeshBuffers;
@@ -71,12 +128,26 @@ var BlazeEngine;
             function MeshTexture() {
                 //this._object=gl.createTexture();
                 this._image = new Image();
-                this._image.onload = this.loadTextureImage();
             }
-            MeshTexture.prototype.setImage = function (filename) {
-                this._image.src = filename;
-            };
-            MeshTexture.prototype.loadTextureImage = function () {
+            Object.defineProperty(MeshTexture.prototype, "onload", {
+                set: function (cb) {
+                    this._onload = cb;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(MeshTexture.prototype, "src", {
+                set: function (filename) {
+                    this._image.onload = this.loadTextureImage(this._onload);
+                },
+                enumerable: true,
+                configurable: true
+            });
+            MeshTexture.prototype.loadTextureImage = function (cb) {
+                return function () {
+                    if (cb)
+                        cb();
+                };
             };
             Object.defineProperty(MeshTexture.prototype, "texture", {
                 get: function () {
@@ -95,6 +166,21 @@ var BlazeEngine;
                 this._specular = specular ? vec4.create(specular) : vec4.create();
                 this._shininess = shininess || 200.0;
             }
+            Object.defineProperty(MeshMaterial.prototype, "onload", {
+                set: function (cb) {
+                    this._onload = cb;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(MeshMaterial.prototype, "src", {
+                set: function (src) {
+                    if (this._onload)
+                        this._onload();
+                },
+                enumerable: true,
+                configurable: true
+            });
             Object.defineProperty(MeshMaterial.prototype, "ambient", {
                 get: function () {
                     return this._ambient;
@@ -151,7 +237,34 @@ var BlazeEngine;
         __extends(MeshEntity, _super);
         function MeshEntity() {
             _super.call(this);
+            this._material = null;
+            this._texture = null;
+            this._buffers = null;
         }
+        MeshEntity.prototype.loadBuffers = function (filename, cb) {
+            this._buffers = new Resources.MeshBuffers();
+            this._buffers.onload = cb;
+            this._buffers.src = filename;
+        };
+        MeshEntity.prototype.loadTexture = function (filename, cb) {
+            this._texture = new Resources.MeshTexture();
+            this._texture.onload = cb;
+            this._texture.src = filename;
+        };
+        Object.defineProperty(MeshEntity.prototype, "material", {
+            set: function (v) {
+                this._material = v;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        MeshEntity.prototype.loadMaterial = function (filename, cb) {
+            this._material = new Resources.MeshMaterial();
+            this._material.onload = cb;
+            this._material.src = filename;
+        };
+        MeshEntity.prototype.loadMesh = function (filesConfig, cb) {
+        };
         return MeshEntity;
     })(Entity);
     BlazeEngine.MeshEntity = MeshEntity;
@@ -534,43 +647,4 @@ var BlazeEngine;
         return SceneGraph;
     })();
     BlazeEngine.SceneGraph = SceneGraph;
-    var utils;
-    (function (utils) {
-        function getGLContext(canvas) {
-            var ctx = null;
-            var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
-            for (var i = 0; i < names.length; ++i) {
-                try {
-                    ctx = canvas.getContext(names[i]);
-                }
-                catch (e) { }
-                if (ctx) {
-                    break;
-                }
-            }
-            if (ctx === null) {
-                alert("Could not initialise WebGL");
-                return null;
-            }
-            else {
-                return ctx;
-            }
-        }
-        utils.getGLContext = getGLContext;
-        function s4() {
-            return Math.floor((1 + Math.random()) * 0x10000)
-                .toString(16)
-                .substring(1);
-        }
-        utils.s4 = s4;
-        function uuid(name) {
-            return name + s4() + s4();
-        }
-        utils.uuid = uuid;
-        function normalizeNaN(vec) {
-            return vec.map(function (a) { if (Number.isNaN(a))
-                a = 0; return a; });
-        }
-        utils.normalizeNaN = normalizeNaN;
-    })(utils = BlazeEngine.utils || (BlazeEngine.utils = {}));
 })(BlazeEngine || (BlazeEngine = {}));

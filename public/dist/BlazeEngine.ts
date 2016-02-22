@@ -1,4 +1,51 @@
 module BlazeEngine {
+export module WebGLUtils{
+     export function getGLContext(canvas) {
+        var ctx = null;
+        var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+
+        for (var i = 0; i < names.length; ++i) {
+            try {
+                ctx = canvas.getContext(names[i]);
+            }
+            catch (e) { }
+            if (ctx) {
+                break;
+            }
+        }
+        if (ctx === null) {
+            alert("Could not initialise WebGL");
+            return null;
+        }
+        else {
+            return ctx;
+        }
+    }
+}
+export module ClassUtils{
+    export interface Rotation {
+        angle: number;
+        axis: Array<number>;
+    }
+}
+export module utils {
+    export function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
+    }
+    export function uuid(name) {
+        return name + s4() + s4();
+    }
+    
+    export function normalizeNaN(vec){
+        return vec.map(a=>{if(Number.isNaN(a))a=0; return a;})
+    }
+
+}
+
+
+
 export interface IEntity {
 
     beginDraw(): void;
@@ -61,9 +108,24 @@ export module Resources {
         private _nbo; //Normal Buffer Object;
         private _ibo; //Index Buffer Object;
         private _tbo; //Texture Coords Buffer Object;
+        private _onload;
+        private _src:string;
         constructor() {
 
         }
+        
+        public set onload(cb) {
+            this._onload = cb;
+        }
+        
+        
+        public set src(src : string) {
+         
+         
+            if(this._onload)this._onload();
+        }
+        
+        
     }
 
 
@@ -71,18 +133,29 @@ export module Resources {
     export class MeshTexture {
         private _texture;
         private _image;
+        private _onload;
         constructor() {
             //this._object=gl.createTexture();
             this._image = new Image();
-            this._image.onload = this.loadTextureImage();
+            
         }
 
-        setImage(filename: string) {
-            this._image.src = filename;
+
+        
+        public set onload(cb) {
+            this._onload = cb;
+        }
+        
+        public set src(filename: string) {
+            this._image.onload = this.loadTextureImage(this._onload);
         }
 
-        loadTextureImage() {
-
+        loadTextureImage(cb) {
+            return function(){
+                
+                
+                if(cb)cb();
+            }
         }
 
 
@@ -96,12 +169,27 @@ export module Resources {
         private _diffuse: Array<number>;
         private _specular: Array<number>;
         private _shininess: number;
+        private _onload;
+        private _src:string;
         constructor(ambient?: Array<number>, diffuse?: Array<number>, specular?: Array<number>, shininess?: number) {
             this._ambient = ambient ? vec4.create(ambient) : vec4.create();
             this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
             this._specular = specular ? vec4.create(specular) : vec4.create();
             this._shininess = shininess || 200.0;
         }
+        
+        public set onload(cb) {
+            this._onload = cb;
+        }
+        
+        
+        public set src(src : string) {
+         
+         
+            if(this._onload)this._onload();
+        }
+        
+        
 
         get ambient(): Array<number> {
             return this._ambient;
@@ -149,20 +237,52 @@ export class AnimationEntity extends Entity{
    
 }
 export class MeshEntity extends Entity{
-   private _meshFilename: string;
    private _material:Resources.MeshMaterial;
-   private _texture: Resouces.MeshTexture;
-   private _buffers: Resouces.MeshBuffers;
+   private _texture: Resources.MeshTexture;
+   private _buffers: Resources.MeshBuffers;
 
    constructor(){
        super();
+       this._material=null;
+       this._texture=null;
+       this._buffers=null;  
    }
+    
+   loadBuffers(filename, cb){
+       this._buffers=new Resources.MeshBuffers();
+       this._buffers.onload=cb;
+       this._buffers.src=filename;
+   }
+   
+   loadTexture(filename, cb){
+       this._texture= new Resources.MeshTexture();
+       this._texture.onload=cb;
+       this._texture.src=filename;
+   }
+   
+   
+   public set material(v : Resources.MeshMaterial) {
+       this._material = v;
+   }
+   
+   loadMaterial(filename, cb){
+        this._material= new Resources.MeshMaterial();
+       this._material.onload=cb;
+       this._material.src=filename;
+   }
+   
+   loadMesh(filesConfig, cb){
+       
+   }
+   
+   
+   
 }
 export class TransformEntity extends Entity {
     private _matrix: Array<number>;
     private _position: Array<number>;
     private _size: Array<number>;
-    private _rotation: utils.Rotation;
+    private _rotation: ClassUtils.Rotation;
     constructor() {
         super();
         this._matrix = mat4.create();
@@ -223,7 +343,7 @@ export class TransformEntity extends Entity {
 
 
 
-    set rotation(rotation: utils.Rotation) {
+    set rotation(rotation: ClassUtils.Rotation) {
         this._rotation = rotation;
     }
 
@@ -340,46 +460,46 @@ export class LightEntity extends Entity {
 
 
 }
-export class DirectionalLightEntity extends LightEntity{
+export class DirectionalLightEntity extends LightEntity {
     private _direction: Array<number>;
     private _cutoff: number;
-   constructor(ambient?: Array<number>, diffuse?: Array<number>, position?: Array<number>, direction?:Array<number>, cutoff?:number) {
+    constructor(ambient?: Array<number>, diffuse?: Array<number>, position?: Array<number>, direction?: Array<number>, cutoff?: number) {
         super(ambient, diffuse, position);
-        this._direction=direction ? vec3.create(direction) : vec3.create();
-        this._cutoff=cutoff || 0.5;
+        this._direction = direction ? vec3.create(direction) : vec3.create();
+        this._cutoff = cutoff || 0.5;
 
     }
-    
-    
-    public set direction(direction : Array<number>) {
+
+
+    public set direction(direction: Array<number>) {
         this._direction = utils.normalizeNaN(vec3.create(direction));
     }
-    
-    public get direction() : Array<number> {
+
+    public get direction(): Array<number> {
         return this._direction;
     }
-    
-    
-    public set cutOff(cutoff : number) {
+
+
+    public set cutOff(cutoff: number) {
         this._cutoff = cutoff;
     }
-    
-    
-    public get cutOff() : number {
+
+
+    public get cutOff(): number {
         return this._cutoff;
     }
-    
-    beginDraw(matrixStack: MatrixStack){
-        
+
+    beginDraw(matrixStack: MatrixStack) {
+
     }
-    
-    endDraw(matrixStack: MatrixStack){
-        
+
+    endDraw(matrixStack: MatrixStack) {
+
     }
-    
-    
-    
-    
+
+
+
+
 }
 export class CameraEntity extends Entity{
    
@@ -586,46 +706,4 @@ export class SceneGraph {
 
 
 }
-export module utils {
-    export function getGLContext(canvas) {
-        var ctx = null;
-        var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
-
-        for (var i = 0; i < names.length; ++i) {
-            try {
-                ctx = canvas.getContext(names[i]);
-            }
-            catch (e) { }
-            if (ctx) {
-                break;
-            }
-        }
-        if (ctx === null) {
-            alert("Could not initialise WebGL");
-            return null;
-        }
-        else {
-            return ctx;
-        }
-    }
-    export function s4() {
-        return Math.floor((1 + Math.random()) * 0x10000)
-            .toString(16)
-            .substring(1);
-    }
-    export function uuid(name) {
-        return name + s4() + s4();
-    }
-    export interface Rotation {
-        angle: number;
-        axis: Array<number>;
-    }
-    export function normalizeNaN(vec){
-        return vec.map(a=>{if(Number.isNaN(a))a=0; return a;})
-    }
-
-}
-
-
-
 }

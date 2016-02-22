@@ -2,7 +2,7 @@ class TransformEntity extends Entity {
     private _matrix: Array<number>;
     private _position: Array<number>;
     private _size: Array<number>;
-    private _rotation: utils.Rotation;
+    private _rotation: ClassUtils.Rotation;
     constructor() {
         super();
         this._matrix = mat4.create();
@@ -63,7 +63,7 @@ class TransformEntity extends Entity {
 
 
 
-    set rotation(rotation: utils.Rotation) {
+    set rotation(rotation: ClassUtils.Rotation) {
         this._rotation = rotation;
     }
 
