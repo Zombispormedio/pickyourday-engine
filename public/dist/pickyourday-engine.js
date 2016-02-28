@@ -150,8 +150,52 @@ var BlazeEngine;
                 configurable: true
             });
             MeshBuffers.prototype.parseJSON = function (data) {
+                var obj = {};
+                try {
+                    obj = JSON.parse(data);
+                }
+                catch (e) {
+                    console.log(e);
+                }
+                return obj;
             };
             MeshBuffers.prototype.parseOBJ = function (data) {
+                var obj = {
+                    v: [],
+                    vn: [],
+                    vt: [],
+                    iv: [],
+                    in: [],
+                    it: []
+                };
+                var lines = data.split("\n");
+                var vertex = lines.filter(function (a) {
+                    return a[0] === 'v';
+                });
+                var index = lines.filter(function (a) {
+                    return a[0] === 'f';
+                });
+                vertex.forEach(function (item) {
+                    var elems = item.replace("\r", "").split(" ");
+                    var key = elems[0];
+                    obj[key] = obj[key].concat(elems.slice(1).filter(function (a) {
+                        return a !== "";
+                    }));
+                });
+                var tempIndex = [];
+                index.forEach(function (item) {
+                    var elems = item.replace("\r", "").replace("f", "").split(" ");
+                    tempIndex = tempIndex.concat(elems.slice(1).filter(function (a) {
+                        return a !== "";
+                    }));
+                });
+                tempIndex.forEach(function (item) {
+                    var elems = item.split("/");
+                    obj.iv = obj.iv.concat(parseInt(elems[0]) - 1);
+                    obj.in = obj.in.concat(parseInt(elems[1]) - 1);
+                    obj.it = obj.it.concat(parseInt(elems[2]) - 1);
+                });
+                return obj;
             };
             MeshBuffers.prototype.createBuffers = function (obj) {
             };
@@ -173,6 +217,7 @@ var BlazeEngine;
             Object.defineProperty(MeshTexture.prototype, "src", {
                 set: function (filename) {
                     this._image.onload = this.loadTextureImage(this._onload);
+                    this._image.src = filename;
                 },
                 enumerable: true,
                 configurable: true
@@ -198,7 +243,7 @@ var BlazeEngine;
                 this._ambient = ambient ? vec4.create(ambient) : vec4.create();
                 this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
                 this._specular = specular ? vec4.create(specular) : vec4.create();
-                this._shininess = shininess || 200.0;
+                this._transparent = shininess || 200.0;
             }
             Object.defineProperty(MeshMaterial.prototype, "onload", {
                 set: function (cb) {
@@ -209,12 +254,38 @@ var BlazeEngine;
             });
             Object.defineProperty(MeshMaterial.prototype, "src", {
                 set: function (src) {
-                    if (this._onload)
-                        this._onload();
+                    var self = this;
+                    utils.load(src, function (data) {
+                        var temp = self.parse(data);
+                        this._ambient = temp.Ka;
+                        this._diffuse = temp.Kd;
+                        this._specular = temp.Ks;
+                        this._transparent = temp.Ns;
+                        if (this._onload)
+                            this._onload();
+                    });
                 },
                 enumerable: true,
                 configurable: true
             });
+            MeshMaterial.prototype.parse = function (data) {
+                var obj = {};
+                var keys = ["Ka", "Kd", "Ks", "Ns"];
+                var lines = data.split("\n");
+                lines.forEach(function (line) {
+                    var elems = line.split(" ");
+                    var key = elems[0];
+                    if (keys.indexOf(key) > -1) {
+                        switch (key) {
+                            case "Ns":
+                                obj["Ns"] = elems[1];
+                                break;
+                            default: obj[key] = elems.slice(1);
+                        }
+                    }
+                });
+                return obj;
+            };
             Object.defineProperty(MeshMaterial.prototype, "ambient", {
                 get: function () {
                     return this._ambient;
@@ -245,12 +316,12 @@ var BlazeEngine;
                 enumerable: true,
                 configurable: true
             });
-            Object.defineProperty(MeshMaterial.prototype, "shininess", {
+            Object.defineProperty(MeshMaterial.prototype, "transparent", {
                 get: function () {
-                    return this._shininess;
+                    return this._transparent;
                 },
                 set: function (v) {
-                    this._shininess = v;
+                    this._transparent = v;
                 },
                 enumerable: true,
                 configurable: true
@@ -297,7 +368,46 @@ var BlazeEngine;
             this._material.onload = cb;
             this._material.src = filename;
         };
-        MeshEntity.prototype.loadMesh = function (filesConfig, cb) {
+        MeshEntity.prototype.loadMesh = function (config, cb) {
+            var self = this;
+            async.waterfall([
+                function buffers(next) {
+                    if (!config.mesh) {
+                        console.log("No Mesh file");
+                        return next();
+                    }
+                    self.loadBuffers(config.mesh, function () {
+                        next();
+                    });
+                },
+                function texture(next) {
+                    if (!config.texture) {
+                        console.log("No Texture file");
+                        return next();
+                    }
+                    self.loadTexture(config.texture, function () {
+                        next();
+                    });
+                },
+                function material(next) {
+                    if (!config.material) {
+                        console.log("No Material file");
+                        return next();
+                    }
+                    self.loadMaterial(config.material, function () {
+                        next();
+                    });
+                }
+            ], function (err) {
+                if (err)
+                    return console.log(err);
+                if (cb)
+                    cb();
+            });
+        };
+        MeshEntity.prototype.beginDraw = function () {
+        };
+        MeshEntity.prototype.endDraw = function () {
         };
         return MeshEntity;
     })(Entity);

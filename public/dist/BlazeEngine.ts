@@ -125,50 +125,99 @@ export module Resources {
         private _ibo; //Index Buffer Object;
         private _tbo; //Texture Coords Buffer Object;
         private _onload;
-        private _src:string;
+        private _src: string;
         constructor() {
 
         }
-        
+
         public set onload(cb) {
             this._onload = cb;
         }
-        
-        
-        public set src(src : string) {
-            var self=this;
-            var ext=utils.getExtension(src);
-            
-            utils.load(src, function(data){
+
+
+        public set src(src: string) {
+            var self = this;
+            var ext = utils.getExtension(src);
+
+            utils.load(src, function(data) {
                 var obj;
-                switch(ext){
-                    case "obj": obj=self.parseOBJ(data);
-                    break;
-                    
-                    case "json": obj=self.parseJSON(data);
-                    break;
-                    
+                switch (ext) {
+                    case "obj": obj = self.parseOBJ(data);
+                        break;
+
+                    case "json": obj = self.parseJSON(data);
+                        break;
+
                 }
                 self.createBuffers(obj);
-                if(this._onload)this._onload();
+                if (this._onload) this._onload();
             });
-         
-            
+
+
         }
-        
-       private parseJSON(data:string):any{
-            
+
+        private parseJSON(data: string): any {
+            var obj = {};
+            try {
+                obj = JSON.parse(data);
+            } catch (e) {
+                console.log(e);
+            }
+            return obj;
         }
-        
-        private parseOBJ(data:string):any{
-            
+
+        private parseOBJ(data: string): any {
+            var obj = {
+                v: [],
+                vn: [],
+                vt: [],
+                iv: [],
+                in: [],
+                it: []
+            };
+            var lines = data.split("\n");
+
+            var vertex = lines.filter(function(a) {
+                return a[0] === 'v';
+            });
+
+            var index = lines.filter(function(a) {
+                return a[0] === 'f';
+            });
+
+            vertex.forEach(function(item) {
+                var elems = item.replace("\r", "").split(" ");
+                var key = elems[0];
+                obj[key] = obj[key].concat(elems.slice(1).filter(function(a) {
+                    return a !== "";
+                }));
+            });
+
+            var tempIndex = [];
+            index.forEach(function(item) {
+                var elems = item.replace("\r", "").replace("f", "").split(" ");
+                tempIndex = tempIndex.concat(elems.slice(1).filter(function(a) {
+                    return a !== "";
+                }));
+            });
+
+            tempIndex.forEach(function(item) {
+                var elems = item.split("/");
+                obj.iv = obj.iv.concat(parseInt(elems[0]) - 1);
+                obj.in = obj.in.concat(parseInt(elems[1]) - 1);
+                obj.it = obj.it.concat(parseInt(elems[2]) - 1);
+            });
+
+
+            return obj;
+
         }
-        
-        private createBuffers(obj:any):void{
-            
+
+        private createBuffers(obj: any): void {
+
         }
-        
-        
+
+
     }
 
 
@@ -180,24 +229,25 @@ export module Resources {
         constructor() {
             //this._object=gl.createTexture();
             this._image = new Image();
-            
+
         }
 
 
-        
+
         public set onload(cb) {
             this._onload = cb;
         }
-        
+
         public set src(filename: string) {
             this._image.onload = this.loadTextureImage(this._onload);
+            this._image.src=filename;
         }
 
         loadTextureImage(cb) {
-            return function(){
+            return function() {
                 
                 
-                if(cb)cb();
+                if (cb) cb();
             }
         }
 
@@ -211,28 +261,59 @@ export module Resources {
         private _ambient: Array<number>;
         private _diffuse: Array<number>;
         private _specular: Array<number>;
-        private _shininess: number;
+        private _transparent: number;
         private _onload;
-        private _src:string;
+        private _src: string;
+        
         constructor(ambient?: Array<number>, diffuse?: Array<number>, specular?: Array<number>, shininess?: number) {
             this._ambient = ambient ? vec4.create(ambient) : vec4.create();
             this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
             this._specular = specular ? vec4.create(specular) : vec4.create();
-            this._shininess = shininess || 200.0;
+            this._transparent = shininess || 200.0;
         }
-        
+
         public set onload(cb) {
             this._onload = cb;
         }
-        
-        
-        public set src(src : string) {
-         
-         
-            if(this._onload)this._onload();
+
+
+        public set src(src: string) {
+
+            var self = this;
+
+
+            utils.load(src, function(data) {
+                 var temp=self.parse(data);
+                 this._ambient=temp.Ka;
+                 this._diffuse=temp.Kd;
+                 this._specular=temp.Ks;
+                 this._transparent=temp.Ns;
+                if (this._onload) this._onload();
+            });
+
+
         }
-        
-        
+
+        parse(data: string): any {
+            var obj = {};
+            var keys=["Ka", "Kd", "Ks", "Ns"];
+            var lines = data.split("\n");
+            lines.forEach(function(line){
+                var elems=line.split(" ");
+                var key=elems[0];
+                if(keys.indexOf(key)>-1){
+                    switch(key){
+                        case "Ns": obj["Ns"]=elems[1];
+                        break;
+                        default: obj[key]=elems.slice(1);
+                    }
+                }
+                
+            })
+            
+            return obj;
+        }
+
 
         get ambient(): Array<number> {
             return this._ambient;
@@ -264,13 +345,13 @@ export module Resources {
         }
 
 
-        public get shininess(): number {
-            return this._shininess;
+        public get transparent(): number {
+            return this._transparent;
         }
 
 
-        public set shininess(v: number) {
-            this._shininess = v;
+        public set transparent(v: number) {
+            this._transparent = v;
         }
 
     }
@@ -279,47 +360,90 @@ export module Resources {
 export class AnimationEntity extends Entity{
    
 }
-export class MeshEntity extends Entity{
-   private _material:Resources.MeshMaterial;
-   private _texture: Resources.MeshTexture;
-   private _buffers: Resources.MeshBuffers;
+export class MeshEntity extends Entity {
+    private _material: Resources.MeshMaterial;
+    private _texture: Resources.MeshTexture;
+    private _buffers: Resources.MeshBuffers;
 
-   constructor(){
-       super();
-       this._material=null;
-       this._texture=null;
-       this._buffers=null;  
-   }
+    constructor() {
+        super();
+        this._material = null;
+        this._texture = null;
+        this._buffers = null;
+    }
+
+    loadBuffers(filename, cb) {
+        this._buffers = new Resources.MeshBuffers();
+        this._buffers.onload = cb;
+        this._buffers.src = filename;
+    }
+
+    loadTexture(filename, cb) {
+        this._texture = new Resources.MeshTexture();
+        this._texture.onload = cb;
+        this._texture.src = filename;
+    }
+
+
+    public set material(v: Resources.MeshMaterial) {
+        this._material = v;
+    }
+
+    loadMaterial(filename, cb) {
+        this._material = new Resources.MeshMaterial();
+        this._material.onload = cb;
+        this._material.src = filename;
+    }
+
+    loadMesh(config, cb) {
+        var self = this;
+        async.waterfall([
+            function buffers(next) {
+                if (!config.mesh) {
+                    console.log("No Mesh file");
+                    return next();
+                }
+                self.loadBuffers(config.mesh, function() {
+                    next();
+                });
+            },
+            function texture(next) {
+                if (!config.texture) {
+                    console.log("No Texture file");
+                    return next();
+                }
+                self.loadTexture(config.texture, function() {
+                    next();
+                });
+            },
+            function material(next) {
+                if (!config.material) {
+                    console.log("No Material file");
+                    return next();
+                }
+                self.loadMaterial(config.material, function() {
+                    next();
+                });
+            }
+        ], function(err) {
+            if (err) return console.log(err);
+            if (cb) cb();
+        });
+
+
+
+    }
+
+    beginDraw() {
+
+    }
     
-   loadBuffers(filename, cb){
-       this._buffers=new Resources.MeshBuffers();
-       this._buffers.onload=cb;
-       this._buffers.src=filename;
-   }
-   
-   loadTexture(filename, cb){
-       this._texture= new Resources.MeshTexture();
-       this._texture.onload=cb;
-       this._texture.src=filename;
-   }
-   
-   
-   public set material(v : Resources.MeshMaterial) {
-       this._material = v;
-   }
-   
-   loadMaterial(filename, cb){
-        this._material= new Resources.MeshMaterial();
-       this._material.onload=cb;
-       this._material.src=filename;
-   }
-   
-   loadMesh(filesConfig, cb){
-       
-   }
-   
-   
-   
+    endDraw(){
+        
+    }
+
+
+
 }
 export class TransformEntity extends Entity {
     private _matrix: Array<number>;
