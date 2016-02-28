@@ -1,3 +1,4 @@
-class AnimationEntity extends Entity{
+class AnimationEntity extends Entity {
+
    
 }

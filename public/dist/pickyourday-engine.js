@@ -60,6 +60,10 @@ var BlazeEngine;
             return elems[elems.length - 1];
         }
         utils.getExtension = getExtension;
+        function nowInMilliseconds() {
+            return (new Date()).getTime();
+        }
+        utils.nowInMilliseconds = nowInMilliseconds;
     })(utils = BlazeEngine.utils || (BlazeEngine.utils = {}));
     (function (CAMERA_TYPE) {
         CAMERA_TYPE[CAMERA_TYPE["ORBITING"] = 0] = "ORBITING";

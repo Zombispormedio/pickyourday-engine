@@ -25,6 +25,10 @@ module utils {
         var elems=str.split(".");
         return elems[elems.length-1];
     }
+    
+    export function nowInMilliseconds(){
+        return  (new Date()).getTime();
+    }
 
 
 

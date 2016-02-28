@@ -55,6 +55,10 @@ export module utils {
         var elems=str.split(".");
         return elems[elems.length-1];
     }
+    
+    export function nowInMilliseconds(){
+        return  (new Date()).getTime();
+    }
 
 
 
@@ -358,7 +362,8 @@ export module Resources {
     }
 
 }
-export class AnimationEntity extends Entity{
+export class AnimationEntity extends Entity {
+
    
 }
 export class MeshEntity extends Entity {
