@@ -1,3 +1,134 @@
-class CameraEntity extends Entity{
-   
+class CameraEntity extends Entity {
+    private _type: CAMERA_TYPE;
+    private _cmatrix: Array<Array<number>>;
+    private _up: Array<number>;
+    private _right: Array<number>;
+    private _normal: Array<number>;
+    private _position: Array<number>;
+    private _focus: Array<number>;
+    private _azimuth: number;
+    private _elevation: number;
+    private _steps: number;
+    private _home: Array<number>;
+    
+    private _options:{focus: Array<number>, azimuth:number, elevation:number, home:Array<number>};
+    
+
+    constructor(options?, type?: CAMERA_TYPE ) {
+        super();
+        this._type = type || CAMERA_TYPE.ORBITING;
+        this._cmatrix = mat4.create();
+        this._up = vec3.create();
+        this._right = vec3.create();
+        this._normal = vec3.create();
+        this._position = vec3.create();
+        this._focus = vec3.create();
+        this._home = vec3.create();
+        this._azimuth = 0.0;
+        this._elevation = 0.0;
+        this._steps = 0;
+        this._options=options;
+    }
+
+
+    public set type(type: CAMERA_TYPE) {
+        this._type = type;
+    }
+    
+    
+    public set home(home: Array<number>) {
+        if (home != void 0) {
+            this._home = home;
+        }
+        this.position = this._home;
+        this.azimuth = 0;
+    }
+    
+
+
+    public set position(p: Array<number>) {
+        vec3.set(p, this._position);
+        vec3.set(p, this._home);
+        this.updateMatrix();
+    }
+
+
+    public set azimuth(azimuth: number) {
+        this._azimuth += azimuth - this._azimuth;
+        if(this._azimuth>360 || this._azimuth<-360){
+            this._azimuth%=360;
+        }
+        this.updateMatrix();
+
+    }
+    
+    
+    public set focus(f : Array<number>) {
+       vec3.set(f, this._focus);
+       this.updateMatrix();
+    }
+    
+    
+    public set elevation(e : number) {
+        this._elevation += e;
+        
+        if(this._elevation>360 || this._elevation<-360){
+            this._elevation%=360;
+        }
+        this.updateMatrix();
+    }
+    
+    
+
+
+    applyOrientationMatrix() {
+        var m = this._cmatrix;
+        mat4.multiplyVec4(m, [1, 0, 0, 0], this._right);
+        mat4.multiplyVec4(m, [0, 1, 0, 0], this._up);
+        mat4.multiplyVec4(m, [0, 0, 1, 0], this._normal);
+    }
+
+    updateMatrix() {
+        mat4.identity(this._cmatrix);
+        this.applyOrientationMatrix();
+
+        if (this._type === CAMERA_TYPE.TRACKING) {
+            mat4.translate(this._cmatrix, this._position);
+            mat4.rotateY(this._cmatrix, this._azimuth * Math.PI / 180);
+            mat4.rotateX(this._cmatrix, this._elevation * Math.PI / 180);
+        } else {
+            mat4.rotateY(this._cmatrix, this._azimuth * Math.PI / 180);
+            mat4.rotateX(this._cmatrix, this._elevation * Math.PI / 180);
+            mat4.translate(this._cmatrix, this._position);
+        }
+
+        this.applyOrientationMatrix();
+
+        if (this._type === CAMERA_TYPE.TRACKING) {
+            mat4.multiplyVec4(this._cmatrix, [0, 0, 0, 1], this._position);
+        }
+    }
+    
+    
+    public get modelView() :Array<number> {
+        var m=mat4.create();
+        mat4.inverse(this._cmatrix, m);
+        return m;
+    }
+    
+    beginDraw(){
+        this.home=this._options.home;
+        this.focus=this._options.focus;
+        this.azimuth=this._options.azimuth;
+        this.elevation=this._options.elevation;
+    }
+    
+    endDraw(){
+        
+    }
+    
+    
+    
+
+
 }
