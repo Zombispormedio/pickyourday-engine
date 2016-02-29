@@ -341,9 +341,39 @@ var BlazeEngine;
     })(Resources = BlazeEngine.Resources || (BlazeEngine.Resources = {}));
     var AnimationEntity = (function (_super) {
         __extends(AnimationEntity, _super);
-        function AnimationEntity() {
-            _super.apply(this, arguments);
+        function AnimationEntity(frequency, times, callback) {
+            _super.call(this);
+            this._frequency = frequency;
+            this._interval_id = null;
+            this._callback = callback;
         }
+        AnimationEntity.prototype.onFrame = function () {
+            AnimationEntity.ElapseTime = utils.nowInMilliseconds();
+            if (AnimationEntity.ElapseTime < 5)
+                return;
+            var steps = Math.floor(AnimationEntity.ElapseTime / this._frequency);
+            while ((steps > 0) && (AnimationEntity.Count != this._times)) {
+                this._callback();
+                steps--;
+                AnimationEntity.Count++;
+            }
+            if (AnimationEntity.Count === this._times) {
+                this.stop();
+            }
+        };
+        AnimationEntity.prototype.start = function () {
+            this._intime = utils.nowInMilliseconds();
+            this._interval_id = setInterval(this.onFrame, this._frequency / 1000);
+        };
+        AnimationEntity.prototype.stop = function () {
+            if (this._interval_id)
+                clearInterval(this._interval_id);
+        };
+        AnimationEntity.prototype.beginDraw = function () {
+        };
+        AnimationEntity.prototype.endDraw = function () {
+        };
+        AnimationEntity.Count = 0;
         return AnimationEntity;
     })(Entity);
     BlazeEngine.AnimationEntity = AnimationEntity;
