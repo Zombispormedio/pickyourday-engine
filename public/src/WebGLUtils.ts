@@ -91,8 +91,19 @@ module WebGLUtils {
     export function createProgram(gl, shaders) {
         var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shaders.fragment);
         var vertexShader = createShader(gl, gl.VERTEX_SHADER, shaders.vertex);
-        
-        var program= gl.createProgram();
+
+        var program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS))
+            alert("No pueden iniciarse los shaders");
+
+        gl.useProgram(program);
+
+        return program;
+
     }
 
 
