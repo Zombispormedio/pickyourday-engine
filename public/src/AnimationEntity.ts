@@ -6,8 +6,8 @@ class AnimationEntity extends Entity {
     private _times:number;
     private static Count:number=0;
     private static ElapseTime:number;
-    constructor(frequency:number, times:number, callback:any ) {
-        super();
+    constructor(graph_id:string, frequency:number, times:number, callback:any ) {
+        super(graph_id);
         this._frequency=frequency;
         this._interval_id=null;
         this._callback=callback;

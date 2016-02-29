@@ -10,12 +10,12 @@ class CameraEntity extends Entity {
     private _elevation: number;
     private _steps: number;
     private _home: Array<number>;
-    
-    private _options:{focus: Array<number>, azimuth:number, elevation:number, home:Array<number>};
-    
 
-    constructor(options?, type?: CAMERA_TYPE ) {
-        super();
+    private _options: { focus: Array<number>, azimuth: number, elevation: number, home: Array<number> };
+
+
+    constructor(graph_id:string,options?, type?: CAMERA_TYPE) {
+        super(graph_id);
         this._type = type || CAMERA_TYPE.ORBITING;
         this._cmatrix = mat4.create();
         this._up = vec3.create();
@@ -27,15 +27,15 @@ class CameraEntity extends Entity {
         this._azimuth = 0.0;
         this._elevation = 0.0;
         this._steps = 0;
-        this._options=options;
+        this._options = options;
     }
 
 
     public set type(type: CAMERA_TYPE) {
         this._type = type;
     }
-    
-    
+
+
     public set home(home: Array<number>) {
         if (home != void 0) {
             this._home = home;
@@ -43,7 +43,7 @@ class CameraEntity extends Entity {
         this.position = this._home;
         this.azimuth = 0;
     }
-    
+
 
 
     public set position(p: Array<number>) {
@@ -55,30 +55,30 @@ class CameraEntity extends Entity {
 
     public set azimuth(azimuth: number) {
         this._azimuth += azimuth - this._azimuth;
-        if(this._azimuth>360 || this._azimuth<-360){
-            this._azimuth%=360;
+        if (this._azimuth > 360 || this._azimuth < -360) {
+            this._azimuth %= 360;
         }
         this.updateMatrix();
 
     }
-    
-    
-    public set focus(f : Array<number>) {
-       vec3.set(f, this._focus);
-       this.updateMatrix();
+
+
+    public set focus(f: Array<number>) {
+        vec3.set(f, this._focus);
+        this.updateMatrix();
     }
-    
-    
-    public set elevation(e : number) {
+
+
+    public set elevation(e: number) {
         this._elevation += e;
-        
-        if(this._elevation>360 || this._elevation<-360){
-            this._elevation%=360;
+
+        if (this._elevation > 360 || this._elevation < -360) {
+            this._elevation %= 360;
         }
         this.updateMatrix();
     }
-    
-    
+
+
 
 
     applyOrientationMatrix() {
@@ -88,6 +88,34 @@ class CameraEntity extends Entity {
         mat4.multiplyVec4(m, [0, 0, 1, 0], this._normal);
     }
 
+
+    dolly(offset: number) {
+        var p=this._position;
+        var n=vec3.create();
+        
+        var step=offset-this._steps;
+        
+        vec3.normalize(this._normal, n);
+        
+        
+        var new_position=vec3.create();
+        
+        if(this._type===CAMERA_TYPE.TRACKING){
+            new_position.forEach((x, index)=>{
+                x=p[index]-step*n[index];
+            });
+        }else{
+             new_position.forEach((x, index)=>{
+                if(index<2)x=p[index];
+                else x=p[index]-step;
+            });
+        }
+        
+        this.position=new_position;
+        this._steps=offset;
+       
+    }
+    
     updateMatrix() {
         mat4.identity(this._cmatrix);
         this.applyOrientationMatrix();
@@ -108,27 +136,27 @@ class CameraEntity extends Entity {
             mat4.multiplyVec4(this._cmatrix, [0, 0, 0, 1], this._position);
         }
     }
-    
-    
-    public get modelView() :Array<number> {
-        var m=mat4.create();
+
+
+    public get modelView(): Array<number> {
+        var m = mat4.create();
         mat4.inverse(this._cmatrix, m);
         return m;
     }
-    
-    beginDraw(){
-        this.home=this._options.home;
-        this.focus=this._options.focus;
-        this.azimuth=this._options.azimuth;
-        this.elevation=this._options.elevation;
+
+    beginDraw() {
+        this.home = this._options.home;
+        this.focus = this._options.focus;
+        this.azimuth = this._options.azimuth;
+        this.elevation = this._options.elevation;
     }
-    
-    endDraw(){
-        
+
+    endDraw() {
+
     }
-    
-    
-    
+
+
+
 
 
 }

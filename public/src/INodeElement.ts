@@ -1,5 +1,5 @@
 interface INodeElement {
-    _entity: IEntity;
+    _entity: Entity;
     _childNodes: INodeElement[];
     _parentNode: INodeElement;
     addChildNode(child: INodeElement);

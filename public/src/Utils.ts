@@ -4,8 +4,9 @@ module utils {
             .toString(16)
             .substring(1);
     }
-    export function uuid(name) {
-        return name + s4() + s4();
+    export function uuid(name?) {
+        var id=s4() + s4();
+        return name?name+id:id;
     }
 
     export function normalizeNaN(vec) {
@@ -15,7 +16,7 @@ module utils {
     export function load(url, callback) {
         var request = new XMLHttpRequest();
         request.open('GET', url, true);
-        request.addEventListener('load', function() {
+        request.addEventListener('load', ()=> {
             callback(request.responseText);
         });
         request.send();

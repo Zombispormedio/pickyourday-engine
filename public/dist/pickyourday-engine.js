@@ -28,6 +28,50 @@ var BlazeEngine;
             }
         }
         WebGLUtils.getGLContext = getGLContext;
+        function createBuffer(gl, data, type_draw) {
+            var buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            switch (type_draw) {
+                case WebGLUtils.BUFFER_DRAW.STATIC:
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+                    break;
+                case WebGLUtils.BUFFER_DRAW.DYNAMIC:
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.DYNAMIC_DRAW);
+                    break;
+                case WebGLUtils.BUFFER_DRAW.STREAM:
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STREAM_DRAW);
+                    break;
+                default: gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+            }
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            return buffer;
+        }
+        WebGLUtils.createBuffer = createBuffer;
+        function createIndexBuffer(gl, data, type_draw) {
+            var indexBuffer = gl.createBuffer(gl.ELEMENT_ARRAY_BUFFER);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            switch (type_draw) {
+                case WebGLUtils.BUFFER_DRAW.STATIC:
+                    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(data), gl.STATIC_DRAW);
+                    break;
+                case WebGLUtils.BUFFER_DRAW.DYNAMIC:
+                    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(data), gl.DYNAMIC_DRAW);
+                    break;
+                case WebGLUtils.BUFFER_DRAW.STREAM:
+                    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(data), gl.STREAM_DRAW);
+                    break;
+                default: gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(data), gl.STATIC_DRAW);
+            }
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+            return indexBuffer;
+        }
+        WebGLUtils.createIndexBuffer = createIndexBuffer;
+        (function (BUFFER_DRAW) {
+            BUFFER_DRAW[BUFFER_DRAW["STATIC"] = 0] = "STATIC";
+            BUFFER_DRAW[BUFFER_DRAW["STREAM"] = 1] = "STREAM";
+            BUFFER_DRAW[BUFFER_DRAW["DYNAMIC"] = 2] = "DYNAMIC";
+        })(WebGLUtils.BUFFER_DRAW || (WebGLUtils.BUFFER_DRAW = {}));
+        var BUFFER_DRAW = WebGLUtils.BUFFER_DRAW;
     })(WebGLUtils = BlazeEngine.WebGLUtils || (BlazeEngine.WebGLUtils = {}));
     var utils;
     (function (utils) {
@@ -38,7 +82,8 @@ var BlazeEngine;
         }
         utils.s4 = s4;
         function uuid(name) {
-            return name + s4() + s4();
+            var id = s4() + s4();
+            return name ? name + id : id;
         }
         utils.uuid = uuid;
         function normalizeNaN(vec) {
@@ -70,15 +115,55 @@ var BlazeEngine;
         CAMERA_TYPE[CAMERA_TYPE["TRACKING"] = 1] = "TRACKING";
     })(BlazeEngine.CAMERA_TYPE || (BlazeEngine.CAMERA_TYPE = {}));
     var CAMERA_TYPE = BlazeEngine.CAMERA_TYPE;
-    var Entity = (function () {
-        function Entity() {
+    var Ketch = (function () {
+        function Ketch() {
+        }
+        Ketch.setCanvasToContext = function (key, canvas) {
+            var context = WebGLUtils.getGLContext(canvas);
+            Ketch.setContext(key, context);
+        };
+        Ketch.setContext = function (key, context) {
+            Ketch._views[key] = context;
+        };
+        Ketch.getContext = function (key) {
+            return Ketch._views[key];
+        };
+        Ketch._views = [];
+        return Ketch;
+    })();
+    BlazeEngine.Ketch = Ketch;
+    var Renderable = (function () {
+        function Renderable(graph_id) {
+            this._graph_id = graph_id;
+        }
+        Object.defineProperty(Renderable.prototype, "graphID", {
+            get: function () {
+                return this._graph_id;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Renderable.prototype, "gl", {
+            get: function () {
+                return Ketch.getContext(this.graphID);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return Renderable;
+    })();
+    BlazeEngine.Renderable = Renderable;
+    var Entity = (function (_super) {
+        __extends(Entity, _super);
+        function Entity(graph_id) {
+            _super.call(this, graph_id);
         }
         Entity.prototype.beginDraw = function (matrixStack) {
         };
         Entity.prototype.endDraw = function (matrixStack) {
         };
         return Entity;
-    })();
+    })(Renderable);
     BlazeEngine.Entity = Entity;
     var MatrixStack = (function () {
         function MatrixStack() {
@@ -126,8 +211,10 @@ var BlazeEngine;
     BlazeEngine.MatrixStack = MatrixStack;
     var Resources;
     (function (Resources) {
-        var MeshBuffers = (function () {
-            function MeshBuffers() {
+        var MeshBuffers = (function (_super) {
+            __extends(MeshBuffers, _super);
+            function MeshBuffers(graph_id) {
+                _super.call(this, graph_id);
             }
             Object.defineProperty(MeshBuffers.prototype, "onload", {
                 set: function (cb) {
@@ -138,6 +225,7 @@ var BlazeEngine;
             });
             Object.defineProperty(MeshBuffers.prototype, "src", {
                 set: function (src) {
+                    var _this = this;
                     var self = this;
                     var ext = utils.getExtension(src);
                     utils.load(src, function (data) {
@@ -151,8 +239,8 @@ var BlazeEngine;
                                 break;
                         }
                         self.createBuffers(obj);
-                        if (this._onload)
-                            this._onload();
+                        if (_this._onload)
+                            _this._onload();
                     });
                 },
                 enumerable: true,
@@ -200,20 +288,40 @@ var BlazeEngine;
                 });
                 tempIndex.forEach(function (item) {
                     var elems = item.split("/");
-                    obj.iv = obj.iv.concat(parseInt(elems[0]) - 1);
-                    obj.in = obj.in.concat(parseInt(elems[1]) - 1);
-                    obj.it = obj.it.concat(parseInt(elems[2]) - 1);
+                    obj.iv.push(parseInt(elems[0]) - 1);
+                    obj.in.push(parseInt(elems[1]) - 1);
+                    obj.it.push(parseInt(elems[2]) - 1);
                 });
                 return obj;
             };
             MeshBuffers.prototype.createBuffers = function (obj) {
+                var gl = this.gl;
+                function createBuffer(data) {
+                    return WebGLUtils.createBuffer(gl, data);
+                }
+                if (obj.v.length > 0)
+                    this._vbo = createBuffer(obj.v);
+                if (obj.vn.length > 0)
+                    this._nbo = createBuffer(obj.vn);
+                if (obj.vt.length > 0)
+                    this._tbo = createBuffer(obj.vt);
+                function createIndexBuffer(data) {
+                    return WebGLUtils.createIndexBuffer(gl, data);
+                }
+                if (obj.iv.length > 0)
+                    this._ivbo = createIndexBuffer(obj.iv);
+                if (obj.in.length > 0)
+                    this._inbo = createIndexBuffer(obj.in);
+                if (obj.it.length > 0)
+                    this._itbo = createIndexBuffer(obj.it);
             };
             return MeshBuffers;
-        })();
+        })(Renderable);
         Resources.MeshBuffers = MeshBuffers;
-        var MeshTexture = (function () {
-            function MeshTexture() {
-                //this._object=gl.createTexture();
+        var MeshTexture = (function (_super) {
+            __extends(MeshTexture, _super);
+            function MeshTexture(graph_id) {
+                _super.call(this, graph_id);
                 this._image = new Image();
             }
             Object.defineProperty(MeshTexture.prototype, "onload", {
@@ -245,10 +353,12 @@ var BlazeEngine;
                 configurable: true
             });
             return MeshTexture;
-        })();
+        })(Renderable);
         Resources.MeshTexture = MeshTexture;
-        var MeshMaterial = (function () {
-            function MeshMaterial(ambient, diffuse, specular, shininess) {
+        var MeshMaterial = (function (_super) {
+            __extends(MeshMaterial, _super);
+            function MeshMaterial(graph_id, ambient, diffuse, specular, shininess) {
+                _super.call(this, graph_id);
                 this._ambient = ambient ? vec4.create(ambient) : vec4.create();
                 this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
                 this._specular = specular ? vec4.create(specular) : vec4.create();
@@ -263,15 +373,17 @@ var BlazeEngine;
             });
             Object.defineProperty(MeshMaterial.prototype, "src", {
                 set: function (src) {
+                    var _this = this;
                     var self = this;
                     utils.load(src, function (data) {
                         var temp = self.parse(data);
-                        this._ambient = temp.Ka;
-                        this._diffuse = temp.Kd;
-                        this._specular = temp.Ks;
-                        this._transparent = temp.Ns;
-                        if (this._onload)
-                            this._onload();
+                        _this._ambient = temp.Ka;
+                        _this._diffuse = temp.Kd;
+                        _this._specular = temp.Ks;
+                        _this._transparent = temp.Ns;
+                        console.log(_this);
+                        if (_this._onload)
+                            _this._onload();
                     });
                 },
                 enumerable: true,
@@ -336,13 +448,13 @@ var BlazeEngine;
                 configurable: true
             });
             return MeshMaterial;
-        })();
+        })(Renderable);
         Resources.MeshMaterial = MeshMaterial;
     })(Resources = BlazeEngine.Resources || (BlazeEngine.Resources = {}));
     var AnimationEntity = (function (_super) {
         __extends(AnimationEntity, _super);
-        function AnimationEntity(frequency, times, callback) {
-            _super.call(this);
+        function AnimationEntity(graph_id, frequency, times, callback) {
+            _super.call(this, graph_id);
             this._frequency = frequency;
             this._interval_id = null;
             this._callback = callback;
@@ -379,19 +491,19 @@ var BlazeEngine;
     BlazeEngine.AnimationEntity = AnimationEntity;
     var MeshEntity = (function (_super) {
         __extends(MeshEntity, _super);
-        function MeshEntity() {
-            _super.call(this);
+        function MeshEntity(graph_id) {
+            _super.call(this, graph_id);
             this._material = null;
             this._texture = null;
             this._buffers = null;
         }
         MeshEntity.prototype.loadBuffers = function (filename, cb) {
-            this._buffers = new Resources.MeshBuffers();
+            this._buffers = new Resources.MeshBuffers(this.graphID);
             this._buffers.onload = cb;
             this._buffers.src = filename;
         };
         MeshEntity.prototype.loadTexture = function (filename, cb) {
-            this._texture = new Resources.MeshTexture();
+            this._texture = new Resources.MeshTexture(this.graphID);
             this._texture.onload = cb;
             this._texture.src = filename;
         };
@@ -403,14 +515,14 @@ var BlazeEngine;
             configurable: true
         });
         MeshEntity.prototype.loadMaterial = function (filename, cb) {
-            this._material = new Resources.MeshMaterial();
+            this._material = new Resources.MeshMaterial(this.graphID);
             this._material.onload = cb;
             this._material.src = filename;
         };
         MeshEntity.prototype.loadMesh = function (config, cb) {
             var self = this;
             async.waterfall([
-                function buffers(next) {
+                function (next) {
                     if (!config.mesh) {
                         console.log("No Mesh file");
                         return next();
@@ -419,7 +531,7 @@ var BlazeEngine;
                         next();
                     });
                 },
-                function texture(next) {
+                function (next) {
                     if (!config.texture) {
                         console.log("No Texture file");
                         return next();
@@ -428,7 +540,7 @@ var BlazeEngine;
                         next();
                     });
                 },
-                function material(next) {
+                function (next) {
                     if (!config.material) {
                         console.log("No Material file");
                         return next();
@@ -453,8 +565,8 @@ var BlazeEngine;
     BlazeEngine.MeshEntity = MeshEntity;
     var TransformEntity = (function (_super) {
         __extends(TransformEntity, _super);
-        function TransformEntity() {
-            _super.call(this);
+        function TransformEntity(graph_id) {
+            _super.call(this, graph_id);
             this._matrix = mat4.create();
             this._position = vec3.create();
             this._size = vec3.create([1, 1, 1]);
@@ -562,8 +674,8 @@ var BlazeEngine;
     BlazeEngine.TransformEntity = TransformEntity;
     var LightEntity = (function (_super) {
         __extends(LightEntity, _super);
-        function LightEntity(ambient, diffuse, position, specular) {
-            _super.call(this);
+        function LightEntity(graph_id, ambient, diffuse, position, specular) {
+            _super.call(this, graph_id);
             this._ambient = ambient ? vec4.create(ambient) : vec4.create();
             this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
             this._position = position ? vec4.create(position) : vec4.create();
@@ -618,8 +730,8 @@ var BlazeEngine;
     BlazeEngine.LightEntity = LightEntity;
     var DirectionalLightEntity = (function (_super) {
         __extends(DirectionalLightEntity, _super);
-        function DirectionalLightEntity(ambient, diffuse, position, direction, cutoff) {
-            _super.call(this, ambient, diffuse, position);
+        function DirectionalLightEntity(graph_id, ambient, diffuse, position, direction, cutoff) {
+            _super.call(this, graph_id, ambient, diffuse, position);
             this._direction = direction ? vec3.create(direction) : vec3.create();
             this._cutoff = cutoff || 0.5;
         }
@@ -652,8 +764,8 @@ var BlazeEngine;
     BlazeEngine.DirectionalLightEntity = DirectionalLightEntity;
     var CameraEntity = (function (_super) {
         __extends(CameraEntity, _super);
-        function CameraEntity(options, type) {
-            _super.call(this);
+        function CameraEntity(graph_id, options, type) {
+            _super.call(this, graph_id);
             this._type = type || CAMERA_TYPE.ORBITING;
             this._cmatrix = mat4.create();
             this._up = vec3.create();
@@ -729,6 +841,28 @@ var BlazeEngine;
             mat4.multiplyVec4(m, [1, 0, 0, 0], this._right);
             mat4.multiplyVec4(m, [0, 1, 0, 0], this._up);
             mat4.multiplyVec4(m, [0, 0, 1, 0], this._normal);
+        };
+        CameraEntity.prototype.dolly = function (offset) {
+            var p = this._position;
+            var n = vec3.create();
+            var step = offset - this._steps;
+            vec3.normalize(this._normal, n);
+            var new_position = vec3.create();
+            if (this._type === CAMERA_TYPE.TRACKING) {
+                new_position.forEach(function (x, index) {
+                    x = p[index] - step * n[index];
+                });
+            }
+            else {
+                new_position.forEach(function (x, index) {
+                    if (index < 2)
+                        x = p[index];
+                    else
+                        x = p[index] - step;
+                });
+            }
+            this.position = new_position;
+            this._steps = offset;
         };
         CameraEntity.prototype.updateMatrix = function () {
             mat4.identity(this._cmatrix);
@@ -905,6 +1039,7 @@ var BlazeEngine;
             this._scene = new NodeElement(void 0, "Scene");
             this._matrixStack = new MatrixStack();
             this._isDrawing = false;
+            this._oid = utils.uuid();
         }
         Object.defineProperty(SceneGraph.prototype, "scene", {
             get: function () {
@@ -928,14 +1063,35 @@ var BlazeEngine;
         SceneGraph.prototype.createMainChildNode = function (type, entity) {
             return this._scene.createChildNode(type, entity);
         };
+        Object.defineProperty(SceneGraph.prototype, "oid", {
+            get: function () {
+                return this._oid;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        SceneGraph.prototype.setContext = function (canvas) {
+            Ketch.setCanvasToContext(this.oid, canvas);
+        };
         SceneGraph.prototype.buildDefaultGraph = function () {
-            var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity());
-            var TrCameraNode = this.createMainChildNode("TRCamera", new TransformEntity());
-            var TrMeshNode = this.createMainChildNode("TRMesh", new TransformEntity());
-            var LightNode = TrLightNode.createChildNode("Light", new LightEntity());
-            var CameraNode = TrCameraNode.createChildNode("Camera", new CameraEntity());
-            var MeshNode1 = TrMeshNode.createChildNode("Mesh", new MeshEntity());
-            var MeshNode2 = TrMeshNode.createChildNode("Texture", new MeshEntity());
+            var mesh = new MeshEntity(this.oid);
+            this.createMainChildNode("Mesh", mesh);
+            mesh.loadMesh({
+                mesh: "data/picky.obj", material: "data/test.mtl"
+            }, function () {
+                console.log("Loaded");
+            });
+            /* var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity(this.oid));
+             var TrCameraNode = this.createMainChildNode("TRCamera", new TransformEntity(this.oid));
+             var TrMeshNode = this.createMainChildNode("TRMesh", new TransformEntity(this.oid));
+     
+     
+             var LightNode = TrLightNode.createChildNode("Light", new LightEntity(this.oid));
+     
+             var CameraNode = TrCameraNode.createChildNode("Camera", new CameraEntity(this.oid));
+     
+             var MeshNode1 = TrMeshNode.createChildNode("Mesh", new MeshEntity(this.oid));
+             var MeshNode2 = TrMeshNode.createChildNode("Mesh", new MeshEntity(this.oid));*/
         };
         return SceneGraph;
     })();

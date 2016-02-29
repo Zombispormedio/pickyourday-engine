@@ -1,14 +1,17 @@
 module Resources {
 
-    export class MeshBuffers {
+    export class MeshBuffers extends Renderable {
         private _vbo; //Vertex Buffer Object;
         private _nbo; //Normal Buffer Object;
-        private _ibo; //Index Buffer Object;
         private _tbo; //Texture Coords Buffer Object;
+        private _ivbo; //Index Vertex Buffer Object;
+        private _inbo;//Index Normal Buffer Object;
+        private _itbo; //Index Texture Coords Buffer Object
+
         private _onload;
         private _src: string;
-        constructor() {
-
+        constructor(graph_id: string) {
+            super(graph_id);
         }
 
         public set onload(cb) {
@@ -20,7 +23,10 @@ module Resources {
             var self = this;
             var ext = utils.getExtension(src);
 
-            utils.load(src, function(data) {
+
+
+            utils.load(src, (data) => {
+
                 var obj;
                 switch (ext) {
                     case "obj": obj = self.parseOBJ(data);
@@ -30,6 +36,7 @@ module Resources {
                         break;
 
                 }
+
                 self.createBuffers(obj);
                 if (this._onload) this._onload();
             });
@@ -58,44 +65,74 @@ module Resources {
             };
             var lines = data.split("\n");
 
-            var vertex = lines.filter(function(a) {
+            var vertex = lines.filter((a) => {
                 return a[0] === 'v';
             });
 
-            var index = lines.filter(function(a) {
+            var index = lines.filter((a) => {
                 return a[0] === 'f';
             });
 
-            vertex.forEach(function(item) {
+
+
+            vertex.forEach((item) => {
                 var elems = item.replace("\r", "").split(" ");
                 var key = elems[0];
-                obj[key] = obj[key].concat(elems.slice(1).filter(function(a) {
+                obj[key] = obj[key].concat(elems.slice(1).filter((a) => {
                     return a !== "";
                 }));
             });
 
             var tempIndex = [];
-            index.forEach(function(item) {
+            index.forEach((item) => {
                 var elems = item.replace("\r", "").replace("f", "").split(" ");
-                tempIndex = tempIndex.concat(elems.slice(1).filter(function(a) {
+                tempIndex = tempIndex.concat(elems.slice(1).filter((a) => {
                     return a !== "";
                 }));
             });
 
-            tempIndex.forEach(function(item) {
-                var elems = item.split("/");
-                obj.iv = obj.iv.concat(parseInt(elems[0]) - 1);
-                obj.in = obj.in.concat(parseInt(elems[1]) - 1);
-                obj.it = obj.it.concat(parseInt(elems[2]) - 1);
-            });
 
+            tempIndex.forEach((item) => {
+                var elems = item.split("/");
+                obj.iv.push(parseInt(elems[0]) - 1);
+                obj.in.push(parseInt(elems[1]) - 1);
+                obj.it.push(parseInt(elems[2]) - 1);
+            });
 
             return obj;
 
         }
 
-        private createBuffers(obj: any): void {
 
+        private createBuffers(obj: any): void {
+            var gl=this.gl;
+            function createBuffer(data) {
+                return WebGLUtils.createBuffer(gl, data);
+            }
+            if (obj.v.length > 0)
+                this._vbo = createBuffer(obj.v);
+
+            if (obj.vn.length > 0)
+                this._nbo = createBuffer(obj.vn);
+
+            if (obj.vt.length > 0)
+                this._tbo = createBuffer(obj.vt);
+
+
+            function createIndexBuffer(data) {
+                return WebGLUtils.createIndexBuffer(gl, data);
+            }
+            
+               if (obj.iv.length > 0)
+                this._ivbo = createIndexBuffer(obj.iv);
+
+            if (obj.in.length > 0)
+                this._inbo = createIndexBuffer(obj.in);
+
+            if (obj.it.length > 0)
+                this._itbo = createIndexBuffer(obj.it);
+            
+        
         }
 
 
@@ -103,12 +140,12 @@ module Resources {
 
 
 
-    export class MeshTexture {
+    export class MeshTexture extends Renderable {
         private _texture;
         private _image;
         private _onload;
-        constructor() {
-            //this._object=gl.createTexture();
+        constructor(graph_id: string) {
+            super(graph_id);
             this._image = new Image();
 
         }
@@ -121,13 +158,13 @@ module Resources {
 
         public set src(filename: string) {
             this._image.onload = this.loadTextureImage(this._onload);
-            this._image.src=filename;
+            this._image.src = filename;
         }
 
         loadTextureImage(cb) {
-            return function() {
-                
-                
+            return () => {
+
+
                 if (cb) cb();
             }
         }
@@ -138,15 +175,16 @@ module Resources {
         }
     }
 
-    export class MeshMaterial {
+    export class MeshMaterial extends Renderable {
         private _ambient: Array<number>;
         private _diffuse: Array<number>;
         private _specular: Array<number>;
         private _transparent: number;
         private _onload;
         private _src: string;
-        
-        constructor(ambient?: Array<number>, diffuse?: Array<number>, specular?: Array<number>, shininess?: number) {
+
+        constructor(graph_id: string, ambient?: Array<number>, diffuse?: Array<number>, specular?: Array<number>, shininess?: number) {
+            super(graph_id);
             this._ambient = ambient ? vec4.create(ambient) : vec4.create();
             this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
             this._specular = specular ? vec4.create(specular) : vec4.create();
@@ -162,13 +200,12 @@ module Resources {
 
             var self = this;
 
-
-            utils.load(src, function(data) {
-                 var temp=self.parse(data);
-                 this._ambient=temp.Ka;
-                 this._diffuse=temp.Kd;
-                 this._specular=temp.Ks;
-                 this._transparent=temp.Ns;
+            utils.load(src, (data) => {
+                var temp = self.parse(data);
+                this._ambient = temp.Ka;
+                this._diffuse = temp.Kd;
+                this._specular = temp.Ks;
+                this._transparent = temp.Ns;
                 if (this._onload) this._onload();
             });
 
@@ -177,21 +214,21 @@ module Resources {
 
         parse(data: string): any {
             var obj = {};
-            var keys=["Ka", "Kd", "Ks", "Ns"];
+            var keys = ["Ka", "Kd", "Ks", "Ns"];
             var lines = data.split("\n");
-            lines.forEach(function(line){
-                var elems=line.split(" ");
-                var key=elems[0];
-                if(keys.indexOf(key)>-1){
-                    switch(key){
-                        case "Ns": obj["Ns"]=elems[1];
-                        break;
-                        default: obj[key]=elems.slice(1);
+            lines.forEach(function(line) {
+                var elems = line.split(" ");
+                var key = elems[0];
+                if (keys.indexOf(key) > -1) {
+                    switch (key) {
+                        case "Ns": obj["Ns"] = elems[1];
+                            break;
+                        default: obj[key] = elems.slice(1);
                     }
                 }
-                
+
             })
-            
+
             return obj;
         }
 

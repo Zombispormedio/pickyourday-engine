@@ -3,21 +3,21 @@ class MeshEntity extends Entity {
     private _texture: Resources.MeshTexture;
     private _buffers: Resources.MeshBuffers;
 
-    constructor() {
-        super();
+    constructor(graph_id:string) {
+        super(graph_id);
         this._material = null;
         this._texture = null;
         this._buffers = null;
     }
 
-    loadBuffers(filename, cb) {
-        this._buffers = new Resources.MeshBuffers();
+    loadBuffers(filename, cb) {        
+        this._buffers = new Resources.MeshBuffers(this.graphID);
         this._buffers.onload = cb;
         this._buffers.src = filename;
     }
 
     loadTexture(filename, cb) {
-        this._texture = new Resources.MeshTexture();
+        this._texture = new Resources.MeshTexture(this.graphID);
         this._texture.onload = cb;
         this._texture.src = filename;
     }
@@ -28,15 +28,16 @@ class MeshEntity extends Entity {
     }
 
     loadMaterial(filename, cb) {
-        this._material = new Resources.MeshMaterial();
+        this._material = new Resources.MeshMaterial(this.graphID);
         this._material.onload = cb;
         this._material.src = filename;
     }
 
     loadMesh(config, cb) {
+        
         var self = this;
         async.waterfall([
-            function buffers(next) {
+            (next) => {
                 if (!config.mesh) {
                     console.log("No Mesh file");
                     return next();
@@ -45,7 +46,7 @@ class MeshEntity extends Entity {
                     next();
                 });
             },
-            function texture(next) {
+            (next) => {
                 if (!config.texture) {
                     console.log("No Texture file");
                     return next();
@@ -54,7 +55,7 @@ class MeshEntity extends Entity {
                     next();
                 });
             },
-            function material(next) {
+            (next) => {
                 if (!config.material) {
                     console.log("No Material file");
                     return next();
@@ -63,8 +64,9 @@ class MeshEntity extends Entity {
                     next();
                 });
             }
-        ], function(err) {
+        ], (err) => {
             if (err) return console.log(err);
+            console.log(this);
             if (cb) cb();
         });
 
@@ -75,9 +77,9 @@ class MeshEntity extends Entity {
     beginDraw() {
 
     }
-    
-    endDraw(){
-        
+
+    endDraw() {
+
     }
 
 

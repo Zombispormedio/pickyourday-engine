@@ -1,8 +1,8 @@
 class DirectionalLightEntity extends LightEntity {
     private _direction: Array<number>;
     private _cutoff: number;
-    constructor(ambient?: Array<number>, diffuse?: Array<number>, position?: Array<number>, direction?: Array<number>, cutoff?: number) {
-        super(ambient, diffuse, position);
+    constructor(graph_id:string, ambient?: Array<number>, diffuse?: Array<number>, position?: Array<number>, direction?: Array<number>, cutoff?: number) {
+        super(graph_id,ambient, diffuse, position);
         this._direction = direction ? vec3.create(direction) : vec3.create();
         this._cutoff = cutoff || 0.5;
 

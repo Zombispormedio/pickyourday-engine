@@ -3,8 +3,8 @@ class TransformEntity extends Entity {
     private _position: Array<number>;
     private _size: Array<number>;
     private _rotation: ClassUtils.Rotation;
-    constructor() {
-        super();
+    constructor(graph_id:string) {
+        super(graph_id);
         this._matrix = mat4.create();
         this._position = vec3.create();
         this._size = vec3.create([1, 1, 1]);

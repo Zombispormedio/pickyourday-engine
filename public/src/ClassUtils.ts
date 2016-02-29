@@ -3,4 +3,5 @@ module ClassUtils{
         angle: number;
         axis: Array<number>;
     }
+    
 }

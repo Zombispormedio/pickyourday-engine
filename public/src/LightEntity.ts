@@ -3,8 +3,8 @@ class LightEntity extends Entity {
     private _diffuse: Array<number>;
     private _specular: Array<number>;
     private _position: Array<number>;
-    constructor(ambient?: Array<number>, diffuse?: Array<number>, position?: Array<number>, specular?:Array<number>) {
-        super();
+    constructor(graph_id:string, ambient?: Array<number>, diffuse?: Array<number>, position?: Array<number>, specular?:Array<number>) {
+        super(graph_id);
         this._ambient = ambient ? vec4.create(ambient) : vec4.create();
         this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
         this._position = position ? vec4.create(position) : vec4.create();
