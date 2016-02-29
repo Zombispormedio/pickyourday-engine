@@ -62,9 +62,19 @@ export module WebGLUtils {
             default: gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(data), gl.STATIC_DRAW);
         }
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-        
+
         return indexBuffer;
 
+    }
+    export function createTexture(gl, data) {
+        var texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, data);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        return texture;
     }
 
     export enum BUFFER_DRAW { STATIC, STREAM, DYNAMIC }
@@ -307,7 +317,7 @@ export module Resources {
 
 
         private createBuffers(obj: any): void {
-            var gl=this.gl;
+            var gl = this.gl;
             function createBuffer(data) {
                 return WebGLUtils.createBuffer(gl, data);
             }
@@ -324,8 +334,8 @@ export module Resources {
             function createIndexBuffer(data) {
                 return WebGLUtils.createIndexBuffer(gl, data);
             }
-            
-               if (obj.iv.length > 0)
+
+            if (obj.iv.length > 0)
                 this._ivbo = createIndexBuffer(obj.iv);
 
             if (obj.in.length > 0)
@@ -333,8 +343,8 @@ export module Resources {
 
             if (obj.it.length > 0)
                 this._itbo = createIndexBuffer(obj.it);
-            
-        
+
+
         }
 
 
@@ -365,6 +375,8 @@ export module Resources {
 
         loadTextureImage(cb) {
             return () => {
+
+                this._texture = WebGLUtils.createTexture(this.gl, this._image);
 
 
                 if (cb) cb();
@@ -408,7 +420,6 @@ export module Resources {
                 this._diffuse = temp.Kd;
                 this._specular = temp.Ks;
                 this._transparent = temp.Ns;
-                console.log(this);
                 if (this._onload) this._onload();
             });
 
@@ -537,14 +548,14 @@ export class MeshEntity extends Entity {
     private _texture: Resources.MeshTexture;
     private _buffers: Resources.MeshBuffers;
 
-    constructor(graph_id:string) {
+    constructor(graph_id: string) {
         super(graph_id);
         this._material = null;
         this._texture = null;
         this._buffers = null;
     }
 
-    loadBuffers(filename, cb) {        
+    loadBuffers(filename, cb) {
         this._buffers = new Resources.MeshBuffers(this.graphID);
         this._buffers.onload = cb;
         this._buffers.src = filename;
@@ -568,7 +579,7 @@ export class MeshEntity extends Entity {
     }
 
     loadMesh(config, cb) {
-        
+
         var self = this;
         async.waterfall([
             (next) => {
@@ -600,6 +611,8 @@ export class MeshEntity extends Entity {
             }
         ], (err) => {
             if (err) return console.log(err);
+            console.log(this);
+            
             if (cb) cb();
         });
 
@@ -1204,7 +1217,7 @@ export class SceneGraph {
         this.createMainChildNode("Mesh", mesh);
         
         mesh.loadMesh({
-            mesh:"data/picky.obj", material:"data/test.mtl"
+            mesh:"data/picky.obj", material:"data/test.mtl", texture:"data/webgl.png"
         }, function(){
             console.log("Loaded");
             

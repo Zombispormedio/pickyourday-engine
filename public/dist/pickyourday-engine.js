@@ -66,6 +66,17 @@ var BlazeEngine;
             return indexBuffer;
         }
         WebGLUtils.createIndexBuffer = createIndexBuffer;
+        function createTexture(gl, data) {
+            var texture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, data);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+            gl.generateMipmap(gl.TEXTURE_2D);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+            return texture;
+        }
+        WebGLUtils.createTexture = createTexture;
         (function (BUFFER_DRAW) {
             BUFFER_DRAW[BUFFER_DRAW["STATIC"] = 0] = "STATIC";
             BUFFER_DRAW[BUFFER_DRAW["STREAM"] = 1] = "STREAM";
@@ -340,7 +351,9 @@ var BlazeEngine;
                 configurable: true
             });
             MeshTexture.prototype.loadTextureImage = function (cb) {
+                var _this = this;
                 return function () {
+                    _this._texture = WebGLUtils.createTexture(_this.gl, _this._image);
                     if (cb)
                         cb();
                 };
@@ -381,7 +394,6 @@ var BlazeEngine;
                         _this._diffuse = temp.Kd;
                         _this._specular = temp.Ks;
                         _this._transparent = temp.Ns;
-                        console.log(_this);
                         if (_this._onload)
                             _this._onload();
                     });
@@ -520,6 +532,7 @@ var BlazeEngine;
             this._material.src = filename;
         };
         MeshEntity.prototype.loadMesh = function (config, cb) {
+            var _this = this;
             var self = this;
             async.waterfall([
                 function (next) {
@@ -552,6 +565,7 @@ var BlazeEngine;
             ], function (err) {
                 if (err)
                     return console.log(err);
+                console.log(_this);
                 if (cb)
                     cb();
             });
@@ -1077,7 +1091,7 @@ var BlazeEngine;
             var mesh = new MeshEntity(this.oid);
             this.createMainChildNode("Mesh", mesh);
             mesh.loadMesh({
-                mesh: "data/picky.obj", material: "data/test.mtl"
+                mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/webgl.png"
             }, function () {
                 console.log("Loaded");
             });

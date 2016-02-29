@@ -105,7 +105,7 @@ module Resources {
 
 
         private createBuffers(obj: any): void {
-            var gl=this.gl;
+            var gl = this.gl;
             function createBuffer(data) {
                 return WebGLUtils.createBuffer(gl, data);
             }
@@ -122,8 +122,8 @@ module Resources {
             function createIndexBuffer(data) {
                 return WebGLUtils.createIndexBuffer(gl, data);
             }
-            
-               if (obj.iv.length > 0)
+
+            if (obj.iv.length > 0)
                 this._ivbo = createIndexBuffer(obj.iv);
 
             if (obj.in.length > 0)
@@ -131,8 +131,8 @@ module Resources {
 
             if (obj.it.length > 0)
                 this._itbo = createIndexBuffer(obj.it);
-            
-        
+
+
         }
 
 
@@ -163,6 +163,8 @@ module Resources {
 
         loadTextureImage(cb) {
             return () => {
+
+                this._texture = WebGLUtils.createTexture(this.gl, this._image);
 
 
                 if (cb) cb();

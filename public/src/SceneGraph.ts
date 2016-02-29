@@ -51,7 +51,7 @@ class SceneGraph {
         this.createMainChildNode("Mesh", mesh);
         
         mesh.loadMesh({
-            mesh:"data/picky.obj", material:"data/test.mtl"
+            mesh:"data/picky.obj", material:"data/test.mtl", texture:"data/webgl.png"
         }, function(){
             console.log("Loaded");
             

@@ -3,14 +3,14 @@ class MeshEntity extends Entity {
     private _texture: Resources.MeshTexture;
     private _buffers: Resources.MeshBuffers;
 
-    constructor(graph_id:string) {
+    constructor(graph_id: string) {
         super(graph_id);
         this._material = null;
         this._texture = null;
         this._buffers = null;
     }
 
-    loadBuffers(filename, cb) {        
+    loadBuffers(filename, cb) {
         this._buffers = new Resources.MeshBuffers(this.graphID);
         this._buffers.onload = cb;
         this._buffers.src = filename;
@@ -34,7 +34,7 @@ class MeshEntity extends Entity {
     }
 
     loadMesh(config, cb) {
-        
+
         var self = this;
         async.waterfall([
             (next) => {
@@ -67,6 +67,7 @@ class MeshEntity extends Entity {
         ], (err) => {
             if (err) return console.log(err);
             console.log(this);
+            
             if (cb) cb();
         });
 

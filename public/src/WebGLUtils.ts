@@ -20,6 +20,7 @@ module WebGLUtils {
             return ctx;
         }
     }
+    export enum BUFFER_DRAW { STATIC, STREAM, DYNAMIC }
 
     export function createBuffer(gl, data, type_draw?: WebGLUtils.BUFFER_DRAW) {
         var buffer = gl.createBuffer();
@@ -61,10 +62,38 @@ module WebGLUtils {
             default: gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(data), gl.STATIC_DRAW);
         }
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-        
+
         return indexBuffer;
 
     }
+    export function createTexture(gl, data) {
+        var texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, data);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        return texture;
+    }
+    export function createShader(gl, type, shaderSource) {
+        var shader = gl.createShader(type);
 
-    export enum BUFFER_DRAW { STATIC, STREAM, DYNAMIC }
+        gl.shaderSource(shader, shaderSource);
+        gl.compileShader(shader);
+
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            alert(gl.getShaderInfoLog(shader));
+            return null;
+        }
+        return shader;
+    }
+    export function createProgram(gl, shaders) {
+        var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shaders.fragment);
+        var vertexShader = createShader(gl, gl.VERTEX_SHADER, shaders.vertex);
+        
+        var program= gl.createProgram();
+    }
+
+
 }
