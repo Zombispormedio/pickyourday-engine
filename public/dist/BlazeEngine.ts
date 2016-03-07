@@ -18,9 +18,13 @@ export module WebGLUtils {
             return null;
         }
         else {
+
+            ctx.viewportWidth = canvas.width;
+            ctx.viewportHeight = canvas.height;
             return ctx;
         }
     }
+    export enum BUFFER_DRAW { STATIC, STREAM, DYNAMIC }
 
     export function createBuffer(gl, data, type_draw?: WebGLUtils.BUFFER_DRAW) {
         var buffer = gl.createBuffer();
@@ -40,6 +44,10 @@ export module WebGLUtils {
         }
 
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+        buffer.itemSize = 3;
+        buffer.numItems = data.length / 3;
+
 
         return buffer;
     }
@@ -63,6 +71,9 @@ export module WebGLUtils {
         }
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
+        indexBuffer.itemSize = 1;
+        indexBuffer.numItems = data.length;
+
         return indexBuffer;
 
     }
@@ -76,15 +87,51 @@ export module WebGLUtils {
         gl.bindTexture(gl.TEXTURE_2D, null);
         return texture;
     }
+    export function createShader(gl, type, shaderSource) {
+        var shader = gl.createShader(type);
 
-    export enum BUFFER_DRAW { STATIC, STREAM, DYNAMIC }
+        gl.shaderSource(shader, shaderSource);
+        gl.compileShader(shader);
+
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            console.log(gl.getShaderInfoLog(shader));
+            return null;
+        }
+        return shader;
+    }
+    export function createProgram(gl, shaders) {
+        var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shaders.fragment);
+        var vertexShader = createShader(gl, gl.VERTEX_SHADER, shaders.vertex);
+
+        var program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS))
+            alert("No pueden iniciarse los shaders");
+
+        gl.useProgram(program);
+
+        return program;
+
+    }
+
+    export interface AttribPointer {
+        size: number,
+        normalized: boolean,
+        stride: number,
+        offset: number
+    }
+
+
 }
 export module ClassUtils{
     export interface Rotation {
         angle: number;
         axis: Array<number>;
     }
-    
+   
 }
 export module utils {
     export function s4() {
@@ -127,19 +174,90 @@ export module utils {
 
 export enum CAMERA_TYPE{ORBITING, TRACKING}
 export class Ketch {
-    private static _views=[];
-    static setCanvasToContext(key, canvas){
-        var context=WebGLUtils.getGLContext(canvas);
+    private static _views = [];
+    static setCanvasToContext(key, canvas) {
+        var context = WebGLUtils.getGLContext(canvas);
         Ketch.setContext(key, context);
     }
-    
-    static setContext(key, context){
-        Ketch._views[key]=context;
+
+    static setContext(key, context) {
+        Ketch._views[key].context = context;
     }
-    
-    static getContext(key){
-        return Ketch._views[key];
+
+    static getContext(key) {
+        return Ketch._views[key].context;
     }
+
+    static createProgram(key, shaders) {
+        var gl = Ketch.getContext(key);
+        var program = WebGLUtils.createProgram(gl, shaders);
+        Ketch.setProgram(key, program);
+    }
+    static setProgram(key, program) {
+        Ketch._views[key].program = program;
+    }
+    static getProgram(key) {
+        return Ketch._views[key].program;
+    }
+
+    static createView(key) {
+        Ketch._views[key] = {};
+    }
+
+    static setAttributeLocations(key, attribs_names) {
+        var view = Ketch._views[key];
+        var gl = view.context;
+        var prg = view.program;
+
+
+        view.attribs = attribs_names.reduce(function(prev, attr) {
+            prev[attr] = gl.getAttribLocation(prg, attr);
+            return prev;
+        }, {});
+
+    }
+
+    static getAttrib(view_key, attr_key) {
+        return Ketch._views[view_key].attribs[attr_key];
+    }
+
+    static getUniform(view_key, uniform_key) {
+        return Ketch._views[view_key].uniforms[uniform_key];
+    }
+
+    static setUniformLocations(key, uniform_names) {
+        var view = Ketch._views[key];
+        var gl = view.context;
+        var prg = view.program;
+
+
+        view.uniforms = uniform_names.reduce(function(prev, attr) {
+            prev[attr] = gl.getUniformLocation(prg, attr);
+            return prev;
+        }, {});
+    }
+
+    static enableAttrib(view_key, attr_key, pointer?: WebGLUtils.AttribPointer) {
+        var index = Ketch.getAttrib(view_key, attr_key);
+
+        var gl = Ketch.getContext(view_key);
+
+        gl.enableVertexAttribArray(index);
+
+        if (pointer) {
+            gl.vertexAttribPointer(index, pointer.size || 3, gl.FLOAT, pointer.normalized || false, pointer.stride || 0, pointer.stride || 0);
+        } else {
+            gl.vertexAttribPointer(index, 3, gl.FLOAT, false, 0, 0);
+        }
+    }
+
+    static disableAttrib(view_key, attr_key) {
+        var index = Ketch.getAttrib(view_key, attr_key);
+        var gl = Ketch.getContext(view_key);
+        gl.disableVertexAttribArray(index);
+    }
+
+
 }
 export class Renderable {
     private _graph_id: string;
@@ -153,9 +271,15 @@ export class Renderable {
     }
 
 
-    public get gl(): string {
+    public get gl() {
         return Ketch.getContext(this.graphID);
     }
+    
+    public get program() {
+        return Ketch.getProgram(this.graphID);
+    }
+    
+ 
 }
 export class Entity extends Renderable {
     constructor(graph_id:string){
@@ -347,6 +471,31 @@ export module Resources {
 
         }
 
+        public get vbo(): string {
+            return this._vbo;
+        }
+
+        public get nbo(): string {
+            return this._nbo;
+        }
+
+        public get tbo(): string {
+            return this._tbo;
+        }
+
+        public get ivbo(): string {
+            return this._ivbo;
+        }
+
+        public get inbo(): string {
+            return this._inbo;
+        }
+
+        public get itbo(): string {
+            return this._itbo;
+        }
+
+
 
     }
 
@@ -488,6 +637,56 @@ export module Resources {
 
     }
 
+    export class File {
+        private _onload;
+        private _data: string;
+        private _src: string
+        public set onload(v) {
+            this._onload = v;
+        }
+
+        public set src(src: string) {
+
+            utils.load(src, data=> {
+
+                this._data = data;
+                this._onload();
+            });
+        }
+
+
+        public get data(): string {
+            return this._data;
+        }
+
+    }
+    export class Shaders {
+        public _fragment: Resources.File;
+        public _vertex: Resources.File;
+        constructor() {
+            this._fragment = new Resources.File();
+            this._vertex = new Resources.File();
+
+        }
+
+
+        public get fragment(): Resources.File {
+            return this._fragment;
+        }
+
+        public get vertex(): Resources.File {
+            return this._vertex;
+        }
+
+
+        public get Sources(): any {
+            return { fragment: this._fragment.data, vertex: this._vertex.data }
+        }
+
+
+
+    }
+
 }
 export class AnimationEntity extends Entity {
     private _frequency: number;
@@ -611,8 +810,7 @@ export class MeshEntity extends Entity {
             }
         ], (err) => {
             if (err) return console.log(err);
-            console.log(this);
-            
+
             if (cb) cb();
         });
 
@@ -621,11 +819,24 @@ export class MeshEntity extends Entity {
     }
 
     beginDraw() {
+        var gl = this.gl;
+        console.log(this._buffers);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
+
+        Ketch.enableAttrib(this.graphID, "a_position");
+        
+        var ivbo = this._buffers.ivbo;
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ivbo);
+
+        gl.drawElements(gl.TRIANGLES, ivbo.numItems, gl.UNSIGNED_SHORT, 0);
 
     }
 
     endDraw() {
-
+        var gl = this.gl;
+        Ketch.disableAttrib(this.graphID, "a_position");
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
     }
 
 
@@ -1164,18 +1375,31 @@ export class NodeElement implements INodeElement {
 
     }
 }
-export class SceneGraph {
+export class SceneGraph extends Renderable {
     private _scene: NodeElement;
     private _isDrawing: boolean;
     private _matrixStack: MatrixStack;
-    private _oid:string;
+    private _oid: string;
+
+    private _shaders: Resources.Shaders;
+
+    private static FRAGMENT_SOURCE = "shaders/main.frag";
+    private static VERTEX_SOURCE = "shaders/main.vert";
+    private static UNIFORMS = [];
+    private static ATTRIBUTES = ['a_position'];
+
+
+
+
     constructor() {
 
+        this._shaders = new Resources.Shaders();
         this._scene = new NodeElement(void 0, "Scene");
-        this._matrixStack= new MatrixStack();
+        this._matrixStack = new MatrixStack();
         this._isDrawing = false;
-        this._oid=utils.uuid();
-
+        this._oid = utils.uuid();
+        super(this._oid);
+        Ketch.createView(this._oid);
     }
 
 
@@ -1189,55 +1413,119 @@ export class SceneGraph {
     }
 
     public draw(): void {
+        var gl = this.gl;
         this._isDrawing = true;
+
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         this._scene.draw(this._matrixStack);
+
+
+
         this._isDrawing = false;
     }
 
     public createMainChildNode(type: string, entity: Entity): NodeElement {
         return this._scene.createChildNode(type, entity);
     }
-    
-    
-    public get oid() : string {
+
+
+    public get oid(): string {
         return this._oid;
     }
-    
-    
-    public setContext(canvas){
-        Ketch.setCanvasToContext(this.oid,canvas);
-        
+
+
+    public setContext(canvas) {
+        Ketch.setCanvasToContext(this.oid, canvas);
+
     }
-    
-    
-    
+
+    private loadProgram(cb, shaders_config?) {
+        if (!shaders_config) {
+            shaders_config = {
+                fragment: SceneGraph.FRAGMENT_SOURCE,
+                vertex: SceneGraph.VERTEX_SOURCE
+            }
+        }
+
+
+        async.waterfall([
+            next=> {
+
+
+                this._shaders.fragment.onload = () => {
+                    next()
+                };
+                this._shaders.fragment.src = shaders_config.fragment || SceneGraph.FRAGMENT_SOURCE;
+
+
+            },
+            next=> {
+                this._shaders.vertex.onload = () => {
+                    next()
+                };
+                this._shaders.vertex.src = shaders_config.vertex || SceneGraph.VERTEX_SOURCE;
+
+            }
+        ], (err) => {
+            if (err) return console.log(err);
+
+            Ketch.createProgram(this._oid, this._shaders.Sources);
+
+
+            if (cb) cb();
+        });
+    }
+
 
     public buildDefaultGraph(): void {
-        var mesh=new MeshEntity(this.oid);
+
+        var mesh = new MeshEntity(this.oid);
         this.createMainChildNode("Mesh", mesh);
-        
-        mesh.loadMesh({
-            mesh:"data/picky.obj", material:"data/test.mtl", texture:"data/webgl.png"
-        }, function(){
-            console.log("Loaded");
-            
-        });
 
-       /* var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity(this.oid));
-        var TrCameraNode = this.createMainChildNode("TRCamera", new TransformEntity(this.oid));
-        var TrMeshNode = this.createMainChildNode("TRMesh", new TransformEntity(this.oid));
-
-
-        var LightNode = TrLightNode.createChildNode("Light", new LightEntity(this.oid));
-
-        var CameraNode = TrCameraNode.createChildNode("Camera", new CameraEntity(this.oid));
-
-        var MeshNode1 = TrMeshNode.createChildNode("Mesh", new MeshEntity(this.oid));
-        var MeshNode2 = TrMeshNode.createChildNode("Mesh", new MeshEntity(this.oid));*/
-
-  
+        /* var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity(this.oid));
+         var TrCameraNode = this.createMainChildNode("TRCamera", new TransformEntity(this.oid));
+         var TrMeshNode = this.createMainChildNode("TRMesh", new TransformEntity(this.oid));
+ 
+ 
+         var LightNode = TrLightNode.createChildNode("Light", new LightEntity(this.oid));
+ 
+         var CameraNode = TrCameraNode.createChildNode("Camera", new CameraEntity(this.oid));
+ 
+         var MeshNode1 = TrMeshNode.createChildNode("Mesh", new MeshEntity(this.oid));
+         var MeshNode2 = TrMeshNode.createChildNode("Mesh", new MeshEntity(this.oid));*/
 
 
+
+
+    }
+
+
+
+    public configure(cb) {
+        var self = this;
+        var gl = this.gl;
+        async.waterfall([
+            (next) => {
+                self.loadProgram(next);
+            },
+            (next) => {
+                var mesh = this._scene.childNodes[0].entity;
+                mesh.loadMesh({
+                    mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/webgl.png"
+                }, () => {
+                    console.log(mesh);
+                    next();
+                });
+            }
+        ], (err) => {
+
+            Ketch.setAttributeLocations(this._oid, SceneGraph.ATTRIBUTES);
+            Ketch.setUniformLocations(this._oid, SceneGraph.UNIFORMS);
+            gl.enable(gl.DEPTH_TEST);
+
+            if (cb) cb();
+        })
     }
 
 

@@ -66,8 +66,7 @@ class MeshEntity extends Entity {
             }
         ], (err) => {
             if (err) return console.log(err);
-            console.log(this);
-            
+
             if (cb) cb();
         });
 
@@ -76,11 +75,24 @@ class MeshEntity extends Entity {
     }
 
     beginDraw() {
+        var gl = this.gl;
+        console.log(this._buffers);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
+
+        Ketch.enableAttrib(this.graphID, "a_position");
+        
+        var ivbo = this._buffers.ivbo;
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ivbo);
+
+        gl.drawElements(gl.TRIANGLES, ivbo.numItems, gl.UNSIGNED_SHORT, 0);
 
     }
 
     endDraw() {
-
+        var gl = this.gl;
+        Ketch.disableAttrib(this.graphID, "a_position");
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
     }
 
 

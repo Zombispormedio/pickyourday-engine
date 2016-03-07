@@ -25,7 +25,7 @@ var config = Object.create(Config.prototype, {
     lib:secure_path("app/lib/"),
     models:secure_path("app/models/"),
     ctrl:secure_path("app/ctrl/"),
-    port:secure(process.env.PORT || 5001)
+    port:secure(process.env.PORT || 5080)
 });
 
 

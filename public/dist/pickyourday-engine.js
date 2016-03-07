@@ -24,10 +24,18 @@ var BlazeEngine;
                 return null;
             }
             else {
+                ctx.viewportWidth = canvas.width;
+                ctx.viewportHeight = canvas.height;
                 return ctx;
             }
         }
         WebGLUtils.getGLContext = getGLContext;
+        (function (BUFFER_DRAW) {
+            BUFFER_DRAW[BUFFER_DRAW["STATIC"] = 0] = "STATIC";
+            BUFFER_DRAW[BUFFER_DRAW["STREAM"] = 1] = "STREAM";
+            BUFFER_DRAW[BUFFER_DRAW["DYNAMIC"] = 2] = "DYNAMIC";
+        })(WebGLUtils.BUFFER_DRAW || (WebGLUtils.BUFFER_DRAW = {}));
+        var BUFFER_DRAW = WebGLUtils.BUFFER_DRAW;
         function createBuffer(gl, data, type_draw) {
             var buffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -44,6 +52,8 @@ var BlazeEngine;
                 default: gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
             }
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            buffer.itemSize = 3;
+            buffer.numItems = data.length / 3;
             return buffer;
         }
         WebGLUtils.createBuffer = createBuffer;
@@ -63,6 +73,8 @@ var BlazeEngine;
                 default: gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(data), gl.STATIC_DRAW);
             }
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+            indexBuffer.itemSize = 1;
+            indexBuffer.numItems = data.length;
             return indexBuffer;
         }
         WebGLUtils.createIndexBuffer = createIndexBuffer;
@@ -77,12 +89,30 @@ var BlazeEngine;
             return texture;
         }
         WebGLUtils.createTexture = createTexture;
-        (function (BUFFER_DRAW) {
-            BUFFER_DRAW[BUFFER_DRAW["STATIC"] = 0] = "STATIC";
-            BUFFER_DRAW[BUFFER_DRAW["STREAM"] = 1] = "STREAM";
-            BUFFER_DRAW[BUFFER_DRAW["DYNAMIC"] = 2] = "DYNAMIC";
-        })(WebGLUtils.BUFFER_DRAW || (WebGLUtils.BUFFER_DRAW = {}));
-        var BUFFER_DRAW = WebGLUtils.BUFFER_DRAW;
+        function createShader(gl, type, shaderSource) {
+            var shader = gl.createShader(type);
+            gl.shaderSource(shader, shaderSource);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.log(gl.getShaderInfoLog(shader));
+                return null;
+            }
+            return shader;
+        }
+        WebGLUtils.createShader = createShader;
+        function createProgram(gl, shaders) {
+            var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shaders.fragment);
+            var vertexShader = createShader(gl, gl.VERTEX_SHADER, shaders.vertex);
+            var program = gl.createProgram();
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+            gl.linkProgram(program);
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS))
+                alert("No pueden iniciarse los shaders");
+            gl.useProgram(program);
+            return program;
+        }
+        WebGLUtils.createProgram = createProgram;
     })(WebGLUtils = BlazeEngine.WebGLUtils || (BlazeEngine.WebGLUtils = {}));
     var utils;
     (function (utils) {
@@ -134,10 +164,64 @@ var BlazeEngine;
             Ketch.setContext(key, context);
         };
         Ketch.setContext = function (key, context) {
-            Ketch._views[key] = context;
+            Ketch._views[key].context = context;
         };
         Ketch.getContext = function (key) {
-            return Ketch._views[key];
+            return Ketch._views[key].context;
+        };
+        Ketch.createProgram = function (key, shaders) {
+            var gl = Ketch.getContext(key);
+            var program = WebGLUtils.createProgram(gl, shaders);
+            Ketch.setProgram(key, program);
+        };
+        Ketch.setProgram = function (key, program) {
+            Ketch._views[key].program = program;
+        };
+        Ketch.getProgram = function (key) {
+            return Ketch._views[key].program;
+        };
+        Ketch.createView = function (key) {
+            Ketch._views[key] = {};
+        };
+        Ketch.setAttributeLocations = function (key, attribs_names) {
+            var view = Ketch._views[key];
+            var gl = view.context;
+            var prg = view.program;
+            view.attribs = attribs_names.reduce(function (prev, attr) {
+                prev[attr] = gl.getAttribLocation(prg, attr);
+                return prev;
+            }, {});
+        };
+        Ketch.getAttrib = function (view_key, attr_key) {
+            return Ketch._views[view_key].attribs[attr_key];
+        };
+        Ketch.getUniform = function (view_key, uniform_key) {
+            return Ketch._views[view_key].uniforms[uniform_key];
+        };
+        Ketch.setUniformLocations = function (key, uniform_names) {
+            var view = Ketch._views[key];
+            var gl = view.context;
+            var prg = view.program;
+            view.uniforms = uniform_names.reduce(function (prev, attr) {
+                prev[attr] = gl.getUniformLocation(prg, attr);
+                return prev;
+            }, {});
+        };
+        Ketch.enableAttrib = function (view_key, attr_key, pointer) {
+            var index = Ketch.getAttrib(view_key, attr_key);
+            var gl = Ketch.getContext(view_key);
+            gl.enableVertexAttribArray(index);
+            if (pointer) {
+                gl.vertexAttribPointer(index, pointer.size || 3, gl.FLOAT, pointer.normalized || false, pointer.stride || 0, pointer.stride || 0);
+            }
+            else {
+                gl.vertexAttribPointer(index, 3, gl.FLOAT, false, 0, 0);
+            }
+        };
+        Ketch.disableAttrib = function (view_key, attr_key) {
+            var index = Ketch.getAttrib(view_key, attr_key);
+            var gl = Ketch.getContext(view_key);
+            gl.disableVertexAttribArray(index);
         };
         Ketch._views = [];
         return Ketch;
@@ -157,6 +241,13 @@ var BlazeEngine;
         Object.defineProperty(Renderable.prototype, "gl", {
             get: function () {
                 return Ketch.getContext(this.graphID);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Renderable.prototype, "program", {
+            get: function () {
+                return Ketch.getProgram(this.graphID);
             },
             enumerable: true,
             configurable: true
@@ -326,6 +417,48 @@ var BlazeEngine;
                 if (obj.it.length > 0)
                     this._itbo = createIndexBuffer(obj.it);
             };
+            Object.defineProperty(MeshBuffers.prototype, "vbo", {
+                get: function () {
+                    return this._vbo;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(MeshBuffers.prototype, "nbo", {
+                get: function () {
+                    return this._nbo;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(MeshBuffers.prototype, "tbo", {
+                get: function () {
+                    return this._tbo;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(MeshBuffers.prototype, "ivbo", {
+                get: function () {
+                    return this._ivbo;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(MeshBuffers.prototype, "inbo", {
+                get: function () {
+                    return this._inbo;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(MeshBuffers.prototype, "itbo", {
+                get: function () {
+                    return this._itbo;
+                },
+                enumerable: true,
+                configurable: true
+            });
             return MeshBuffers;
         })(Renderable);
         Resources.MeshBuffers = MeshBuffers;
@@ -462,6 +595,66 @@ var BlazeEngine;
             return MeshMaterial;
         })(Renderable);
         Resources.MeshMaterial = MeshMaterial;
+        var File = (function () {
+            function File() {
+            }
+            Object.defineProperty(File.prototype, "onload", {
+                set: function (v) {
+                    this._onload = v;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(File.prototype, "src", {
+                set: function (src) {
+                    var _this = this;
+                    utils.load(src, function (data) {
+                        _this._data = data;
+                        _this._onload();
+                    });
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(File.prototype, "data", {
+                get: function () {
+                    return this._data;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            return File;
+        })();
+        Resources.File = File;
+        var Shaders = (function () {
+            function Shaders() {
+                this._fragment = new Resources.File();
+                this._vertex = new Resources.File();
+            }
+            Object.defineProperty(Shaders.prototype, "fragment", {
+                get: function () {
+                    return this._fragment;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Shaders.prototype, "vertex", {
+                get: function () {
+                    return this._vertex;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Shaders.prototype, "Sources", {
+                get: function () {
+                    return { fragment: this._fragment.data, vertex: this._vertex.data };
+                },
+                enumerable: true,
+                configurable: true
+            });
+            return Shaders;
+        })();
+        Resources.Shaders = Shaders;
     })(Resources = BlazeEngine.Resources || (BlazeEngine.Resources = {}));
     var AnimationEntity = (function (_super) {
         __extends(AnimationEntity, _super);
@@ -532,7 +725,6 @@ var BlazeEngine;
             this._material.src = filename;
         };
         MeshEntity.prototype.loadMesh = function (config, cb) {
-            var _this = this;
             var self = this;
             async.waterfall([
                 function (next) {
@@ -565,14 +757,24 @@ var BlazeEngine;
             ], function (err) {
                 if (err)
                     return console.log(err);
-                console.log(_this);
                 if (cb)
                     cb();
             });
         };
         MeshEntity.prototype.beginDraw = function () {
+            var gl = this.gl;
+            console.log(this._buffers);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
+            Ketch.enableAttrib(this.graphID, "a_position");
+            var ivbo = this._buffers.ivbo;
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ivbo);
+            gl.drawElements(gl.TRIANGLES, ivbo.numItems, gl.UNSIGNED_SHORT, 0);
         };
         MeshEntity.prototype.endDraw = function () {
+            var gl = this.gl;
+            Ketch.disableAttrib(this.graphID, "a_position");
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
         };
         return MeshEntity;
     })(Entity);
@@ -1048,12 +1250,16 @@ var BlazeEngine;
         return NodeElement;
     })();
     BlazeEngine.NodeElement = NodeElement;
-    var SceneGraph = (function () {
+    var SceneGraph = (function (_super) {
+        __extends(SceneGraph, _super);
         function SceneGraph() {
+            this._shaders = new Resources.Shaders();
             this._scene = new NodeElement(void 0, "Scene");
             this._matrixStack = new MatrixStack();
             this._isDrawing = false;
             this._oid = utils.uuid();
+            _super.call(this, this._oid);
+            Ketch.createView(this._oid);
         }
         Object.defineProperty(SceneGraph.prototype, "scene", {
             get: function () {
@@ -1070,7 +1276,10 @@ var BlazeEngine;
             configurable: true
         });
         SceneGraph.prototype.draw = function () {
+            var gl = this.gl;
             this._isDrawing = true;
+            gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             this._scene.draw(this._matrixStack);
             this._isDrawing = false;
         };
@@ -1087,14 +1296,38 @@ var BlazeEngine;
         SceneGraph.prototype.setContext = function (canvas) {
             Ketch.setCanvasToContext(this.oid, canvas);
         };
+        SceneGraph.prototype.loadProgram = function (cb, shaders_config) {
+            var _this = this;
+            if (!shaders_config) {
+                shaders_config = {
+                    fragment: SceneGraph.FRAGMENT_SOURCE,
+                    vertex: SceneGraph.VERTEX_SOURCE
+                };
+            }
+            async.waterfall([
+                function (next) {
+                    _this._shaders.fragment.onload = function () {
+                        next();
+                    };
+                    _this._shaders.fragment.src = shaders_config.fragment || SceneGraph.FRAGMENT_SOURCE;
+                },
+                function (next) {
+                    _this._shaders.vertex.onload = function () {
+                        next();
+                    };
+                    _this._shaders.vertex.src = shaders_config.vertex || SceneGraph.VERTEX_SOURCE;
+                }
+            ], function (err) {
+                if (err)
+                    return console.log(err);
+                Ketch.createProgram(_this._oid, _this._shaders.Sources);
+                if (cb)
+                    cb();
+            });
+        };
         SceneGraph.prototype.buildDefaultGraph = function () {
             var mesh = new MeshEntity(this.oid);
             this.createMainChildNode("Mesh", mesh);
-            mesh.loadMesh({
-                mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/webgl.png"
-            }, function () {
-                console.log("Loaded");
-            });
             /* var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity(this.oid));
              var TrCameraNode = this.createMainChildNode("TRCamera", new TransformEntity(this.oid));
              var TrMeshNode = this.createMainChildNode("TRMesh", new TransformEntity(this.oid));
@@ -1107,7 +1340,36 @@ var BlazeEngine;
              var MeshNode1 = TrMeshNode.createChildNode("Mesh", new MeshEntity(this.oid));
              var MeshNode2 = TrMeshNode.createChildNode("Mesh", new MeshEntity(this.oid));*/
         };
+        SceneGraph.prototype.configure = function (cb) {
+            var _this = this;
+            var self = this;
+            var gl = this.gl;
+            async.waterfall([
+                function (next) {
+                    self.loadProgram(next);
+                },
+                function (next) {
+                    var mesh = _this._scene.childNodes[0].entity;
+                    mesh.loadMesh({
+                        mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/webgl.png"
+                    }, function () {
+                        console.log(mesh);
+                        next();
+                    });
+                }
+            ], function (err) {
+                Ketch.setAttributeLocations(_this._oid, SceneGraph.ATTRIBUTES);
+                Ketch.setUniformLocations(_this._oid, SceneGraph.UNIFORMS);
+                gl.enable(gl.DEPTH_TEST);
+                if (cb)
+                    cb();
+            });
+        };
+        SceneGraph.FRAGMENT_SOURCE = "shaders/main.frag";
+        SceneGraph.VERTEX_SOURCE = "shaders/main.vert";
+        SceneGraph.UNIFORMS = [];
+        SceneGraph.ATTRIBUTES = ['a_position'];
         return SceneGraph;
-    })();
+    })(Renderable);
     BlazeEngine.SceneGraph = SceneGraph;
 })(BlazeEngine || (BlazeEngine = {}));

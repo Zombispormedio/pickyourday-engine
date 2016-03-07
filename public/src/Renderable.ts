@@ -10,7 +10,13 @@ class Renderable {
     }
 
 
-    public get gl(): string {
+    public get gl() {
         return Ketch.getContext(this.graphID);
     }
+    
+    public get program() {
+        return Ketch.getProgram(this.graphID);
+    }
+    
+ 
 }

@@ -17,6 +17,9 @@ module WebGLUtils {
             return null;
         }
         else {
+
+            ctx.viewportWidth = canvas.width;
+            ctx.viewportHeight = canvas.height;
             return ctx;
         }
     }
@@ -41,6 +44,10 @@ module WebGLUtils {
 
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
+        buffer.itemSize = 3;
+        buffer.numItems = data.length / 3;
+
+
         return buffer;
     }
 
@@ -63,6 +70,9 @@ module WebGLUtils {
         }
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
+        indexBuffer.itemSize = 1;
+        indexBuffer.numItems = data.length;
+
         return indexBuffer;
 
     }
@@ -83,7 +93,7 @@ module WebGLUtils {
         gl.compileShader(shader);
 
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            alert(gl.getShaderInfoLog(shader));
+            console.log(gl.getShaderInfoLog(shader));
             return null;
         }
         return shader;
@@ -104,6 +114,13 @@ module WebGLUtils {
 
         return program;
 
+    }
+
+    export interface AttribPointer {
+        size: number,
+        normalized: boolean,
+        stride: number,
+        offset: number
     }
 
 
