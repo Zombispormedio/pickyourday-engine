@@ -8,6 +8,7 @@ class MeshEntity extends Entity {
         this._material = null;
         this._texture = null;
         this._buffers = null;
+        
     }
 
     loadBuffers(filename, cb) {

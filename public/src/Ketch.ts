@@ -1,5 +1,5 @@
 class Ketch {
-    private static _views = [];
+    private static _views ={} ;
     static setCanvasToContext(key, canvas) {
         var context = WebGLUtils.getGLContext(canvas);
         Ketch.setContext(key, context);
@@ -70,7 +70,7 @@ class Ketch {
         gl.enableVertexAttribArray(index);
 
         if (pointer) {
-            gl.vertexAttribPointer(index, pointer.size || 3, gl.FLOAT, pointer.normalized || false, pointer.stride || 0, pointer.stride || 0);
+            gl.vertexAttribPointer(index, pointer.size || 3, gl.FLOAT, pointer.normalized || false, pointer.stride || 0, pointer.offset || 0);
         } else {
             gl.vertexAttribPointer(index, 3, gl.FLOAT, false, 0, 0);
         }
