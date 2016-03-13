@@ -8,12 +8,12 @@ const MODULE_NAME="BlazeEngine";
 const DST_FILE="pickyourday-engine";
 
 
-function run_cmd(cmd, args, cb,end) {
+function run_cmd(cmd, args, out,end) {
     var spawn = require('child_process').spawn,
         child = spawn(cmd, args),
         me=this;
         
-    child.stdout.on('data', function (buffer) { cb(me, buffer); });
+    child.stdout.on('data', function (buffer) { out(me, buffer); });
     child.stdout.on('end', end);
 }
 
