@@ -106,8 +106,9 @@ class TransformEntity extends Entity {
         mat4.scale(this._matrix, this._size);
 
         var rad = this._rotation.angle * Math.PI / 180;
+    
         mat4.rotate(this._matrix, rad, this._rotation.axis);
-        matrixStack.setUniforms();
+        matrixStack.setUp();
             
     }
 

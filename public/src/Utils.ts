@@ -5,30 +5,34 @@ module utils {
             .substring(1);
     }
     export function uuid(name?) {
-        var id=s4() + s4();
-        return name?name+id:id;
+        var id = s4() + s4();
+        return name ? name + id : id;
     }
 
     export function normalizeNaN(vec) {
-        return vec.map(a=> { if (Number.isNaN(a)) a = 0; return a; })
+        return vec.map(a => { if (Number.isNaN(a)) a = 0; return a; })
     }
 
     export function load(url, callback) {
         var request = new XMLHttpRequest();
         request.open('GET', url, true);
-        request.addEventListener('load', ()=> {
+        request.addEventListener('load', () => {
             callback(request.responseText);
         });
         request.send();
     }
-    
-    export function getExtension(str:string){
-        var elems=str.split(".");
-        return elems[elems.length-1];
+
+    export function getExtension(str: string) {
+        var elems = str.split(".");
+        return elems[elems.length - 1];
     }
-    
-    export function nowInMilliseconds(){
-        return  (new Date()).getTime();
+
+    export function nowInMilliseconds() {
+        return (new Date()).getTime();
+    }
+
+    export function degToRad(d) {
+        return d * Math.PI / 180;
     }
 
 

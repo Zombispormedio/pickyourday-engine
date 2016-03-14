@@ -82,8 +82,9 @@ class MeshEntity extends Entity {
     }
 
     beginDraw() {
+        
         var gl = this.gl;
-       
+      
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 
         Ketch.enableAttrib(this.graphID, "a_position");

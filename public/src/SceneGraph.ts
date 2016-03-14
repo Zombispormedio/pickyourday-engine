@@ -5,6 +5,7 @@ class SceneGraph extends Renderable {
     private _oid: string;
 
     private _shaders: Resources.Shaders;
+    private _loaderBuffer: Array<MeshEntity>;
 
     private static FRAGMENT_SOURCE = "shaders/main.frag";
     private static VERTEX_SOURCE = "shaders/main.vert";
@@ -21,6 +22,7 @@ class SceneGraph extends Renderable {
         this._shaders = new Resources.Shaders();
         this._scene = new NodeElement(void 0, "Scene");
         this._matrixStack = new MatrixStack(this._oid);
+        this._loaderBuffer = [];
         this._isDrawing = false;
         Ketch.createView(this._oid);
     }
@@ -46,16 +48,14 @@ class SceneGraph extends Renderable {
         gl.clearDepth(1.0);
     }
 
-    public draw():void{
-     
-            var gl = this.gl;
-            this._isDrawing = true;
-            gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-            this._scene.draw(this._matrixStack);
-            this._isDrawing = false;
-        
-
+    public draw(): void {
+        var gl = this.gl;
+        this._isDrawing = true;
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        this._matrixStack.Perspective();
+        this._scene.draw(this._matrixStack);
+        this._isDrawing = false;
     }
 
     public createMainChildNode(type: string, entity: Entity): NodeElement {
@@ -112,13 +112,20 @@ class SceneGraph extends Renderable {
 
 
     public buildDefaultGraph(): void {
-
+        var tr=this.createTransform();
+       var TrMeshNode = this.createMainChildNode("TRMesh", tr);
         var mesh = this.createMesh({ mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/webgl.png" });
         this.createMainChildNode("Mesh", mesh);
 
+        tr.position=[1, 0.0, -7];
+        
+       
+        tr.setAngle(90);
+        tr.setAxis([0,1,0])
+
         /* var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity(this.oid));
          var TrCameraNode = this.createMainChildNode("TRCamera", new TransformEntity(this.oid));
-         var TrMeshNode = this.createMainChildNode("TRMesh", new TransformEntity(this.oid));
+         
  
  
          var LightNode = TrLightNode.createChildNode("Light", new LightEntity(this.oid));
@@ -132,16 +139,28 @@ class SceneGraph extends Renderable {
 
 
     }
+    
+    
 
 
-    public createMesh(config: { mesh: string, texture: string, material: string }): MeshEntity {
-        return new MeshEntity(this.oid, config.mesh, config.material, config.texture);
+    public createMesh(config: { mesh?: string, texture?: string, material?: string }): MeshEntity {
+        var mesh = new MeshEntity(this.oid, config.mesh, config.material, config.texture);
+        this._loaderBuffer.push(mesh);
+        return mesh;
     }
 
     public createTransform(position?: Array<number>, size?: Array<number>, rotation?: ClassUtils.Rotation) {
         return new TransformEntity(this.oid, position, size, rotation);
     }
 
+    public loadAllMeshObjects(cb) {
+        async.eachSeries(this._loaderBuffer, (item, next) => {
+            item.loadMesh(() => {
+                console.log(item);
+                next();
+            });
+        }, cb);
+    }
 
 
 
@@ -155,11 +174,9 @@ class SceneGraph extends Renderable {
                 self.loadProgram(next);
             },
             (next) => {
-                var mesh = this._scene.childNodes[0].entity;
-                mesh.loadMesh(() => {
-                    console.log(mesh);
+                self.loadAllMeshObjects(() => {
                     next();
-                });
+                })
             }
         ], (err) => {
 

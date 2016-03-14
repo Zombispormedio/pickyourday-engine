@@ -140,30 +140,34 @@ export module utils {
             .substring(1);
     }
     export function uuid(name?) {
-        var id=s4() + s4();
-        return name?name+id:id;
+        var id = s4() + s4();
+        return name ? name + id : id;
     }
 
     export function normalizeNaN(vec) {
-        return vec.map(a=> { if (Number.isNaN(a)) a = 0; return a; })
+        return vec.map(a => { if (Number.isNaN(a)) a = 0; return a; })
     }
 
     export function load(url, callback) {
         var request = new XMLHttpRequest();
         request.open('GET', url, true);
-        request.addEventListener('load', ()=> {
+        request.addEventListener('load', () => {
             callback(request.responseText);
         });
         request.send();
     }
-    
-    export function getExtension(str:string){
-        var elems=str.split(".");
-        return elems[elems.length-1];
+
+    export function getExtension(str: string) {
+        var elems = str.split(".");
+        return elems[elems.length - 1];
     }
-    
-    export function nowInMilliseconds(){
-        return  (new Date()).getTime();
+
+    export function nowInMilliseconds() {
+        return (new Date()).getTime();
+    }
+
+    export function degToRad(d) {
+        return d * Math.PI / 180;
     }
 
 
@@ -342,17 +346,21 @@ export class MatrixStack extends Renderable {
         return Ketch.getUniform(this.graphID, key);
     }
 
+    public Perspective(): void {
+        var gl=this.gl;
+        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, this._pMatrix);
+    }
 
-    public setUniforms() {
+    public setUp() {
         var gl = this.gl;
-
+       
         var mvMatrix = this.getUniform("uMVMatrix");
         if (mvMatrix)
-            gl.uniformMatrix4fv(mvMatrix, false, this.mvMatrix);
+            gl.uniformMatrix4fv(mvMatrix, false, this._mvMatrix);
 
         var pMatrix = this.getUniform("uPMatrix");
         if (pMatrix)
-            gl.uniformMatrix4fv(pMatrix, false, this.pMatrix);
+            gl.uniformMatrix4fv(pMatrix, false, this._pMatrix);
     }
 
 
@@ -849,8 +857,9 @@ export class MeshEntity extends Entity {
     }
 
     beginDraw() {
+        
         var gl = this.gl;
-       
+      
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 
         Ketch.enableAttrib(this.graphID, "a_position");
@@ -980,8 +989,9 @@ export class TransformEntity extends Entity {
         mat4.scale(this._matrix, this._size);
 
         var rad = this._rotation.angle * Math.PI / 180;
+    
         mat4.rotate(this._matrix, rad, this._rotation.axis);
-        matrixStack.setUniforms();
+        matrixStack.setUp();
             
     }
 
@@ -1396,7 +1406,6 @@ export class NodeElement implements INodeElement {
     }
 
     draw(matrixStack: MatrixStack): void {
-        console.log("Drawing: "+this._oid);
         
         if (this._entity) this._entity.beginDraw(matrixStack);
         this._childNodes.forEach(child=> {
@@ -1414,6 +1423,7 @@ export class SceneGraph extends Renderable {
     private _oid: string;
 
     private _shaders: Resources.Shaders;
+    private _loaderBuffer: Array<MeshEntity>;
 
     private static FRAGMENT_SOURCE = "shaders/main.frag";
     private static VERTEX_SOURCE = "shaders/main.vert";
@@ -1430,6 +1440,7 @@ export class SceneGraph extends Renderable {
         this._shaders = new Resources.Shaders();
         this._scene = new NodeElement(void 0, "Scene");
         this._matrixStack = new MatrixStack(this._oid);
+        this._loaderBuffer = [];
         this._isDrawing = false;
         Ketch.createView(this._oid);
     }
@@ -1455,16 +1466,14 @@ export class SceneGraph extends Renderable {
         gl.clearDepth(1.0);
     }
 
-    public draw():void{
-     
-            var gl = this.gl;
-            this._isDrawing = true;
-            gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-            this._scene.draw(this._matrixStack);
-            this._isDrawing = false;
-        
-
+    public draw(): void {
+        var gl = this.gl;
+        this._isDrawing = true;
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        this._matrixStack.Perspective();
+        this._scene.draw(this._matrixStack);
+        this._isDrawing = false;
     }
 
     public createMainChildNode(type: string, entity: Entity): NodeElement {
@@ -1521,13 +1530,20 @@ export class SceneGraph extends Renderable {
 
 
     public buildDefaultGraph(): void {
-
+        var tr=this.createTransform();
+       var TrMeshNode = this.createMainChildNode("TRMesh", tr);
         var mesh = this.createMesh({ mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/webgl.png" });
         this.createMainChildNode("Mesh", mesh);
 
+        tr.position=[1, 0.0, -7];
+        
+       
+        tr.setAngle(90);
+        tr.setAxis([0,1,0])
+
         /* var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity(this.oid));
          var TrCameraNode = this.createMainChildNode("TRCamera", new TransformEntity(this.oid));
-         var TrMeshNode = this.createMainChildNode("TRMesh", new TransformEntity(this.oid));
+         
  
  
          var LightNode = TrLightNode.createChildNode("Light", new LightEntity(this.oid));
@@ -1541,16 +1557,28 @@ export class SceneGraph extends Renderable {
 
 
     }
+    
+    
 
 
-    public createMesh(config: { mesh: string, texture: string, material: string }): MeshEntity {
-        return new MeshEntity(this.oid, config.mesh, config.material, config.texture);
+    public createMesh(config: { mesh?: string, texture?: string, material?: string }): MeshEntity {
+        var mesh = new MeshEntity(this.oid, config.mesh, config.material, config.texture);
+        this._loaderBuffer.push(mesh);
+        return mesh;
     }
 
     public createTransform(position?: Array<number>, size?: Array<number>, rotation?: ClassUtils.Rotation) {
         return new TransformEntity(this.oid, position, size, rotation);
     }
 
+    public loadAllMeshObjects(cb) {
+        async.eachSeries(this._loaderBuffer, (item, next) => {
+            item.loadMesh(() => {
+                console.log(item);
+                next();
+            });
+        }, cb);
+    }
 
 
 
@@ -1564,11 +1592,9 @@ export class SceneGraph extends Renderable {
                 self.loadProgram(next);
             },
             (next) => {
-                var mesh = this._scene.childNodes[0].entity;
-                mesh.loadMesh(() => {
-                    console.log(mesh);
+                self.loadAllMeshObjects(() => {
                     next();
-                });
+                })
             }
         ], (err) => {
 

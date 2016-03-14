@@ -127,7 +127,6 @@ class NodeElement implements INodeElement {
     }
 
     draw(matrixStack: MatrixStack): void {
-        console.log("Drawing: "+this._oid);
         
         if (this._entity) this._entity.beginDraw(matrixStack);
         this._childNodes.forEach(child=> {

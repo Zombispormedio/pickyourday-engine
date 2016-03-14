@@ -150,6 +150,10 @@ var BlazeEngine;
             return (new Date()).getTime();
         }
         utils.nowInMilliseconds = nowInMilliseconds;
+        function degToRad(d) {
+            return d * Math.PI / 180;
+        }
+        utils.degToRad = degToRad;
     })(utils = BlazeEngine.utils || (BlazeEngine.utils = {}));
     (function (CAMERA_TYPE) {
         CAMERA_TYPE[CAMERA_TYPE["ORBITING"] = 0] = "ORBITING";
@@ -316,14 +320,18 @@ var BlazeEngine;
         MatrixStack.prototype.getUniform = function (key) {
             return Ketch.getUniform(this.graphID, key);
         };
-        MatrixStack.prototype.setUniforms = function () {
+        MatrixStack.prototype.Perspective = function () {
+            var gl = this.gl;
+            mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, this._pMatrix);
+        };
+        MatrixStack.prototype.setUp = function () {
             var gl = this.gl;
             var mvMatrix = this.getUniform("uMVMatrix");
             if (mvMatrix)
-                gl.uniformMatrix4fv(mvMatrix, false, this.mvMatrix);
+                gl.uniformMatrix4fv(mvMatrix, false, this._mvMatrix);
             var pMatrix = this.getUniform("uPMatrix");
             if (pMatrix)
-                gl.uniformMatrix4fv(pMatrix, false, this.pMatrix);
+                gl.uniformMatrix4fv(pMatrix, false, this._pMatrix);
         };
         return MatrixStack;
     })(Renderable);
@@ -898,7 +906,7 @@ var BlazeEngine;
             mat4.scale(this._matrix, this._size);
             var rad = this._rotation.angle * Math.PI / 180;
             mat4.rotate(this._matrix, rad, this._rotation.axis);
-            matrixStack.setUniforms();
+            matrixStack.setUp();
         };
         TransformEntity.prototype.endDraw = function (matrixStack) {
             matrixStack.pop();
@@ -1256,7 +1264,6 @@ var BlazeEngine;
             this._childNodes = [];
         };
         NodeElement.prototype.draw = function (matrixStack) {
-            console.log("Drawing: " + this._oid);
             if (this._entity)
                 this._entity.beginDraw(matrixStack);
             this._childNodes.forEach(function (child) {
@@ -1277,6 +1284,7 @@ var BlazeEngine;
             this._shaders = new Resources.Shaders();
             this._scene = new NodeElement(void 0, "Scene");
             this._matrixStack = new MatrixStack(this._oid);
+            this._loaderBuffer = [];
             this._isDrawing = false;
             Ketch.createView(this._oid);
         }
@@ -1309,6 +1317,7 @@ var BlazeEngine;
             this._isDrawing = true;
             gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            this._matrixStack.Perspective();
             this._scene.draw(this._matrixStack);
             this._isDrawing = false;
         };
@@ -1355,11 +1364,16 @@ var BlazeEngine;
             });
         };
         SceneGraph.prototype.buildDefaultGraph = function () {
+            var tr = this.createTransform();
+            var TrMeshNode = this.createMainChildNode("TRMesh", tr);
             var mesh = this.createMesh({ mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/webgl.png" });
             this.createMainChildNode("Mesh", mesh);
+            tr.position = [1, 0.0, -7];
+            tr.setAngle(90);
+            tr.setAxis([0, 1, 0]);
             /* var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity(this.oid));
              var TrCameraNode = this.createMainChildNode("TRCamera", new TransformEntity(this.oid));
-             var TrMeshNode = this.createMainChildNode("TRMesh", new TransformEntity(this.oid));
+             
      
      
              var LightNode = TrLightNode.createChildNode("Light", new LightEntity(this.oid));
@@ -1370,10 +1384,20 @@ var BlazeEngine;
              var MeshNode2 = TrMeshNode.createChildNode("Mesh", new MeshEntity(this.oid));*/
         };
         SceneGraph.prototype.createMesh = function (config) {
-            return new MeshEntity(this.oid, config.mesh, config.material, config.texture);
+            var mesh = new MeshEntity(this.oid, config.mesh, config.material, config.texture);
+            this._loaderBuffer.push(mesh);
+            return mesh;
         };
         SceneGraph.prototype.createTransform = function (position, size, rotation) {
             return new TransformEntity(this.oid, position, size, rotation);
+        };
+        SceneGraph.prototype.loadAllMeshObjects = function (cb) {
+            async.eachSeries(this._loaderBuffer, function (item, next) {
+                item.loadMesh(function () {
+                    console.log(item);
+                    next();
+                });
+            }, cb);
         };
         SceneGraph.prototype.configure = function (cb) {
             var _this = this;
@@ -1385,9 +1409,7 @@ var BlazeEngine;
                     self.loadProgram(next);
                 },
                 function (next) {
-                    var mesh = _this._scene.childNodes[0].entity;
-                    mesh.loadMesh(function () {
-                        console.log(mesh);
+                    self.loadAllMeshObjects(function () {
                         next();
                     });
                 }

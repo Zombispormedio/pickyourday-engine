@@ -43,17 +43,21 @@ class MatrixStack extends Renderable {
         return Ketch.getUniform(this.graphID, key);
     }
 
+    public Perspective(): void {
+        var gl=this.gl;
+        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, this._pMatrix);
+    }
 
-    public setUniforms() {
+    public setUp() {
         var gl = this.gl;
-
+       
         var mvMatrix = this.getUniform("uMVMatrix");
         if (mvMatrix)
-            gl.uniformMatrix4fv(mvMatrix, false, this.mvMatrix);
+            gl.uniformMatrix4fv(mvMatrix, false, this._mvMatrix);
 
         var pMatrix = this.getUniform("uPMatrix");
         if (pMatrix)
-            gl.uniformMatrix4fv(pMatrix, false, this.pMatrix);
+            gl.uniformMatrix4fv(pMatrix, false, this._pMatrix);
     }
 
 
