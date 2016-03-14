@@ -8,20 +8,20 @@ class SceneGraph extends Renderable {
 
     private static FRAGMENT_SOURCE = "shaders/main.frag";
     private static VERTEX_SOURCE = "shaders/main.vert";
-    private static UNIFORMS = [];
+    private static UNIFORMS = ["uPMatrix", "uMVMatrix"];
     private static ATTRIBUTES = ['a_position'];
 
 
 
 
     constructor() {
-
+        var oid = utils.uuid();
+        super(oid);
+        this._oid = oid;
         this._shaders = new Resources.Shaders();
         this._scene = new NodeElement(void 0, "Scene");
-        this._matrixStack = new MatrixStack();
+        this._matrixStack = new MatrixStack(this._oid);
         this._isDrawing = false;
-        this._oid = utils.uuid();
-        super(this._oid);
         Ketch.createView(this._oid);
     }
 
@@ -35,17 +35,27 @@ class SceneGraph extends Renderable {
         return this._isDrawing;
     }
 
-    public draw(): void {
+    public Environment() {
         var gl = this.gl;
-        this._isDrawing = true;
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LEQUAL);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.clearColor(0, 0, 0, 1);
+        gl.clearDepth(1.0);
+    }
 
-        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        this._scene.draw(this._matrixStack);
+    public draw():void{
+     
+            var gl = this.gl;
+            this._isDrawing = true;
+            gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            this._scene.draw(this._matrixStack);
+            this._isDrawing = false;
+        
 
-
-
-        this._isDrawing = false;
     }
 
     public createMainChildNode(type: string, entity: Entity): NodeElement {
@@ -73,7 +83,7 @@ class SceneGraph extends Renderable {
 
 
         async.waterfall([
-            next=> {
+            next => {
 
 
                 this._shaders.fragment.onload = () => {
@@ -83,7 +93,7 @@ class SceneGraph extends Renderable {
 
 
             },
-            next=> {
+            next => {
                 this._shaders.vertex.onload = () => {
                     next()
                 };
@@ -103,7 +113,7 @@ class SceneGraph extends Renderable {
 
     public buildDefaultGraph(): void {
 
-        var mesh = new MeshEntity(this.oid);
+        var mesh = this.createMesh({ mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/webgl.png" });
         this.createMainChildNode("Mesh", mesh);
 
         /* var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity(this.oid));
@@ -124,19 +134,29 @@ class SceneGraph extends Renderable {
     }
 
 
+    public createMesh(config: { mesh: string, texture: string, material: string }): MeshEntity {
+        return new MeshEntity(this.oid, config.mesh, config.material, config.texture);
+    }
+
+    public createTransform(position?: Array<number>, size?: Array<number>, rotation?: ClassUtils.Rotation) {
+        return new TransformEntity(this.oid, position, size, rotation);
+    }
+
+
+
 
     public configure(cb) {
         var self = this;
         var gl = this.gl;
+
+        self.Environment()
         async.waterfall([
             (next) => {
                 self.loadProgram(next);
             },
             (next) => {
                 var mesh = this._scene.childNodes[0].entity;
-                mesh.loadMesh({
-                    mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/webgl.png"
-                }, () => {
+                mesh.loadMesh(() => {
                     console.log(mesh);
                     next();
                 });
@@ -145,7 +165,7 @@ class SceneGraph extends Renderable {
 
             Ketch.setAttributeLocations(this._oid, SceneGraph.ATTRIBUTES);
             Ketch.setUniformLocations(this._oid, SceneGraph.UNIFORMS);
-            gl.enable(gl.DEPTH_TEST);
+
 
             if (cb) cb();
         })

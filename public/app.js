@@ -14,8 +14,9 @@ var Tree = new BlazeEngine.SceneGraph();
 Tree.setContext(document.getElementById("3dView"));
 
 Tree.buildDefaultGraph();
-Tree.configure(function(){
+Tree.configure(function() {
     console.log(Tree);
-    
-    Tree.draw();
+
+    BlazeEngine.Ketch.renderLoop(Tree.draw.bind(Tree));
+
 });

@@ -1,5 +1,5 @@
 class Ketch {
-    private static _views ={} ;
+    private static _views = {};
     static setCanvasToContext(key, canvas) {
         var context = WebGLUtils.getGLContext(canvas);
         Ketch.setContext(key, context);
@@ -80,6 +80,10 @@ class Ketch {
         var index = Ketch.getAttrib(view_key, attr_key);
         var gl = Ketch.getContext(view_key);
         gl.disableVertexAttribArray(index);
+    }
+
+    static renderLoop(cb) {
+        setInterval(cb, 500);
     }
 
 

@@ -3,12 +3,18 @@ class MeshEntity extends Entity {
     private _texture: Resources.MeshTexture;
     private _buffers: Resources.MeshBuffers;
 
-    constructor(graph_id: string) {
+    private _meshfile: string;
+    private _materialfile: string;
+    private _texturefile: string;
+
+    constructor(graph_id: string, meshfile?: string, materialfile?: string, texturefile?: string) {
         super(graph_id);
         this._material = null;
         this._texture = null;
         this._buffers = null;
-        
+        this._meshfile = meshfile || null;
+        this._materialfile = materialfile || null;
+        this._texturefile = texturefile || null;
     }
 
     loadBuffers(filename, cb) {
@@ -34,34 +40,34 @@ class MeshEntity extends Entity {
         this._material.src = filename;
     }
 
-    loadMesh(config, cb) {
+    loadMesh(cb) {
 
         var self = this;
         async.waterfall([
             (next) => {
-                if (!config.mesh) {
-                    console.log("No Mesh file");
+                if (!self._meshfile) {
+                    
                     return next();
                 }
-                self.loadBuffers(config.mesh, function() {
+                self.loadBuffers(self._meshfile, function() {
                     next();
                 });
             },
             (next) => {
-                if (!config.texture) {
-                    console.log("No Texture file");
+                if (!this._texturefile) {
+                  
                     return next();
                 }
-                self.loadTexture(config.texture, function() {
+                self.loadTexture(self._texturefile, function() {
                     next();
                 });
             },
             (next) => {
-                if (!config.material) {
-                    console.log("No Material file");
+                if (!self._materialfile) {
+                   
                     return next();
                 }
-                self.loadMaterial(config.material, function() {
+                self.loadMaterial(self._materialfile, function() {
                     next();
                 });
             }
@@ -77,11 +83,11 @@ class MeshEntity extends Entity {
 
     beginDraw() {
         var gl = this.gl;
-        console.log(this._buffers);
+       
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 
         Ketch.enableAttrib(this.graphID, "a_position");
-        
+
         var ivbo = this._buffers.ivbo;
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ivbo);
 

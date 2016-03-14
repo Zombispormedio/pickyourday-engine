@@ -174,7 +174,7 @@ export module utils {
 
 export enum CAMERA_TYPE{ORBITING, TRACKING}
 export class Ketch {
-    private static _views = [];
+    private static _views = {};
     static setCanvasToContext(key, canvas) {
         var context = WebGLUtils.getGLContext(canvas);
         Ketch.setContext(key, context);
@@ -245,7 +245,7 @@ export class Ketch {
         gl.enableVertexAttribArray(index);
 
         if (pointer) {
-            gl.vertexAttribPointer(index, pointer.size || 3, gl.FLOAT, pointer.normalized || false, pointer.stride || 0, pointer.stride || 0);
+            gl.vertexAttribPointer(index, pointer.size || 3, gl.FLOAT, pointer.normalized || false, pointer.stride || 0, pointer.offset || 0);
         } else {
             gl.vertexAttribPointer(index, 3, gl.FLOAT, false, 0, 0);
         }
@@ -255,6 +255,10 @@ export class Ketch {
         var index = Ketch.getAttrib(view_key, attr_key);
         var gl = Ketch.getContext(view_key);
         gl.disableVertexAttribArray(index);
+    }
+
+    static renderLoop(cb) {
+        setInterval(cb, 500);
     }
 
 
@@ -293,13 +297,14 @@ export class Entity extends Renderable {
         
     }
 }
-export class MatrixStack {
+export class MatrixStack extends Renderable {
     private _stack: Array<Array<number>>;
     private _mvMatrix: Array<number>;
     private _pMatrix: Array<number>;
     private _nMatrix: Array<number>;
 
-    constructor() {
+    constructor(graph_id: string) {
+        super(graph_id);
         this._stack = [];
         this._mvMatrix = mat4.create();
         this._pMatrix = mat4.create();
@@ -332,6 +337,24 @@ export class MatrixStack {
     get nMatrix(): Array<number> {
         return this._nMatrix;
     }
+
+    public getUniform(key: string) {
+        return Ketch.getUniform(this.graphID, key);
+    }
+
+
+    public setUniforms() {
+        var gl = this.gl;
+
+        var mvMatrix = this.getUniform("uMVMatrix");
+        if (mvMatrix)
+            gl.uniformMatrix4fv(mvMatrix, false, this.mvMatrix);
+
+        var pMatrix = this.getUniform("uPMatrix");
+        if (pMatrix)
+            gl.uniformMatrix4fv(pMatrix, false, this.pMatrix);
+    }
+
 
 }
 export module Resources {
@@ -747,11 +770,18 @@ export class MeshEntity extends Entity {
     private _texture: Resources.MeshTexture;
     private _buffers: Resources.MeshBuffers;
 
-    constructor(graph_id: string) {
+    private _meshfile: string;
+    private _materialfile: string;
+    private _texturefile: string;
+
+    constructor(graph_id: string, meshfile?: string, materialfile?: string, texturefile?: string) {
         super(graph_id);
         this._material = null;
         this._texture = null;
         this._buffers = null;
+        this._meshfile = meshfile || null;
+        this._materialfile = materialfile || null;
+        this._texturefile = texturefile || null;
     }
 
     loadBuffers(filename, cb) {
@@ -777,34 +807,34 @@ export class MeshEntity extends Entity {
         this._material.src = filename;
     }
 
-    loadMesh(config, cb) {
+    loadMesh(cb) {
 
         var self = this;
         async.waterfall([
             (next) => {
-                if (!config.mesh) {
-                    console.log("No Mesh file");
+                if (!self._meshfile) {
+                    
                     return next();
                 }
-                self.loadBuffers(config.mesh, function() {
+                self.loadBuffers(self._meshfile, function() {
                     next();
                 });
             },
             (next) => {
-                if (!config.texture) {
-                    console.log("No Texture file");
+                if (!this._texturefile) {
+                  
                     return next();
                 }
-                self.loadTexture(config.texture, function() {
+                self.loadTexture(self._texturefile, function() {
                     next();
                 });
             },
             (next) => {
-                if (!config.material) {
-                    console.log("No Material file");
+                if (!self._materialfile) {
+                   
                     return next();
                 }
-                self.loadMaterial(config.material, function() {
+                self.loadMaterial(self._materialfile, function() {
                     next();
                 });
             }
@@ -820,11 +850,11 @@ export class MeshEntity extends Entity {
 
     beginDraw() {
         var gl = this.gl;
-        console.log(this._buffers);
+       
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 
         Ketch.enableAttrib(this.graphID, "a_position");
-        
+
         var ivbo = this._buffers.ivbo;
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ivbo);
 
@@ -847,12 +877,12 @@ export class TransformEntity extends Entity {
     private _position: Array<number>;
     private _size: Array<number>;
     private _rotation: ClassUtils.Rotation;
-    constructor(graph_id:string) {
+    constructor(graph_id:string, position?:Array<number>, size?:Array<number>, rotation?: ClassUtils.Rotation) {
         super(graph_id);
         this._matrix = mat4.create();
-        this._position = vec3.create();
-        this._size = vec3.create([1, 1, 1]);
-        this._rotation = { angle: 0, axis: vec3.create() };
+        this._position = position||vec3.create();
+        this._size = size||vec3.create([1, 1, 1]);
+        this._rotation = rotation||{ angle: 0, axis: vec3.create() };
     }
 
     identity() {
@@ -944,13 +974,15 @@ export class TransformEntity extends Entity {
         matrixStack.makeMV();
         this._matrix = matrixStack.mvMatrix;
 
+        
         mat4.translate(this._matrix, this._position);
 
         mat4.scale(this._matrix, this._size);
 
         var rad = this._rotation.angle * Math.PI / 180;
         mat4.rotate(this._matrix, rad, this._rotation.axis);
-
+        matrixStack.setUniforms();
+            
     }
 
     endDraw(matrixStack: MatrixStack) {
@@ -1385,20 +1417,20 @@ export class SceneGraph extends Renderable {
 
     private static FRAGMENT_SOURCE = "shaders/main.frag";
     private static VERTEX_SOURCE = "shaders/main.vert";
-    private static UNIFORMS = [];
+    private static UNIFORMS = ["uPMatrix", "uMVMatrix"];
     private static ATTRIBUTES = ['a_position'];
 
 
 
 
     constructor() {
-
+        var oid = utils.uuid();
+        super(oid);
+        this._oid = oid;
         this._shaders = new Resources.Shaders();
         this._scene = new NodeElement(void 0, "Scene");
-        this._matrixStack = new MatrixStack();
+        this._matrixStack = new MatrixStack(this._oid);
         this._isDrawing = false;
-        this._oid = utils.uuid();
-        super(this._oid);
         Ketch.createView(this._oid);
     }
 
@@ -1412,17 +1444,27 @@ export class SceneGraph extends Renderable {
         return this._isDrawing;
     }
 
-    public draw(): void {
+    public Environment() {
         var gl = this.gl;
-        this._isDrawing = true;
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LEQUAL);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.clearColor(0, 0, 0, 1);
+        gl.clearDepth(1.0);
+    }
 
-        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        this._scene.draw(this._matrixStack);
+    public draw():void{
+     
+            var gl = this.gl;
+            this._isDrawing = true;
+            gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            this._scene.draw(this._matrixStack);
+            this._isDrawing = false;
+        
 
-
-
-        this._isDrawing = false;
     }
 
     public createMainChildNode(type: string, entity: Entity): NodeElement {
@@ -1450,7 +1492,7 @@ export class SceneGraph extends Renderable {
 
 
         async.waterfall([
-            next=> {
+            next => {
 
 
                 this._shaders.fragment.onload = () => {
@@ -1460,7 +1502,7 @@ export class SceneGraph extends Renderable {
 
 
             },
-            next=> {
+            next => {
                 this._shaders.vertex.onload = () => {
                     next()
                 };
@@ -1480,7 +1522,7 @@ export class SceneGraph extends Renderable {
 
     public buildDefaultGraph(): void {
 
-        var mesh = new MeshEntity(this.oid);
+        var mesh = this.createMesh({ mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/webgl.png" });
         this.createMainChildNode("Mesh", mesh);
 
         /* var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity(this.oid));
@@ -1501,19 +1543,29 @@ export class SceneGraph extends Renderable {
     }
 
 
+    public createMesh(config: { mesh: string, texture: string, material: string }): MeshEntity {
+        return new MeshEntity(this.oid, config.mesh, config.material, config.texture);
+    }
+
+    public createTransform(position?: Array<number>, size?: Array<number>, rotation?: ClassUtils.Rotation) {
+        return new TransformEntity(this.oid, position, size, rotation);
+    }
+
+
+
 
     public configure(cb) {
         var self = this;
         var gl = this.gl;
+
+        self.Environment()
         async.waterfall([
             (next) => {
                 self.loadProgram(next);
             },
             (next) => {
                 var mesh = this._scene.childNodes[0].entity;
-                mesh.loadMesh({
-                    mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/webgl.png"
-                }, () => {
+                mesh.loadMesh(() => {
                     console.log(mesh);
                     next();
                 });
@@ -1522,7 +1574,7 @@ export class SceneGraph extends Renderable {
 
             Ketch.setAttributeLocations(this._oid, SceneGraph.ATTRIBUTES);
             Ketch.setUniformLocations(this._oid, SceneGraph.UNIFORMS);
-            gl.enable(gl.DEPTH_TEST);
+
 
             if (cb) cb();
         })

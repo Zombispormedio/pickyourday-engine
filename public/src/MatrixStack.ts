@@ -1,10 +1,11 @@
-class MatrixStack {
+class MatrixStack extends Renderable {
     private _stack: Array<Array<number>>;
     private _mvMatrix: Array<number>;
     private _pMatrix: Array<number>;
     private _nMatrix: Array<number>;
 
-    constructor() {
+    constructor(graph_id: string) {
+        super(graph_id);
         this._stack = [];
         this._mvMatrix = mat4.create();
         this._pMatrix = mat4.create();
@@ -37,5 +38,23 @@ class MatrixStack {
     get nMatrix(): Array<number> {
         return this._nMatrix;
     }
+
+    public getUniform(key: string) {
+        return Ketch.getUniform(this.graphID, key);
+    }
+
+
+    public setUniforms() {
+        var gl = this.gl;
+
+        var mvMatrix = this.getUniform("uMVMatrix");
+        if (mvMatrix)
+            gl.uniformMatrix4fv(mvMatrix, false, this.mvMatrix);
+
+        var pMatrix = this.getUniform("uPMatrix");
+        if (pMatrix)
+            gl.uniformMatrix4fv(pMatrix, false, this.pMatrix);
+    }
+
 
 }
