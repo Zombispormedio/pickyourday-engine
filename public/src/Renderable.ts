@@ -13,10 +13,12 @@ class Renderable {
     public get gl() {
         return Ketch.getContext(this.graphID);
     }
-    
+
     public get program() {
         return Ketch.getProgram(this.graphID);
     }
-    
- 
+    public getUniform(key: string) {
+        return Ketch.getUniform(this.graphID, key);
+    }
+
 }

@@ -282,12 +282,14 @@ export class Renderable {
     public get gl() {
         return Ketch.getContext(this.graphID);
     }
-    
+
     public get program() {
         return Ketch.getProgram(this.graphID);
     }
-    
- 
+    public getUniform(key: string) {
+        return Ketch.getUniform(this.graphID, key);
+    }
+
 }
 export class Entity extends Renderable {
     constructor(graph_id:string){
@@ -342,18 +344,16 @@ export class MatrixStack extends Renderable {
         return this._nMatrix;
     }
 
-    public getUniform(key: string) {
-        return Ketch.getUniform(this.graphID, key);
-    }
+
 
     public Perspective(): void {
-        var gl=this.gl;
+        var gl = this.gl;
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, this._pMatrix);
     }
 
     public setUp() {
         var gl = this.gl;
-       
+
         var mvMatrix = this.getUniform("uMVMatrix");
         if (mvMatrix)
             gl.uniformMatrix4fv(mvMatrix, false, this._mvMatrix);
@@ -361,6 +361,16 @@ export class MatrixStack extends Renderable {
         var pMatrix = this.getUniform("uPMatrix");
         if (pMatrix)
             gl.uniformMatrix4fv(pMatrix, false, this._pMatrix);
+
+
+
+        mat4.set(this._mvMatrix, this._nMatrix);
+        mat4.inverse(this._nMatrix);
+        mat4.transpose(this._nMatrix);
+
+        var nMatrix = this.getUniform("uNMatrix");
+        if(nMatrix)
+        gl.uniformMatrix4fv(nMatrix, false, this._nMatrix);
     }
 
 
@@ -573,7 +583,7 @@ export module Resources {
         private _ambient: Array<number>;
         private _diffuse: Array<number>;
         private _specular: Array<number>;
-        private _transparent: number;
+        private _shininess: number;
         private _onload;
         private _src: string;
 
@@ -582,7 +592,7 @@ export module Resources {
             this._ambient = ambient ? vec4.create(ambient) : vec4.create();
             this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
             this._specular = specular ? vec4.create(specular) : vec4.create();
-            this._transparent = shininess || 200.0;
+            this._shininess = shininess || 200.0;
         }
 
         public set onload(cb) {
@@ -596,10 +606,10 @@ export module Resources {
 
             utils.load(src, (data) => {
                 var temp = self.parse(data);
-                this._ambient = temp.Ka;
-                this._diffuse = temp.Kd;
-                this._specular = temp.Ks;
-                this._transparent = temp.Ns;
+                this.ambient = temp.Ka;
+                this.diffuse = temp.Kd;
+                this.specular = temp.Ks;
+                this.shininess = temp.Ns;
                 if (this._onload) this._onload();
             });
 
@@ -615,9 +625,13 @@ export module Resources {
                 var key = elems[0];
                 if (keys.indexOf(key) > -1) {
                     switch (key) {
-                        case "Ns": obj["Ns"] = elems[1];
+                        case "Ns": obj["Ns"] = Number(elems[1]);
                             break;
-                        default: obj[key] = elems.slice(1);
+                        default:{
+                            var temp=elems.slice(1).map(function(a){return Number(a)});
+                            temp.push(1.0);
+                            obj[key] = temp;
+                        } 
                     }
                 }
 
@@ -657,13 +671,13 @@ export module Resources {
         }
 
 
-        public get transparent(): number {
-            return this._transparent;
+        public get shininess(): number {
+            return this._shininess;
         }
 
 
-        public set transparent(v: number) {
-            this._transparent = v;
+        public set shininess(v: number) {
+            this._shininess = v;
         }
 
     }
@@ -824,25 +838,32 @@ export class MeshEntity extends Entity {
                     
                     return next();
                 }
-                self.loadBuffers(self._meshfile, function() {
+                
+                  console.log("Loading Buffers");
+                self.loadBuffers(self._meshfile, ()=> {
+                    console.log("Loaded Buffers");
                     next();
                 });
             },
             (next) => {
                 if (!this._texturefile) {
-                  
+
                     return next();
                 }
-                self.loadTexture(self._texturefile, function() {
+                console.log("Loading Texture");
+                self.loadTexture(self._texturefile, ()=> {
+                    console.log("Loaded Texture");
                     next();
                 });
             },
             (next) => {
                 if (!self._materialfile) {
-                   
+
                     return next();
                 }
-                self.loadMaterial(self._materialfile, function() {
+                console.log("Loading Material");
+                self.loadMaterial(self._materialfile, ()=> {
+                    console.log("Loaded Material");
                     next();
                 });
             }
@@ -856,13 +877,58 @@ export class MeshEntity extends Entity {
 
     }
 
+    public setMaterialUniforms() {
+        if (this._material) {
+
+            var gl = this.gl;
+
+            if (this._material.ambient) {
+                var uMaterialAmbient = this.getUniform("uMaterialAmbient");
+                if (uMaterialAmbient)
+                    gl.uniform4fv(uMaterialAmbient, this._material.ambient);
+            }
+
+            if (this._material.diffuse) {
+                var uMaterialDiffuse = this.getUniform("uMaterialDiffuse");
+                if (uMaterialDiffuse)
+                    gl.uniform4fv(uMaterialDiffuse, this._material.diffuse);
+            }
+
+            if (this._material.specular) {
+                var uMaterialSpecular = this.getUniform("uMaterialSpecular");
+                if (uMaterialSpecular)
+                    gl.uniform4fv(uMaterialSpecular, this._material.specular);
+            }
+
+            if (this._material.shininess) {
+
+                var uShininess = this.getUniform("uShininess");
+                if (uShininess)
+                    gl.uniform4fv(uShininess, this._material.shininess);
+            }
+
+
+
+        }
+    }
+
     beginDraw() {
-        
+
         var gl = this.gl;
-      
+
+
+
+        //this.setMaterialUniforms();
+
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 
         Ketch.enableAttrib(this.graphID, "a_position");
+        
+        
+         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.nbo);
+
+        Ketch.enableAttrib(this.graphID, "a_normal");
+     
 
         var ivbo = this._buffers.ivbo;
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ivbo);
@@ -1006,12 +1072,17 @@ export class LightEntity extends Entity {
     private _diffuse: Array<number>;
     private _specular: Array<number>;
     private _position: Array<number>;
-    constructor(graph_id:string, ambient?: Array<number>, diffuse?: Array<number>, position?: Array<number>, specular?:Array<number>) {
+    private _direction: Array<number>;
+    private _cutoff: number;
+
+    constructor(graph_id: string, ambient?: Array<number>, diffuse?: Array<number>, position?: Array<number>, specular?: Array<number>,  direction?: Array<number>, cutoff?: number) {
         super(graph_id);
-        this._ambient = ambient ? vec4.create(ambient) : vec4.create();
-        this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
-        this._position = position ? vec4.create(position) : vec4.create();
-        this._specular = specular ? vec4.create(specular) : vec4.create();
+        this._ambient = ambient ? vec4.create(ambient) : null;
+        this._diffuse = diffuse ? vec4.create(diffuse) : null;
+        this._position = position ? vec4.create(position) : null;
+        this._specular = specular ? vec4.create(specular) : null;
+        this._direction = direction ? vec3.create(direction) : null;
+        this._cutoff = cutoff;
     }
 
 
@@ -1033,8 +1104,8 @@ export class LightEntity extends Entity {
     set diffuse(diffuse: Array<number>) {
         this._diffuse = utils.normalizeNaN(vec4.create(diffuse));
     }
-    
-    
+
+
     get specular(): Array<number> {
         return this._specular;
     }
@@ -1053,29 +1124,6 @@ export class LightEntity extends Entity {
     set position(position: Array<number>) {
         this._position = utils.normalizeNaN(vec3.create(position));
     }
-    
-    beginDraw(matrixStack: MatrixStack){
-        
-    }
-    
-    endDraw(matrixStack: MatrixStack){
-        
-    }
-    
-   
-
-
-}
-export class DirectionalLightEntity extends LightEntity {
-    private _direction: Array<number>;
-    private _cutoff: number;
-    constructor(graph_id:string, ambient?: Array<number>, diffuse?: Array<number>, position?: Array<number>, direction?: Array<number>, cutoff?: number) {
-        super(graph_id,ambient, diffuse, position);
-        this._direction = direction ? vec3.create(direction) : vec3.create();
-        this._cutoff = cutoff || 0.5;
-
-    }
-
 
     public set direction(direction: Array<number>) {
         this._direction = utils.normalizeNaN(vec3.create(direction));
@@ -1095,11 +1143,47 @@ export class DirectionalLightEntity extends LightEntity {
         return this._cutoff;
     }
 
-    beginDraw(matrixStack: MatrixStack) {
+    beginDraw() {
+        var gl = this.gl;
 
+       /* if (this._ambient) {
+            var uLightAmbient = this.getUniform("uLightAmbient");
+            if (uLightAmbient)
+                gl.uniform4fv(uLightAmbient, this._ambient);
+        }
+
+        if (this._diffuse) {
+            var uLightDiffuse = this.getUniform("uLightDiffuse");
+            if (uLightDiffuse)
+                gl.uniform4fv(uLightDiffuse, this._diffuse);
+        }
+
+        if (this._specular) {
+            var uLightSpecular = this.getUniform("uLightSpecular");
+            if (uLightSpecular)
+                gl.uniform4fv(uLightSpecular, this._specular);
+        }
+
+        if (this._position) {
+            var uLightPosition = this.getUniform("uLightPosition");
+            if (uLightPosition)
+                gl.uniform3fv(uLightPosition, this._position);
+        }*/
+
+       /* if (this._direction) {
+            var uDirection = this.getUniform("uLightDirection");
+            if (uDirection)
+                gl.uniform3fv(uDirection, this._direction);
+        }*/
+
+       /* if (this._cutoff) {
+            var uCutOff = this.getUniform("uCutOff");
+            if (uCutOff)
+                gl.uniform1f(uCutOff, this._cutoff);
+        }*/
     }
 
-    endDraw(matrixStack: MatrixStack) {
+    endDraw() {
 
     }
 
@@ -1406,11 +1490,13 @@ export class NodeElement implements INodeElement {
     }
 
     draw(matrixStack: MatrixStack): void {
-        
+       
         if (this._entity) this._entity.beginDraw(matrixStack);
-        this._childNodes.forEach(child=> {
+        
+        for(var i=0;i<this._childNodes.length;i++){
+            var child=this._childNodes[i];
             child.draw(matrixStack);
-        });
+        }
 
         if (this._entity) this._entity.endDraw(matrixStack);
 
@@ -1427,8 +1513,8 @@ export class SceneGraph extends Renderable {
 
     private static FRAGMENT_SOURCE = "shaders/main.frag";
     private static VERTEX_SOURCE = "shaders/main.vert";
-    private static UNIFORMS = ["uPMatrix", "uMVMatrix"];
-    private static ATTRIBUTES = ['a_position'];
+    private static UNIFORMS = ['uPMatrix', 'uMVMatrix', 'uNMatrix'/*, 'uLightDirection'*/];
+    private static ATTRIBUTES = ['a_position', 'a_normal'];
 
 
 
@@ -1530,16 +1616,17 @@ export class SceneGraph extends Renderable {
 
 
     public buildDefaultGraph(): void {
-        var tr=this.createTransform();
-       var TrMeshNode = this.createMainChildNode("TRMesh", tr);
-        var mesh = this.createMesh({ mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/webgl.png" });
-        this.createMainChildNode("Mesh", mesh);
-
-        tr.position=[1, 0.0, -7];
         
-       
-        tr.setAngle(90);
-        tr.setAxis([0,1,0])
+        /* var light= this.createLight({
+            direction:[0.0,-1.0,-1.0],
+            ambient:[0.03,0.03,0.03,1.0],
+            diffuse:[1.0,1.0,1.0,1.0],
+            specular:[1.0,1.0,1.0,1.0]
+        });
+        
+        this.createMainChildNode("Light", light);*/
+        
+      
 
         /* var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity(this.oid));
          var TrCameraNode = this.createMainChildNode("TRCamera", new TransformEntity(this.oid));
@@ -1557,8 +1644,8 @@ export class SceneGraph extends Renderable {
 
 
     }
-    
-    
+
+
 
 
     public createMesh(config: { mesh?: string, texture?: string, material?: string }): MeshEntity {
@@ -1570,6 +1657,11 @@ export class SceneGraph extends Renderable {
     public createTransform(position?: Array<number>, size?: Array<number>, rotation?: ClassUtils.Rotation) {
         return new TransformEntity(this.oid, position, size, rotation);
     }
+
+    public createLight(config: { ambient?: Array<number>, diffuse?: Array<number>, specular?: Array<number>, position?: Array<number>, direction?: Array<number>, cutoff?: number }) {
+        return new LightEntity(this.oid, config.ambient, config.diffuse, config.position, config.specular, config.direction, config.cutoff);
+    }
+
 
     public loadAllMeshObjects(cb) {
         async.eachSeries(this._loaderBuffer, (item, next) => {

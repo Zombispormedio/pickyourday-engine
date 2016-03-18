@@ -39,18 +39,16 @@ class MatrixStack extends Renderable {
         return this._nMatrix;
     }
 
-    public getUniform(key: string) {
-        return Ketch.getUniform(this.graphID, key);
-    }
+
 
     public Perspective(): void {
-        var gl=this.gl;
+        var gl = this.gl;
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, this._pMatrix);
     }
 
     public setUp() {
         var gl = this.gl;
-       
+
         var mvMatrix = this.getUniform("uMVMatrix");
         if (mvMatrix)
             gl.uniformMatrix4fv(mvMatrix, false, this._mvMatrix);
@@ -58,6 +56,16 @@ class MatrixStack extends Renderable {
         var pMatrix = this.getUniform("uPMatrix");
         if (pMatrix)
             gl.uniformMatrix4fv(pMatrix, false, this._pMatrix);
+
+
+
+        mat4.set(this._mvMatrix, this._nMatrix);
+        mat4.inverse(this._nMatrix);
+        mat4.transpose(this._nMatrix);
+
+        var nMatrix = this.getUniform("uNMatrix");
+        if(nMatrix)
+        gl.uniformMatrix4fv(nMatrix, false, this._nMatrix);
     }
 
 

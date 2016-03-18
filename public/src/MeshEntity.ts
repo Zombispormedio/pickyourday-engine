@@ -49,25 +49,32 @@ class MeshEntity extends Entity {
                     
                     return next();
                 }
-                self.loadBuffers(self._meshfile, function() {
+                
+                  console.log("Loading Buffers");
+                self.loadBuffers(self._meshfile, ()=> {
+                    console.log("Loaded Buffers");
                     next();
                 });
             },
             (next) => {
                 if (!this._texturefile) {
-                  
+
                     return next();
                 }
-                self.loadTexture(self._texturefile, function() {
+                console.log("Loading Texture");
+                self.loadTexture(self._texturefile, ()=> {
+                    console.log("Loaded Texture");
                     next();
                 });
             },
             (next) => {
                 if (!self._materialfile) {
-                   
+
                     return next();
                 }
-                self.loadMaterial(self._materialfile, function() {
+                console.log("Loading Material");
+                self.loadMaterial(self._materialfile, ()=> {
+                    console.log("Loaded Material");
                     next();
                 });
             }
@@ -81,13 +88,58 @@ class MeshEntity extends Entity {
 
     }
 
+    public setMaterialUniforms() {
+        if (this._material) {
+
+            var gl = this.gl;
+
+            if (this._material.ambient) {
+                var uMaterialAmbient = this.getUniform("uMaterialAmbient");
+                if (uMaterialAmbient)
+                    gl.uniform4fv(uMaterialAmbient, this._material.ambient);
+            }
+
+            if (this._material.diffuse) {
+                var uMaterialDiffuse = this.getUniform("uMaterialDiffuse");
+                if (uMaterialDiffuse)
+                    gl.uniform4fv(uMaterialDiffuse, this._material.diffuse);
+            }
+
+            if (this._material.specular) {
+                var uMaterialSpecular = this.getUniform("uMaterialSpecular");
+                if (uMaterialSpecular)
+                    gl.uniform4fv(uMaterialSpecular, this._material.specular);
+            }
+
+            if (this._material.shininess) {
+
+                var uShininess = this.getUniform("uShininess");
+                if (uShininess)
+                    gl.uniform4fv(uShininess, this._material.shininess);
+            }
+
+
+
+        }
+    }
+
     beginDraw() {
-        
+
         var gl = this.gl;
-      
+
+
+
+        //this.setMaterialUniforms();
+
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 
         Ketch.enableAttrib(this.graphID, "a_position");
+        
+        
+         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.nbo);
+
+        Ketch.enableAttrib(this.graphID, "a_normal");
+     
 
         var ivbo = this._buffers.ivbo;
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ivbo);

@@ -259,6 +259,9 @@ var BlazeEngine;
             enumerable: true,
             configurable: true
         });
+        Renderable.prototype.getUniform = function (key) {
+            return Ketch.getUniform(this.graphID, key);
+        };
         return Renderable;
     })();
     BlazeEngine.Renderable = Renderable;
@@ -317,9 +320,6 @@ var BlazeEngine;
             enumerable: true,
             configurable: true
         });
-        MatrixStack.prototype.getUniform = function (key) {
-            return Ketch.getUniform(this.graphID, key);
-        };
         MatrixStack.prototype.Perspective = function () {
             var gl = this.gl;
             mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, this._pMatrix);
@@ -332,6 +332,12 @@ var BlazeEngine;
             var pMatrix = this.getUniform("uPMatrix");
             if (pMatrix)
                 gl.uniformMatrix4fv(pMatrix, false, this._pMatrix);
+            mat4.set(this._mvMatrix, this._nMatrix);
+            mat4.inverse(this._nMatrix);
+            mat4.transpose(this._nMatrix);
+            var nMatrix = this.getUniform("uNMatrix");
+            if (nMatrix)
+                gl.uniformMatrix4fv(nMatrix, false, this._nMatrix);
         };
         return MatrixStack;
     })(Renderable);
@@ -533,7 +539,7 @@ var BlazeEngine;
                 this._ambient = ambient ? vec4.create(ambient) : vec4.create();
                 this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
                 this._specular = specular ? vec4.create(specular) : vec4.create();
-                this._transparent = shininess || 200.0;
+                this._shininess = shininess || 200.0;
             }
             Object.defineProperty(MeshMaterial.prototype, "onload", {
                 set: function (cb) {
@@ -548,10 +554,10 @@ var BlazeEngine;
                     var self = this;
                     utils.load(src, function (data) {
                         var temp = self.parse(data);
-                        _this._ambient = temp.Ka;
-                        _this._diffuse = temp.Kd;
-                        _this._specular = temp.Ks;
-                        _this._transparent = temp.Ns;
+                        _this.ambient = temp.Ka;
+                        _this.diffuse = temp.Kd;
+                        _this.specular = temp.Ks;
+                        _this.shininess = temp.Ns;
                         if (_this._onload)
                             _this._onload();
                     });
@@ -569,9 +575,13 @@ var BlazeEngine;
                     if (keys.indexOf(key) > -1) {
                         switch (key) {
                             case "Ns":
-                                obj["Ns"] = elems[1];
+                                obj["Ns"] = Number(elems[1]);
                                 break;
-                            default: obj[key] = elems.slice(1);
+                            default: {
+                                var temp = elems.slice(1).map(function (a) { return Number(a); });
+                                temp.push(1.0);
+                                obj[key] = temp;
+                            }
                         }
                     }
                 });
@@ -607,12 +617,12 @@ var BlazeEngine;
                 enumerable: true,
                 configurable: true
             });
-            Object.defineProperty(MeshMaterial.prototype, "transparent", {
+            Object.defineProperty(MeshMaterial.prototype, "shininess", {
                 get: function () {
-                    return this._transparent;
+                    return this._shininess;
                 },
                 set: function (v) {
-                    this._transparent = v;
+                    this._shininess = v;
                 },
                 enumerable: true,
                 configurable: true
@@ -760,7 +770,9 @@ var BlazeEngine;
                     if (!self._meshfile) {
                         return next();
                     }
+                    console.log("Loading Buffers");
                     self.loadBuffers(self._meshfile, function () {
+                        console.log("Loaded Buffers");
                         next();
                     });
                 },
@@ -768,7 +780,9 @@ var BlazeEngine;
                     if (!_this._texturefile) {
                         return next();
                     }
+                    console.log("Loading Texture");
                     self.loadTexture(self._texturefile, function () {
+                        console.log("Loaded Texture");
                         next();
                     });
                 },
@@ -776,7 +790,9 @@ var BlazeEngine;
                     if (!self._materialfile) {
                         return next();
                     }
+                    console.log("Loading Material");
                     self.loadMaterial(self._materialfile, function () {
+                        console.log("Loaded Material");
                         next();
                     });
                 }
@@ -787,10 +803,38 @@ var BlazeEngine;
                     cb();
             });
         };
+        MeshEntity.prototype.setMaterialUniforms = function () {
+            if (this._material) {
+                var gl = this.gl;
+                if (this._material.ambient) {
+                    var uMaterialAmbient = this.getUniform("uMaterialAmbient");
+                    if (uMaterialAmbient)
+                        gl.uniform4fv(uMaterialAmbient, this._material.ambient);
+                }
+                if (this._material.diffuse) {
+                    var uMaterialDiffuse = this.getUniform("uMaterialDiffuse");
+                    if (uMaterialDiffuse)
+                        gl.uniform4fv(uMaterialDiffuse, this._material.diffuse);
+                }
+                if (this._material.specular) {
+                    var uMaterialSpecular = this.getUniform("uMaterialSpecular");
+                    if (uMaterialSpecular)
+                        gl.uniform4fv(uMaterialSpecular, this._material.specular);
+                }
+                if (this._material.shininess) {
+                    var uShininess = this.getUniform("uShininess");
+                    if (uShininess)
+                        gl.uniform4fv(uShininess, this._material.shininess);
+                }
+            }
+        };
         MeshEntity.prototype.beginDraw = function () {
             var gl = this.gl;
+            //this.setMaterialUniforms();
             gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
             Ketch.enableAttrib(this.graphID, "a_position");
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.nbo);
+            Ketch.enableAttrib(this.graphID, "a_normal");
             var ivbo = this._buffers.ivbo;
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ivbo);
             gl.drawElements(gl.TRIANGLES, ivbo.numItems, gl.UNSIGNED_SHORT, 0);
@@ -916,12 +960,14 @@ var BlazeEngine;
     BlazeEngine.TransformEntity = TransformEntity;
     var LightEntity = (function (_super) {
         __extends(LightEntity, _super);
-        function LightEntity(graph_id, ambient, diffuse, position, specular) {
+        function LightEntity(graph_id, ambient, diffuse, position, specular, direction, cutoff) {
             _super.call(this, graph_id);
-            this._ambient = ambient ? vec4.create(ambient) : vec4.create();
-            this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
-            this._position = position ? vec4.create(position) : vec4.create();
-            this._specular = specular ? vec4.create(specular) : vec4.create();
+            this._ambient = ambient ? vec4.create(ambient) : null;
+            this._diffuse = diffuse ? vec4.create(diffuse) : null;
+            this._position = position ? vec4.create(position) : null;
+            this._specular = specular ? vec4.create(specular) : null;
+            this._direction = direction ? vec3.create(direction) : null;
+            this._cutoff = cutoff;
         }
         Object.defineProperty(LightEntity.prototype, "ambient", {
             get: function () {
@@ -963,21 +1009,7 @@ var BlazeEngine;
             enumerable: true,
             configurable: true
         });
-        LightEntity.prototype.beginDraw = function (matrixStack) {
-        };
-        LightEntity.prototype.endDraw = function (matrixStack) {
-        };
-        return LightEntity;
-    })(Entity);
-    BlazeEngine.LightEntity = LightEntity;
-    var DirectionalLightEntity = (function (_super) {
-        __extends(DirectionalLightEntity, _super);
-        function DirectionalLightEntity(graph_id, ambient, diffuse, position, direction, cutoff) {
-            _super.call(this, graph_id, ambient, diffuse, position);
-            this._direction = direction ? vec3.create(direction) : vec3.create();
-            this._cutoff = cutoff || 0.5;
-        }
-        Object.defineProperty(DirectionalLightEntity.prototype, "direction", {
+        Object.defineProperty(LightEntity.prototype, "direction", {
             get: function () {
                 return this._direction;
             },
@@ -987,7 +1019,7 @@ var BlazeEngine;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(DirectionalLightEntity.prototype, "cutOff", {
+        Object.defineProperty(LightEntity.prototype, "cutOff", {
             get: function () {
                 return this._cutoff;
             },
@@ -997,13 +1029,47 @@ var BlazeEngine;
             enumerable: true,
             configurable: true
         });
-        DirectionalLightEntity.prototype.beginDraw = function (matrixStack) {
+        LightEntity.prototype.beginDraw = function () {
+            var gl = this.gl;
+            /* if (this._ambient) {
+                 var uLightAmbient = this.getUniform("uLightAmbient");
+                 if (uLightAmbient)
+                     gl.uniform4fv(uLightAmbient, this._ambient);
+             }
+     
+             if (this._diffuse) {
+                 var uLightDiffuse = this.getUniform("uLightDiffuse");
+                 if (uLightDiffuse)
+                     gl.uniform4fv(uLightDiffuse, this._diffuse);
+             }
+     
+             if (this._specular) {
+                 var uLightSpecular = this.getUniform("uLightSpecular");
+                 if (uLightSpecular)
+                     gl.uniform4fv(uLightSpecular, this._specular);
+             }
+     
+             if (this._position) {
+                 var uLightPosition = this.getUniform("uLightPosition");
+                 if (uLightPosition)
+                     gl.uniform3fv(uLightPosition, this._position);
+             }*/
+            /* if (this._direction) {
+                 var uDirection = this.getUniform("uLightDirection");
+                 if (uDirection)
+                     gl.uniform3fv(uDirection, this._direction);
+             }*/
+            /* if (this._cutoff) {
+                 var uCutOff = this.getUniform("uCutOff");
+                 if (uCutOff)
+                     gl.uniform1f(uCutOff, this._cutoff);
+             }*/
         };
-        DirectionalLightEntity.prototype.endDraw = function (matrixStack) {
+        LightEntity.prototype.endDraw = function () {
         };
-        return DirectionalLightEntity;
-    })(LightEntity);
-    BlazeEngine.DirectionalLightEntity = DirectionalLightEntity;
+        return LightEntity;
+    })(Entity);
+    BlazeEngine.LightEntity = LightEntity;
     var CameraEntity = (function (_super) {
         __extends(CameraEntity, _super);
         function CameraEntity(graph_id, options, type) {
@@ -1266,9 +1332,10 @@ var BlazeEngine;
         NodeElement.prototype.draw = function (matrixStack) {
             if (this._entity)
                 this._entity.beginDraw(matrixStack);
-            this._childNodes.forEach(function (child) {
+            for (var i = 0; i < this._childNodes.length; i++) {
+                var child = this._childNodes[i];
                 child.draw(matrixStack);
-            });
+            }
             if (this._entity)
                 this._entity.endDraw(matrixStack);
         };
@@ -1364,13 +1431,14 @@ var BlazeEngine;
             });
         };
         SceneGraph.prototype.buildDefaultGraph = function () {
-            var tr = this.createTransform();
-            var TrMeshNode = this.createMainChildNode("TRMesh", tr);
-            var mesh = this.createMesh({ mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/webgl.png" });
-            this.createMainChildNode("Mesh", mesh);
-            tr.position = [1, 0.0, -7];
-            tr.setAngle(90);
-            tr.setAxis([0, 1, 0]);
+            /* var light= this.createLight({
+                direction:[0.0,-1.0,-1.0],
+                ambient:[0.03,0.03,0.03,1.0],
+                diffuse:[1.0,1.0,1.0,1.0],
+                specular:[1.0,1.0,1.0,1.0]
+            });
+            
+            this.createMainChildNode("Light", light);*/
             /* var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity(this.oid));
              var TrCameraNode = this.createMainChildNode("TRCamera", new TransformEntity(this.oid));
              
@@ -1390,6 +1458,9 @@ var BlazeEngine;
         };
         SceneGraph.prototype.createTransform = function (position, size, rotation) {
             return new TransformEntity(this.oid, position, size, rotation);
+        };
+        SceneGraph.prototype.createLight = function (config) {
+            return new LightEntity(this.oid, config.ambient, config.diffuse, config.position, config.specular, config.direction, config.cutoff);
         };
         SceneGraph.prototype.loadAllMeshObjects = function (cb) {
             async.eachSeries(this._loaderBuffer, function (item, next) {
@@ -1422,8 +1493,8 @@ var BlazeEngine;
         };
         SceneGraph.FRAGMENT_SOURCE = "shaders/main.frag";
         SceneGraph.VERTEX_SOURCE = "shaders/main.vert";
-        SceneGraph.UNIFORMS = ["uPMatrix", "uMVMatrix"];
-        SceneGraph.ATTRIBUTES = ['a_position'];
+        SceneGraph.UNIFORMS = ['uPMatrix', 'uMVMatrix', 'uNMatrix' /*, 'uLightDirection'*/];
+        SceneGraph.ATTRIBUTES = ['a_position', 'a_normal'];
         return SceneGraph;
     })(Renderable);
     BlazeEngine.SceneGraph = SceneGraph;

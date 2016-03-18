@@ -206,7 +206,7 @@ module Resources {
         private _ambient: Array<number>;
         private _diffuse: Array<number>;
         private _specular: Array<number>;
-        private _transparent: number;
+        private _shininess: number;
         private _onload;
         private _src: string;
 
@@ -215,7 +215,7 @@ module Resources {
             this._ambient = ambient ? vec4.create(ambient) : vec4.create();
             this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
             this._specular = specular ? vec4.create(specular) : vec4.create();
-            this._transparent = shininess || 200.0;
+            this._shininess = shininess || 200.0;
         }
 
         public set onload(cb) {
@@ -229,10 +229,10 @@ module Resources {
 
             utils.load(src, (data) => {
                 var temp = self.parse(data);
-                this._ambient = temp.Ka;
-                this._diffuse = temp.Kd;
-                this._specular = temp.Ks;
-                this._transparent = temp.Ns;
+                this.ambient = temp.Ka;
+                this.diffuse = temp.Kd;
+                this.specular = temp.Ks;
+                this.shininess = temp.Ns;
                 if (this._onload) this._onload();
             });
 
@@ -248,9 +248,13 @@ module Resources {
                 var key = elems[0];
                 if (keys.indexOf(key) > -1) {
                     switch (key) {
-                        case "Ns": obj["Ns"] = elems[1];
+                        case "Ns": obj["Ns"] = Number(elems[1]);
                             break;
-                        default: obj[key] = elems.slice(1);
+                        default:{
+                            var temp=elems.slice(1).map(function(a){return Number(a)});
+                            temp.push(1.0);
+                            obj[key] = temp;
+                        } 
                     }
                 }
 
@@ -290,13 +294,13 @@ module Resources {
         }
 
 
-        public get transparent(): number {
-            return this._transparent;
+        public get shininess(): number {
+            return this._shininess;
         }
 
 
-        public set transparent(v: number) {
-            this._transparent = v;
+        public set shininess(v: number) {
+            this._shininess = v;
         }
 
     }

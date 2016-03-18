@@ -9,8 +9,8 @@ class SceneGraph extends Renderable {
 
     private static FRAGMENT_SOURCE = "shaders/main.frag";
     private static VERTEX_SOURCE = "shaders/main.vert";
-    private static UNIFORMS = ["uPMatrix", "uMVMatrix"];
-    private static ATTRIBUTES = ['a_position'];
+    private static UNIFORMS = ['uPMatrix', 'uMVMatrix', 'uNMatrix'/*, 'uLightDirection'*/];
+    private static ATTRIBUTES = ['a_position', 'a_normal'];
 
 
 
@@ -112,16 +112,10 @@ class SceneGraph extends Renderable {
 
 
     public buildDefaultGraph(): void {
-        var tr=this.createTransform();
-       var TrMeshNode = this.createMainChildNode("TRMesh", tr);
-        var mesh = this.createMesh({ mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/webgl.png" });
-        this.createMainChildNode("Mesh", mesh);
-
-        tr.position=[1, 0.0, -7];
         
        
-        tr.setAngle(90);
-        tr.setAxis([0,1,0])
+        
+      
 
         /* var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity(this.oid));
          var TrCameraNode = this.createMainChildNode("TRCamera", new TransformEntity(this.oid));
@@ -139,8 +133,8 @@ class SceneGraph extends Renderable {
 
 
     }
-    
-    
+
+
 
 
     public createMesh(config: { mesh?: string, texture?: string, material?: string }): MeshEntity {
@@ -152,6 +146,11 @@ class SceneGraph extends Renderable {
     public createTransform(position?: Array<number>, size?: Array<number>, rotation?: ClassUtils.Rotation) {
         return new TransformEntity(this.oid, position, size, rotation);
     }
+
+    public createLight(config: { ambient?: Array<number>, diffuse?: Array<number>, specular?: Array<number>, position?: Array<number>, direction?: Array<number>, cutoff?: number }) {
+        return new LightEntity(this.oid, config.ambient, config.diffuse, config.position, config.specular, config.direction, config.cutoff);
+    }
+
 
     public loadAllMeshObjects(cb) {
         async.eachSeries(this._loaderBuffer, (item, next) => {
