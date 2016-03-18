@@ -51,6 +51,16 @@ module Resources {
             } catch (e) {
                 console.log(e);
             }
+          
+            _.defaults(obj, {
+                v: [],
+                vn: [],
+                vt: [],
+                iv: [],
+                in: [],
+                it: []
+            });
+             
             return obj;
         }
 
@@ -106,14 +116,22 @@ module Resources {
 
         private createBuffers(obj: any): void {
             var gl = this.gl;
+            
+             
             function createBuffer(data) {
                 return WebGLUtils.createBuffer(gl, data);
             }
             if (obj.v.length > 0)
                 this._vbo = createBuffer(obj.v);
 
-            if (obj.vn.length > 0)
+            if (obj.vn.length > 0){
                 this._nbo = createBuffer(obj.vn);
+            }else{
+                if(obj.v.length>0&&obj.iv.length>0){
+                     this._nbo = createBuffer(utils.calculateNormals(obj.v, obj.iv));
+                }
+            }
+                
 
             if (obj.vt.length > 0)
                 this._tbo = createBuffer(obj.vt);
@@ -229,9 +247,9 @@ module Resources {
 
             utils.load(src, (data) => {
                 var temp = self.parse(data);
-                this.ambient = temp.Ka;
-                this.diffuse = temp.Kd;
-                this.specular = temp.Ks;
+                this._ambient = temp.Ka;
+                this._diffuse = temp.Kd;
+                this._specular = temp.Ks;
                 this.shininess = temp.Ns;
                 if (this._onload) this._onload();
             });

@@ -33,8 +33,12 @@ var TrMeshNode = Tree.createMainChildNode("TRMesh", tr);
 var mesh = Tree.createMesh({ mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/webgl.png" });
 TrMeshNode.createChildNode("Mesh", mesh);
 
+var mesh2 = Tree.createMesh({ mesh: "data/sphere.json", material: "data/test.mtl" });
 
 
+var tr2 = Tree.createTransform();
+var TrMesh2Node = Tree.createMainChildNode("TRMesh", tr2);
+TrMesh2Node.createChildNode("Mesh", mesh2);
 
 
 
@@ -44,7 +48,7 @@ Tree.configure(function() {
     var x = 4;
     BlazeEngine.Ketch.renderLoop(function() {
         tr.position = [x, 0, -7];
-
+       
         Tree.draw.bind(Tree)();
         x -= 0.1;
         if (x < -4) x = 4;

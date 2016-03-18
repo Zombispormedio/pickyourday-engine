@@ -154,6 +154,66 @@ var BlazeEngine;
             return d * Math.PI / 180;
         }
         utils.degToRad = degToRad;
+        function calculateNormals(vs, ind) {
+            var x = 0;
+            var y = 1;
+            var z = 2;
+            var ns = [];
+            for (var i = 0; i < vs.length; i++) {
+                ns[i] = 0.0;
+            }
+            for (var i = 0; i < ind.length; i = i + 3) {
+                var v1 = [];
+                var v2 = [];
+                var normal = [];
+                //p1 - p0
+                v1[x] = vs[3 * ind[i + 1] + x] - vs[3 * ind[i] + x];
+                v1[y] = vs[3 * ind[i + 1] + y] - vs[3 * ind[i] + y];
+                v1[z] = vs[3 * ind[i + 1] + z] - vs[3 * ind[i] + z];
+                // p0 - p1
+                v2[x] = vs[3 * ind[i + 2] + x] - vs[3 * ind[i + 1] + x];
+                v2[y] = vs[3 * ind[i + 2] + y] - vs[3 * ind[i + 1] + y];
+                v2[z] = vs[3 * ind[i + 2] + z] - vs[3 * ind[i + 1] + z];
+                //p2 - p1
+                // v1[x] = vs[3*ind[i+2]+x] - vs[3*ind[i+1]+x];
+                // v1[y] = vs[3*ind[i+2]+y] - vs[3*ind[i+1]+y];
+                // v1[z] = vs[3*ind[i+2]+z] - vs[3*ind[i+1]+z];
+                // p0 - p1
+                // v2[x] = vs[3*ind[i]+x] - vs[3*ind[i+1]+x];
+                // v2[y] = vs[3*ind[i]+y] - vs[3*ind[i+1]+y];
+                // v2[z] = vs[3*ind[i]+z] - vs[3*ind[i+1]+z];
+                //cross product by Sarrus Rule
+                normal[x] = v1[y] * v2[z] - v1[z] * v2[y];
+                normal[y] = v1[z] * v2[x] - v1[x] * v2[z];
+                normal[z] = v1[x] * v2[y] - v1[y] * v2[x];
+                // ns[3*ind[i]+x] += normal[x];
+                // ns[3*ind[i]+y] += normal[y];
+                // ns[3*ind[i]+z] += normal[z];
+                for (j = 0; j < 3; j++) {
+                    ns[3 * ind[i + j] + x] = ns[3 * ind[i + j] + x] + normal[x];
+                    ns[3 * ind[i + j] + y] = ns[3 * ind[i + j] + y] + normal[y];
+                    ns[3 * ind[i + j] + z] = ns[3 * ind[i + j] + z] + normal[z];
+                }
+            }
+            //normalize the result
+            for (var i = 0; i < vs.length; i = i + 3) {
+                var nn = [];
+                nn[x] = ns[i + x];
+                nn[y] = ns[i + y];
+                nn[z] = ns[i + z];
+                var len = Math.sqrt((nn[x] * nn[x]) + (nn[y] * nn[y]) + (nn[z] * nn[z]));
+                if (len == 0)
+                    len = 0.00001;
+                nn[x] = nn[x] / len;
+                nn[y] = nn[y] / len;
+                nn[z] = nn[z] / len;
+                ns[i + x] = nn[x];
+                ns[i + y] = nn[y];
+                ns[i + z] = nn[z];
+            }
+            return ns;
+        }
+        utils.calculateNormals = calculateNormals;
     })(utils = BlazeEngine.utils || (BlazeEngine.utils = {}));
     (function (CAMERA_TYPE) {
         CAMERA_TYPE[CAMERA_TYPE["ORBITING"] = 0] = "ORBITING";
@@ -387,6 +447,14 @@ var BlazeEngine;
                 catch (e) {
                     console.log(e);
                 }
+                _.defaults(obj, {
+                    v: [],
+                    vn: [],
+                    vt: [],
+                    iv: [],
+                    in: [],
+                    it: []
+                });
                 return obj;
             };
             MeshBuffers.prototype.parseOBJ = function (data) {
@@ -434,8 +502,14 @@ var BlazeEngine;
                 }
                 if (obj.v.length > 0)
                     this._vbo = createBuffer(obj.v);
-                if (obj.vn.length > 0)
+                if (obj.vn.length > 0) {
                     this._nbo = createBuffer(obj.vn);
+                }
+                else {
+                    if (obj.v.length > 0 && obj.iv.length > 0) {
+                        this._nbo = createBuffer(utils.calculateNormals(obj.v, obj.iv));
+                    }
+                }
                 if (obj.vt.length > 0)
                     this._tbo = createBuffer(obj.vt);
                 function createIndexBuffer(data) {
@@ -554,9 +628,9 @@ var BlazeEngine;
                     var self = this;
                     utils.load(src, function (data) {
                         var temp = self.parse(data);
-                        _this.ambient = temp.Ka;
-                        _this.diffuse = temp.Kd;
-                        _this.specular = temp.Ks;
+                        _this._ambient = temp.Ka;
+                        _this._diffuse = temp.Kd;
+                        _this._specular = temp.Ks;
                         _this.shininess = temp.Ns;
                         if (_this._onload)
                             _this._onload();
@@ -824,13 +898,13 @@ var BlazeEngine;
                 if (this._material.shininess) {
                     var uShininess = this.getUniform("uShininess");
                     if (uShininess)
-                        gl.uniform4fv(uShininess, this._material.shininess);
+                        gl.uniform1f(uShininess, this._material.shininess);
                 }
             }
         };
         MeshEntity.prototype.beginDraw = function () {
             var gl = this.gl;
-            //this.setMaterialUniforms();
+            this.setMaterialUniforms();
             gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
             Ketch.enableAttrib(this.graphID, "a_position");
             gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.nbo);
@@ -1031,34 +1105,31 @@ var BlazeEngine;
         });
         LightEntity.prototype.beginDraw = function () {
             var gl = this.gl;
-            /* if (this._ambient) {
-                 var uLightAmbient = this.getUniform("uLightAmbient");
-                 if (uLightAmbient)
-                     gl.uniform4fv(uLightAmbient, this._ambient);
-             }
-     
-             if (this._diffuse) {
-                 var uLightDiffuse = this.getUniform("uLightDiffuse");
-                 if (uLightDiffuse)
-                     gl.uniform4fv(uLightDiffuse, this._diffuse);
-             }
-     
-             if (this._specular) {
-                 var uLightSpecular = this.getUniform("uLightSpecular");
-                 if (uLightSpecular)
-                     gl.uniform4fv(uLightSpecular, this._specular);
-             }
-     
-             if (this._position) {
-                 var uLightPosition = this.getUniform("uLightPosition");
-                 if (uLightPosition)
-                     gl.uniform3fv(uLightPosition, this._position);
-             }*/
-            /* if (this._direction) {
-                 var uDirection = this.getUniform("uLightDirection");
-                 if (uDirection)
-                     gl.uniform3fv(uDirection, this._direction);
-             }*/
+            if (this._ambient) {
+                var uLightAmbient = this.getUniform("uLightAmbient");
+                if (uLightAmbient)
+                    gl.uniform4fv(uLightAmbient, this._ambient);
+            }
+            if (this._diffuse) {
+                var uLightDiffuse = this.getUniform("uLightDiffuse");
+                if (uLightDiffuse)
+                    gl.uniform4fv(uLightDiffuse, this._diffuse);
+            }
+            if (this._specular) {
+                var uLightSpecular = this.getUniform("uLightSpecular");
+                if (uLightSpecular)
+                    gl.uniform4fv(uLightSpecular, this._specular);
+            }
+            if (this._position) {
+                var uLightPosition = this.getUniform("uLightPosition");
+                if (uLightPosition)
+                    gl.uniform3fv(uLightPosition, this._position);
+            }
+            if (this._direction) {
+                var uDirection = this.getUniform("uLightDirection");
+                if (uDirection)
+                    gl.uniform3fv(uDirection, this._direction);
+            }
             /* if (this._cutoff) {
                  var uCutOff = this.getUniform("uCutOff");
                  if (uCutOff)
@@ -1431,14 +1502,6 @@ var BlazeEngine;
             });
         };
         SceneGraph.prototype.buildDefaultGraph = function () {
-            /* var light= this.createLight({
-                direction:[0.0,-1.0,-1.0],
-                ambient:[0.03,0.03,0.03,1.0],
-                diffuse:[1.0,1.0,1.0,1.0],
-                specular:[1.0,1.0,1.0,1.0]
-            });
-            
-            this.createMainChildNode("Light", light);*/
             /* var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity(this.oid));
              var TrCameraNode = this.createMainChildNode("TRCamera", new TransformEntity(this.oid));
              
@@ -1493,7 +1556,19 @@ var BlazeEngine;
         };
         SceneGraph.FRAGMENT_SOURCE = "shaders/main.frag";
         SceneGraph.VERTEX_SOURCE = "shaders/main.vert";
-        SceneGraph.UNIFORMS = ['uPMatrix', 'uMVMatrix', 'uNMatrix' /*, 'uLightDirection'*/];
+        SceneGraph.UNIFORMS = [
+            'uPMatrix',
+            'uMVMatrix',
+            'uNMatrix',
+            'uLightDirection',
+            'uLightAmbient',
+            'uMaterialAmbient',
+            'uLightDiffuse',
+            'uMaterialDiffuse',
+            'uLightSpecular',
+            'uMaterialSpecular',
+            'uShininess'
+        ];
         SceneGraph.ATTRIBUTES = ['a_position', 'a_normal'];
         return SceneGraph;
     })(Renderable);

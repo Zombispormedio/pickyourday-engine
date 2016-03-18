@@ -77,7 +77,7 @@ class LightEntity extends Entity {
     beginDraw() {
         var gl = this.gl;
 
-       /* if (this._ambient) {
+        if (this._ambient) {
             var uLightAmbient = this.getUniform("uLightAmbient");
             if (uLightAmbient)
                 gl.uniform4fv(uLightAmbient, this._ambient);
@@ -99,13 +99,13 @@ class LightEntity extends Entity {
             var uLightPosition = this.getUniform("uLightPosition");
             if (uLightPosition)
                 gl.uniform3fv(uLightPosition, this._position);
-        }*/
+        }
 
-       /* if (this._direction) {
+        if (this._direction) {
             var uDirection = this.getUniform("uLightDirection");
             if (uDirection)
                 gl.uniform3fv(uDirection, this._direction);
-        }*/
+        }
 
        /* if (this._cutoff) {
             var uCutOff = this.getUniform("uCutOff");

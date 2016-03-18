@@ -115,7 +115,7 @@ class MeshEntity extends Entity {
 
                 var uShininess = this.getUniform("uShininess");
                 if (uShininess)
-                    gl.uniform4fv(uShininess, this._material.shininess);
+                    gl.uniform1f(uShininess, this._material.shininess);
             }
 
 
@@ -129,7 +129,7 @@ class MeshEntity extends Entity {
 
 
 
-        //this.setMaterialUniforms();
+        this.setMaterialUniforms();
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 

@@ -9,7 +9,19 @@ class SceneGraph extends Renderable {
 
     private static FRAGMENT_SOURCE = "shaders/main.frag";
     private static VERTEX_SOURCE = "shaders/main.vert";
-    private static UNIFORMS = ['uPMatrix', 'uMVMatrix', 'uNMatrix'/*, 'uLightDirection'*/];
+    private static UNIFORMS = [
+        'uPMatrix',
+        'uMVMatrix',
+        'uNMatrix',
+        'uLightDirection',
+        'uLightAmbient',
+        'uMaterialAmbient',
+        'uLightDiffuse',
+        'uMaterialDiffuse',
+        'uLightSpecular',
+        'uMaterialSpecular',
+        'uShininess'
+    ];
     private static ATTRIBUTES = ['a_position', 'a_normal'];
 
 
@@ -112,10 +124,10 @@ class SceneGraph extends Renderable {
 
 
     public buildDefaultGraph(): void {
-        
-       
-        
-      
+
+
+
+
 
         /* var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity(this.oid));
          var TrCameraNode = this.createMainChildNode("TRCamera", new TransformEntity(this.oid));

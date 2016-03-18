@@ -171,6 +171,74 @@ export module utils {
     }
 
 
+    export function calculateNormals(vs, ind) {
+        var x = 0;
+        var y = 1;
+        var z = 2;
+
+        var ns = [];
+        for (var i = 0; i < vs.length; i++) { //for each vertex, initialize normal x, normal y, normal z
+            ns[i] = 0.0;
+        }
+
+        for (var i = 0; i < ind.length; i = i + 3) { //we work on triads of vertices to calculate normals so i = i+3 (i = indices index)
+            var v1 = [];
+            var v2 = [];
+            var normal = [];
+            //p1 - p0
+            v1[x] = vs[3 * ind[i + 1] + x] - vs[3 * ind[i] + x];
+            v1[y] = vs[3 * ind[i + 1] + y] - vs[3 * ind[i] + y];
+            v1[z] = vs[3 * ind[i + 1] + z] - vs[3 * ind[i] + z];
+            // p0 - p1
+            v2[x] = vs[3 * ind[i + 2] + x] - vs[3 * ind[i + 1] + x];
+            v2[y] = vs[3 * ind[i + 2] + y] - vs[3 * ind[i + 1] + y];
+            v2[z] = vs[3 * ind[i + 2] + z] - vs[3 * ind[i + 1] + z];
+            //p2 - p1
+            // v1[x] = vs[3*ind[i+2]+x] - vs[3*ind[i+1]+x];
+            // v1[y] = vs[3*ind[i+2]+y] - vs[3*ind[i+1]+y];
+            // v1[z] = vs[3*ind[i+2]+z] - vs[3*ind[i+1]+z];
+            // p0 - p1
+            // v2[x] = vs[3*ind[i]+x] - vs[3*ind[i+1]+x];
+            // v2[y] = vs[3*ind[i]+y] - vs[3*ind[i+1]+y];
+            // v2[z] = vs[3*ind[i]+z] - vs[3*ind[i+1]+z];
+            //cross product by Sarrus Rule
+            normal[x] = v1[y] * v2[z] - v1[z] * v2[y];
+            normal[y] = v1[z] * v2[x] - v1[x] * v2[z];
+            normal[z] = v1[x] * v2[y] - v1[y] * v2[x];
+
+            // ns[3*ind[i]+x] += normal[x];
+            // ns[3*ind[i]+y] += normal[y];
+            // ns[3*ind[i]+z] += normal[z];
+            for (j = 0; j < 3; j++) { //update the normals of that triangle: sum of vectors
+                ns[3 * ind[i + j] + x] = ns[3 * ind[i + j] + x] + normal[x];
+                ns[3 * ind[i + j] + y] = ns[3 * ind[i + j] + y] + normal[y];
+                ns[3 * ind[i + j] + z] = ns[3 * ind[i + j] + z] + normal[z];
+            }
+        }
+        //normalize the result
+        for (var i = 0; i < vs.length; i = i + 3) { //the increment here is because each vertex occurs with an offset of 3 in the array (due to x, y, z contiguous values)
+
+            var nn = [];
+            nn[x] = ns[i + x];
+            nn[y] = ns[i + y];
+            nn[z] = ns[i + z];
+
+            var len = Math.sqrt((nn[x] * nn[x]) + (nn[y] * nn[y]) + (nn[z] * nn[z]));
+            if (len == 0) len = 0.00001;
+
+            nn[x] = nn[x] / len;
+            nn[y] = nn[y] / len;
+            nn[z] = nn[z] / len;
+
+            ns[i + x] = nn[x];
+            ns[i + y] = nn[y];
+            ns[i + z] = nn[z];
+        }
+
+        return ns;
+    }
+
+
 
 }
 
@@ -428,6 +496,16 @@ export module Resources {
             } catch (e) {
                 console.log(e);
             }
+          
+            _.defaults(obj, {
+                v: [],
+                vn: [],
+                vt: [],
+                iv: [],
+                in: [],
+                it: []
+            });
+             
             return obj;
         }
 
@@ -483,14 +561,22 @@ export module Resources {
 
         private createBuffers(obj: any): void {
             var gl = this.gl;
+            
+             
             function createBuffer(data) {
                 return WebGLUtils.createBuffer(gl, data);
             }
             if (obj.v.length > 0)
                 this._vbo = createBuffer(obj.v);
 
-            if (obj.vn.length > 0)
+            if (obj.vn.length > 0){
                 this._nbo = createBuffer(obj.vn);
+            }else{
+                if(obj.v.length>0&&obj.iv.length>0){
+                     this._nbo = createBuffer(utils.calculateNormals(obj.v, obj.iv));
+                }
+            }
+                
 
             if (obj.vt.length > 0)
                 this._tbo = createBuffer(obj.vt);
@@ -606,9 +692,9 @@ export module Resources {
 
             utils.load(src, (data) => {
                 var temp = self.parse(data);
-                this.ambient = temp.Ka;
-                this.diffuse = temp.Kd;
-                this.specular = temp.Ks;
+                this._ambient = temp.Ka;
+                this._diffuse = temp.Kd;
+                this._specular = temp.Ks;
                 this.shininess = temp.Ns;
                 if (this._onload) this._onload();
             });
@@ -904,7 +990,7 @@ export class MeshEntity extends Entity {
 
                 var uShininess = this.getUniform("uShininess");
                 if (uShininess)
-                    gl.uniform4fv(uShininess, this._material.shininess);
+                    gl.uniform1f(uShininess, this._material.shininess);
             }
 
 
@@ -918,7 +1004,7 @@ export class MeshEntity extends Entity {
 
 
 
-        //this.setMaterialUniforms();
+        this.setMaterialUniforms();
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 
@@ -1146,7 +1232,7 @@ export class LightEntity extends Entity {
     beginDraw() {
         var gl = this.gl;
 
-       /* if (this._ambient) {
+        if (this._ambient) {
             var uLightAmbient = this.getUniform("uLightAmbient");
             if (uLightAmbient)
                 gl.uniform4fv(uLightAmbient, this._ambient);
@@ -1168,13 +1254,13 @@ export class LightEntity extends Entity {
             var uLightPosition = this.getUniform("uLightPosition");
             if (uLightPosition)
                 gl.uniform3fv(uLightPosition, this._position);
-        }*/
+        }
 
-       /* if (this._direction) {
+        if (this._direction) {
             var uDirection = this.getUniform("uLightDirection");
             if (uDirection)
                 gl.uniform3fv(uDirection, this._direction);
-        }*/
+        }
 
        /* if (this._cutoff) {
             var uCutOff = this.getUniform("uCutOff");
@@ -1513,7 +1599,19 @@ export class SceneGraph extends Renderable {
 
     private static FRAGMENT_SOURCE = "shaders/main.frag";
     private static VERTEX_SOURCE = "shaders/main.vert";
-    private static UNIFORMS = ['uPMatrix', 'uMVMatrix', 'uNMatrix'/*, 'uLightDirection'*/];
+    private static UNIFORMS = [
+        'uPMatrix',
+        'uMVMatrix',
+        'uNMatrix',
+        'uLightDirection',
+        'uLightAmbient',
+        'uMaterialAmbient',
+        'uLightDiffuse',
+        'uMaterialDiffuse',
+        'uLightSpecular',
+        'uMaterialSpecular',
+        'uShininess'
+    ];
     private static ATTRIBUTES = ['a_position', 'a_normal'];
 
 
@@ -1616,17 +1714,10 @@ export class SceneGraph extends Renderable {
 
 
     public buildDefaultGraph(): void {
-        
-        /* var light= this.createLight({
-            direction:[0.0,-1.0,-1.0],
-            ambient:[0.03,0.03,0.03,1.0],
-            diffuse:[1.0,1.0,1.0,1.0],
-            specular:[1.0,1.0,1.0,1.0]
-        });
-        
-        this.createMainChildNode("Light", light);*/
-        
-      
+
+
+
+
 
         /* var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity(this.oid));
          var TrCameraNode = this.createMainChildNode("TRCamera", new TransformEntity(this.oid));
