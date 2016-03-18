@@ -88,6 +88,7 @@ module Resources {
             vertex.forEach((item) => {
                 var elems = item.replace("\r", "").split(" ");
                 var key = elems[0];
+                if(key!=="vn")
                 obj[key] = obj[key].concat(elems.slice(1).filter((a) => {
                     return a !== "";
                 }));

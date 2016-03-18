@@ -476,9 +476,10 @@ var BlazeEngine;
                 vertex.forEach(function (item) {
                     var elems = item.replace("\r", "").split(" ");
                     var key = elems[0];
-                    obj[key] = obj[key].concat(elems.slice(1).filter(function (a) {
-                        return a !== "";
-                    }));
+                    if (key !== "vn")
+                        obj[key] = obj[key].concat(elems.slice(1).filter(function (a) {
+                            return a !== "";
+                        }));
                 });
                 var tempIndex = [];
                 index.forEach(function (item) {
