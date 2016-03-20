@@ -19,25 +19,25 @@
         <canvas id="3dView" width="600" height="600" flex></canvas>
         <div flex>
             <section ng-repeat="m in meshes">
-                <md-subheader  ng-init="m.show=false" ng-click="m.show=!m.show" class="md-warn">Mesh {{$index}}</md-subheader>
+                <md-subheader ng-init="m.show=false" ng-click="m.show=!m.show" class="md-warn">Mesh {{$index}}</md-subheader>
                 <md-tabs ng-if="m.show" class="md-accent" md-align-tabs="top">
                     <md-tab>
                         <md-tab-label>Position</md-tab-label>
                         <md-tab-body>
                             <md-slider-container>
                                 <span>X</span>
-                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.position[0]" step="0.1" min="-5" max="5" aria-label="positionX">
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.position[0]" step="0.1" min="-20" max="20" aria-label="positionX">
                                 </md-slider>
                             </md-slider-container>
 
                             <md-slider-container>
                                 <span>Y</span>
-                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.position[1]" step="0.1" min="-5" max="5" aria-label="positionX">
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.position[1]" step="0.1" min="-20" max="20" aria-label="positionX">
                                 </md-slider>
                             </md-slider-container>
                             <md-slider-container>
                                 <span>Z</span>
-                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.position[2]" step="0.1" min="-5" max="5" aria-label="positionX">
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.position[2]" step="0.1" min="-20" max="20" aria-label="positionX">
                                 </md-slider>
                             </md-slider-container>
                         </md-tab-body>
@@ -48,18 +48,18 @@
                         <md-tab-body>
                             <md-slider-container>
                                 <span>X</span>
-                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.size[0]" step="0.1" min="-5" max="5" aria-label="positionX">
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.size[0]" step="0.1" min="-20" max="20" aria-label="positionX">
                                 </md-slider>
                             </md-slider-container>
 
                             <md-slider-container>
                                 <span>Y</span>
-                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.size[1]" step="0.1" min="-5" max="5" aria-label="positionX">
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.size[1]" step="0.1" min="-20" max="20" aria-label="positionX">
                                 </md-slider>
                             </md-slider-container>
                             <md-slider-container>
                                 <span>Z</span>
-                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.size[2]" step="0.1" min="-5" max="5" aria-label="positionX">
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.size[2]" step="0.1" min="-20" max="20" aria-label="positionX">
                                 </md-slider>
                             </md-slider-container>
 
@@ -86,8 +86,8 @@
                             </md-checkbox>
                         </md-tab-body>
                     </md-tab>
-                    
-                     <md-tab>
+
+                    <md-tab>
                         <md-tab-label>Material Ambient</md-tab-label>
                         <md-tab-body>
                             <md-slider-container>
@@ -118,7 +118,7 @@
                             </md-slider-container>
                             <md-slider-container>
                                 <span>G</span>
-                                <md-slider flex class="md-primary" md-discrete ng-model="m.mesh._material.difusse[1]" step="0.01" min="0" max="1" aria-label="positionX">
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.mesh._material.diffuse[1]" step="0.01" min="0" max="1" aria-label="positionX">
                                 </md-slider>
                             </md-slider-container>
                             <md-slider-container>
@@ -149,7 +149,7 @@
                             </md-slider-container>
                         </md-tab-body>
                     </md-tab>
-                    
+
                     <md-tab>
                         <md-tab-label>Shininess</md-tab-label>
                         <md-tab-body>
@@ -158,7 +158,7 @@
                                 <md-slider flex class="md-primary" md-discrete ng-model="m.mesh._material._shininess" step="10" min="0" max="500" aria-label="positionX">
                                 </md-slider>
                             </md-slider-container>
-                           
+
                         </md-tab-body>
                     </md-tab>
                 </md-tabs>
@@ -252,6 +252,23 @@
                     </md-tab>
                 </md-tabs>
 
+            </section>
+            <section>
+                <md-subheader ng-init="showCamera=false" ng-click="showCamera=!showCamera" class="md-warn">Camera</md-subheader>
+                <md-tabs class="md-accent" ng-if="showCamera">
+                    <md-tab>
+                        <md-tab-label>Zoom</md-tab-label>
+                        <md-tab-body>
+                            <md-slider-container>
+                                <span>Units</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="values.zoom"  ng-change="changeZoom()" step="10" min="0" max="1000" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                           
+
+                        </md-tab-body>
+                    </md-tab>
+                </md-tabs>
             </section>
         </div>
 

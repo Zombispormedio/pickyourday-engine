@@ -14,7 +14,7 @@ class CameraEntity extends Entity {
     private _options: { focus: Array<number>, azimuth: number, elevation: number, home: Array<number> };
 
 
-    constructor(graph_id:string,options?, type?: CAMERA_TYPE) {
+    constructor(graph_id: string, options?, type?: CAMERA_TYPE) {
         super(graph_id);
         this._type = type || CAMERA_TYPE.ORBITING;
         this._cmatrix = mat4.create();
@@ -28,11 +28,8 @@ class CameraEntity extends Entity {
         this._elevation = 0.0;
         this._steps = 0;
         this._options = options;
-        
-        this.home = this._options.home;
-        this.focus = this._options.focus;
-        this.azimuth = this._options.azimuth;
-        this.elevation = this._options.elevation;
+
+
     }
 
 
@@ -45,27 +42,31 @@ class CameraEntity extends Entity {
         if (home != void 0) {
             this._home = home;
         }
-        this.position = this._home;
+        this.setPosition(this._home);
         this.azimuth = 0;
-        this.elevation=0;
-        this._steps=0;
+        this.elevation = 0;
+        this._steps = 0;
     }
 
 
 
-    public set position(p: Array<number>) {
+    public setPosition(p: Array<number>) {
         vec3.set(p, this._position);
-        vec3.set(p, this._home);
+
         this.updateMatrix();
+
     }
 
-
-    public set azimuth(azimuth: number) {
-        this._azimuth += azimuth - this._azimuth;
+    public changeAzimuth(az: number) {
+        this._azimuth += az;
         if (this._azimuth > 360 || this._azimuth < -360) {
             this._azimuth %= 360;
         }
         this.updateMatrix();
+    }
+
+    public set azimuth(azimuth: number) {
+        this.changeAzimuth(azimuth - this._azimuth);
 
     }
 
@@ -76,8 +77,8 @@ class CameraEntity extends Entity {
     }
 
 
-    public set elevation(e: number) {
-        this._elevation += e;
+    public changeElevation(el) {
+        this._elevation += el;
 
         if (this._elevation > 360 || this._elevation < -360) {
             this._elevation %= 360;
@@ -85,9 +86,45 @@ class CameraEntity extends Entity {
         this.updateMatrix();
     }
 
+    public set elevation(e: number) {
+        this.changeElevation(e - this._elevation);
+    }
 
 
 
+
+
+
+
+    public zoom(offset: number) {
+
+        var p = this._position;
+        var n = vec3.create();
+
+        var step = offset - this._steps;
+
+        vec3.normalize(this._normal, n);
+
+
+        var new_position = vec3.create();
+
+        if (this._type === CAMERA_TYPE.TRACKING) {
+            new_position.forEach((x, index) => {
+                x = p[index] - step * n[index];
+            });
+        } else {
+            new_position.forEach((x, index) => {
+                if (index < 2) x = p[index];
+                else x = p[index] - step;
+            });
+        }
+
+        this.setPosition(new_position);
+        this._steps = offset;
+
+
+
+    }
     applyOrientationMatrix() {
         var m = this._cmatrix;
         mat4.multiplyVec4(m, [1, 0, 0, 0], this._right);
@@ -95,37 +132,9 @@ class CameraEntity extends Entity {
         mat4.multiplyVec4(m, [0, 0, 1, 0], this._normal);
     }
 
-
-    dolly(offset: number) {
-        var p=this._position;
-        var n=vec3.create();
-        
-        var step=offset-this._steps;
-        
-        vec3.normalize(this._normal, n);
-        
-        
-        var new_position=vec3.create();
-        
-        if(this._type===CAMERA_TYPE.TRACKING){
-            new_position.forEach((x, index)=>{
-                x=p[index]-step*n[index];
-            });
-        }else{
-             new_position.forEach((x, index)=>{
-                if(index<2)x=p[index];
-                else x=p[index]-step;
-            });
-        }
-        
-        this.position=new_position;
-        this._steps=offset;
-       
-    }
-    
     updateMatrix() {
         mat4.identity(this._cmatrix);
-        this.applyOrientationMatrix();
+       
 
         if (this._type === CAMERA_TYPE.TRACKING) {
             mat4.translate(this._cmatrix, this._position);
@@ -136,6 +145,7 @@ class CameraEntity extends Entity {
             mat4.rotateX(this._cmatrix, this._elevation * Math.PI / 180);
             mat4.translate(this._cmatrix, this._position);
         }
+        
 
         this.applyOrientationMatrix();
 
@@ -143,6 +153,9 @@ class CameraEntity extends Entity {
             mat4.multiplyVec4(this._cmatrix, [0, 0, 0, 1], this._position);
         }
     }
+    
+    
+    
 
 
     public get modelView(): Array<number> {
@@ -152,7 +165,10 @@ class CameraEntity extends Entity {
     }
 
     beginDraw() {
-        
+        this.home = this._options.home;
+        this.focus = this._options.focus;
+        this.azimuth = this._options.azimuth;
+        this.elevation = this._options.elevation;
     }
 
     endDraw() {

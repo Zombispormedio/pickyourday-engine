@@ -288,7 +288,7 @@ var BlazeEngine;
             gl.disableVertexAttribArray(index);
         };
         Ketch.renderLoop = function (cb) {
-            setInterval(cb, 50);
+            setInterval(cb, 500);
         };
         Ketch._views = {};
         return Ketch;
@@ -1184,10 +1184,6 @@ var BlazeEngine;
             this._elevation = 0.0;
             this._steps = 0;
             this._options = options;
-            this.home = this._options.home;
-            this.focus = this._options.focus;
-            this.azimuth = this._options.azimuth;
-            this.elevation = this._options.elevation;
         }
         Object.defineProperty(CameraEntity.prototype, "type", {
             set: function (type) {
@@ -1201,7 +1197,7 @@ var BlazeEngine;
                 if (home != void 0) {
                     this._home = home;
                 }
-                this.position = this._home;
+                this.setPosition(this._home);
                 this.azimuth = 0;
                 this.elevation = 0;
                 this._steps = 0;
@@ -1209,22 +1205,20 @@ var BlazeEngine;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(CameraEntity.prototype, "position", {
-            set: function (p) {
-                vec3.set(p, this._position);
-                vec3.set(p, this._home);
-                this.updateMatrix();
-            },
-            enumerable: true,
-            configurable: true
-        });
+        CameraEntity.prototype.setPosition = function (p) {
+            vec3.set(p, this._position);
+            this.updateMatrix();
+        };
+        CameraEntity.prototype.changeAzimuth = function (az) {
+            this._azimuth += az;
+            if (this._azimuth > 360 || this._azimuth < -360) {
+                this._azimuth %= 360;
+            }
+            this.updateMatrix();
+        };
         Object.defineProperty(CameraEntity.prototype, "azimuth", {
             set: function (azimuth) {
-                this._azimuth += azimuth - this._azimuth;
-                if (this._azimuth > 360 || this._azimuth < -360) {
-                    this._azimuth %= 360;
-                }
-                this.updateMatrix();
+                this.changeAzimuth(azimuth - this._azimuth);
             },
             enumerable: true,
             configurable: true
@@ -1237,24 +1231,21 @@ var BlazeEngine;
             enumerable: true,
             configurable: true
         });
+        CameraEntity.prototype.changeElevation = function (el) {
+            this._elevation += el;
+            if (this._elevation > 360 || this._elevation < -360) {
+                this._elevation %= 360;
+            }
+            this.updateMatrix();
+        };
         Object.defineProperty(CameraEntity.prototype, "elevation", {
             set: function (e) {
-                this._elevation += e;
-                if (this._elevation > 360 || this._elevation < -360) {
-                    this._elevation %= 360;
-                }
-                this.updateMatrix();
+                this.changeElevation(e - this._elevation);
             },
             enumerable: true,
             configurable: true
         });
-        CameraEntity.prototype.applyOrientationMatrix = function () {
-            var m = this._cmatrix;
-            mat4.multiplyVec4(m, [1, 0, 0, 0], this._right);
-            mat4.multiplyVec4(m, [0, 1, 0, 0], this._up);
-            mat4.multiplyVec4(m, [0, 0, 1, 0], this._normal);
-        };
-        CameraEntity.prototype.dolly = function (offset) {
+        CameraEntity.prototype.zoom = function (offset) {
             var p = this._position;
             var n = vec3.create();
             var step = offset - this._steps;
@@ -1273,12 +1264,17 @@ var BlazeEngine;
                         x = p[index] - step;
                 });
             }
-            this.position = new_position;
+            this.setPosition(new_position);
             this._steps = offset;
+        };
+        CameraEntity.prototype.applyOrientationMatrix = function () {
+            var m = this._cmatrix;
+            mat4.multiplyVec4(m, [1, 0, 0, 0], this._right);
+            mat4.multiplyVec4(m, [0, 1, 0, 0], this._up);
+            mat4.multiplyVec4(m, [0, 0, 1, 0], this._normal);
         };
         CameraEntity.prototype.updateMatrix = function () {
             mat4.identity(this._cmatrix);
-            this.applyOrientationMatrix();
             if (this._type === CAMERA_TYPE.TRACKING) {
                 mat4.translate(this._cmatrix, this._position);
                 mat4.rotateY(this._cmatrix, this._azimuth * Math.PI / 180);
@@ -1304,6 +1300,10 @@ var BlazeEngine;
             configurable: true
         });
         CameraEntity.prototype.beginDraw = function () {
+            this.home = this._options.home;
+            this.focus = this._options.focus;
+            this.azimuth = this._options.azimuth;
+            this.elevation = this._options.elevation;
         };
         CameraEntity.prototype.endDraw = function () {
         };
