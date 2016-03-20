@@ -4,22 +4,269 @@
 <head>
     <meta charset="UTF-8">
     <title>Blaze Engine</title>
-     <link rel="shortcut icon" type="image/png" href="https://8549c43475562a0521ba166a16fdb7de6ce65077.googledrive.com/host/0B-TPTaV5ouD7TUtDXzVxQmhYa1E/logo.png"/>
-    <script type="text/javascript" src="/bower_components/angular/angular.min.js"></script>
-    <script type="text/javascript" src="/bower_components/gl-matrix/gl-matrix-min.js"></script>
-    <script type="text/javascript" src="bower_components/lodash/dist/lodash.min.js"></script>
-    <script type="text/javascript" src="bower_components/async/dist/async.min.js"></script>
-    <script type="text/javascript" src="/dist/pickyourday-engine.js"></script>
-       
+    <link rel="shortcut icon" type="image/png" href="https://8549c43475562a0521ba166a16fdb7de6ce65077.googledrive.com/host/0B-TPTaV5ouD7TUtDXzVxQmhYa1E/logo.png"
+    />
+    <link rel="stylesheet" href="bower_components/angular-material/angular-material.min.css">
+
 
 
 </head>
 
-<body>
+<body ng-app="_3dApp">
 
-    <div>
-        <canvas id="3dView" width="600" height="600"></canvas>
+    <div ng-controller="AppController" layout="row">
+        <md-progress-circular md-mode="indeterminate" ng-if="loading"></md-progress-circular>
+        <canvas id="3dView" width="600" height="600" flex></canvas>
+        <div flex>
+            <section ng-repeat="m in meshes">
+                <md-subheader  ng-init="m.show=false" ng-click="m.show=!m.show" class="md-warn">Mesh {{$index}}</md-subheader>
+                <md-tabs ng-if="m.show" class="md-accent" md-align-tabs="top">
+                    <md-tab>
+                        <md-tab-label>Position</md-tab-label>
+                        <md-tab-body>
+                            <md-slider-container>
+                                <span>X</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.position[0]" step="0.1" min="-5" max="5" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+
+                            <md-slider-container>
+                                <span>Y</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.position[1]" step="0.1" min="-5" max="5" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            <md-slider-container>
+                                <span>Z</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.position[2]" step="0.1" min="-5" max="5" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                        </md-tab-body>
+                    </md-tab>
+
+                    <md-tab>
+                        <md-tab-label>Size</md-tab-label>
+                        <md-tab-body>
+                            <md-slider-container>
+                                <span>X</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.size[0]" step="0.1" min="-5" max="5" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+
+                            <md-slider-container>
+                                <span>Y</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.size[1]" step="0.1" min="-5" max="5" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            <md-slider-container>
+                                <span>Z</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.size[2]" step="0.1" min="-5" max="5" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+
+                        </md-tab-body>
+                    </md-tab>
+
+                    <md-tab>
+                        <md-tab-label>Rotation</md-tab-label>
+                        <md-tab-body>
+                            <md-slider-container>
+                                <span>Angle</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.tr.rotation.angle" step="10" min="0" max="360" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            <span>Axis</span>
+                            <md-checkbox ng-checked="checkAxis(m.tr.rotation.axis[0])" ng-click="toggleAxis(m.tr.rotation.axis, 0)" aria-label="Checkbox 1">
+                                X
+                            </md-checkbox>
+                            <md-checkbox ng-checked="checkAxis(m.tr.rotation.axis[1])" ng-click="toggleAxis(m.tr.rotation.axis, 1)" aria-label="Checkbox 1">
+                                Y
+                            </md-checkbox>
+                            <md-checkbox ng-checked="checkAxis(m.tr.rotation.axis[2])" ng-click="toggleAxis(m.tr.rotation.axis, 2)" aria-label="Checkbox 1">
+                                Z
+                            </md-checkbox>
+                        </md-tab-body>
+                    </md-tab>
+                    
+                     <md-tab>
+                        <md-tab-label>Material Ambient</md-tab-label>
+                        <md-tab-body>
+                            <md-slider-container>
+                                <span>R</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.mesh._material.ambient[0]" step="0.01" min="0" max="1" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            <md-slider-container>
+                                <span>G</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.mesh._material.ambient[1]" step="0.01" min="0" max="1" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            <md-slider-container>
+                                <span>B</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.mesh._material.ambient[2]" step="0.01" min="0" max="1" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                        </md-tab-body>
+                    </md-tab>
+
+                    <md-tab>
+                        <md-tab-label>Diffuse</md-tab-label>
+                        <md-tab-body>
+                            <md-slider-container>
+                                <span>R</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.mesh._material.diffuse[0]" step="0.01" min="0" max="1" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            <md-slider-container>
+                                <span>G</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.mesh._material.difusse[1]" step="0.01" min="0" max="1" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            <md-slider-container>
+                                <span>B</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.mesh._material.diffuse[2]" step="0.01" min="0" max="1" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                        </md-tab-body>
+                    </md-tab>
+
+                    <md-tab>
+                        <md-tab-label>Specular</md-tab-label>
+                        <md-tab-body>
+                            <md-slider-container>
+                                <span>R</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.mesh._material.specular[0]" step="0.01" min="0" max="1" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            <md-slider-container>
+                                <span>G</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.mesh._material.specular[1]" step="0.01" min="0" max="1" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            <md-slider-container>
+                                <span>B</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.mesh._material.specular[2]" step="0.01" min="0" max="1" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                        </md-tab-body>
+                    </md-tab>
+                    
+                    <md-tab>
+                        <md-tab-label>Shininess</md-tab-label>
+                        <md-tab-body>
+                            <md-slider-container>
+                                <span>Value</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="m.mesh._material._shininess" step="10" min="0" max="500" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                           
+                        </md-tab-body>
+                    </md-tab>
+                </md-tabs>
+            </section>
+            <section>
+                <md-subheader ng-init="showLight=false" ng-click="showLight=!showLight" class="md-warn">Light</md-subheader>
+                <md-tabs class="md-accent" ng-if="showLight">
+                    <md-tab>
+                        <md-tab-label>Ambient</md-tab-label>
+                        <md-tab-body>
+                            <md-slider-container>
+                                <span>R</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="light.ambient[0]" step="0.01" min="0" max="1" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            <md-slider-container>
+                                <span>G</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="light.ambient[1]" step="0.01" min="0" max="1" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            <md-slider-container>
+                                <span>B</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="light.ambient[2]" step="0.01" min="0" max="1" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                        </md-tab-body>
+                    </md-tab>
+
+                    <md-tab>
+                        <md-tab-label>Diffuse</md-tab-label>
+                        <md-tab-body>
+                            <md-slider-container>
+                                <span>R</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="light.diffuse[0]" step="0.01" min="0" max="1" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            <md-slider-container>
+                                <span>G</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="light.difusse[1]" step="0.01" min="0" max="1" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            <md-slider-container>
+                                <span>B</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="light.diffuse[2]" step="0.01" min="0" max="1" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                        </md-tab-body>
+                    </md-tab>
+
+                    <md-tab>
+                        <md-tab-label>Specular</md-tab-label>
+                        <md-tab-body>
+                            <md-slider-container>
+                                <span>R</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="light.specular[0]" step="0.01" min="0" max="1" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            <md-slider-container>
+                                <span>G</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="light.specular[1]" step="0.01" min="0" max="1" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            <md-slider-container>
+                                <span>B</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="light.specular[2]" step="0.01" min="0" max="1" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                        </md-tab-body>
+                    </md-tab>
+
+                    <md-tab>
+                        <md-tab-label>Direction</md-tab-label>
+                        <md-tab-body>
+                            <md-slider-container>
+                                <span>X</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="light.direction[0]" step="0.1" min="-5" max="5" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            <md-slider-container>
+                                <span>Y</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="light.direction[1]" step="0.1" min="-5" max="5" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            <md-slider-container>
+                                <span>Z</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="light.direction[2]" step="0.1" min="-5" max="5" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                        </md-tab-body>
+
+                    </md-tab>
+                </md-tabs>
+
+            </section>
+        </div>
+
     </div>
+
+    <script type="text/javascript" src="/bower_components/angular/angular.min.js"></script>
+
+    <script type="text/javascript" src="/bower_components/angular-animate/angular-animate.min.js"></script>
+    <script type="text/javascript" src="/bower_components/angular-aria/angular-aria.min.js"></script>
+    <script type="text/javascript" src="/bower_components/angular-material/angular-material.min.js"></script>
+    <script type="text/javascript" src="/bower_components/gl-matrix/gl-matrix-min.js"></script>
+    <script type="text/javascript" src="bower_components/lodash/dist/lodash.min.js"></script>
+    <script type="text/javascript" src="bower_components/async/dist/async.min.js"></script>
+    <script type="text/javascript" src="/dist/pickyourday-engine.js"></script>
+
     <script type="text/javascript" src="/app.js"></script>
 </body>
 

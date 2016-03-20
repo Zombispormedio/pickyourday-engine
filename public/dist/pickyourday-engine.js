@@ -189,7 +189,7 @@ var BlazeEngine;
                 // ns[3*ind[i]+x] += normal[x];
                 // ns[3*ind[i]+y] += normal[y];
                 // ns[3*ind[i]+z] += normal[z];
-                for (j = 0; j < 3; j++) {
+                for (var j = 0; j < 3; j++) {
                     ns[3 * ind[i + j] + x] = ns[3 * ind[i + j] + x] + normal[x];
                     ns[3 * ind[i + j] + y] = ns[3 * ind[i + j] + y] + normal[y];
                     ns[3 * ind[i + j] + z] = ns[3 * ind[i + j] + z] + normal[z];
@@ -288,7 +288,7 @@ var BlazeEngine;
             gl.disableVertexAttribArray(index);
         };
         Ketch.renderLoop = function (cb) {
-            setInterval(cb, 500);
+            setInterval(cb, 50);
         };
         Ketch._views = {};
         return Ketch;
@@ -356,8 +356,13 @@ var BlazeEngine;
                 throw "invalid popMatrix";
             this._mvMatrix = this._stack.pop();
         };
-        MatrixStack.prototype.makeMV = function () {
-            mat4.identity(this._mvMatrix);
+        MatrixStack.prototype.ModelView = function () {
+            if (this._camera) {
+                this._mvMatrix = this._camera.modelView;
+            }
+            else {
+                mat4.identity(this._mvMatrix);
+            }
         };
         Object.defineProperty(MatrixStack.prototype, "mvMatrix", {
             get: function () {
@@ -380,21 +385,38 @@ var BlazeEngine;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(MatrixStack.prototype, "MainCamera", {
+            set: function (camera) {
+                this._camera = camera;
+            },
+            enumerable: true,
+            configurable: true
+        });
         MatrixStack.prototype.Perspective = function () {
             var gl = this.gl;
+            mat4.identity(this._pMatrix);
             mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, this._pMatrix);
+        };
+        MatrixStack.prototype.Normal = function () {
+            mat4.identity(this._nMatrix);
+            mat4.set(this._mvMatrix, this._nMatrix);
+            mat4.inverse(this._nMatrix);
+            mat4.transpose(this._nMatrix);
+        };
+        MatrixStack.prototype.init = function () {
+            this.ModelView();
+            this.Perspective();
+            this.Normal();
         };
         MatrixStack.prototype.setUp = function () {
             var gl = this.gl;
+            this.Normal();
             var mvMatrix = this.getUniform("uMVMatrix");
             if (mvMatrix)
                 gl.uniformMatrix4fv(mvMatrix, false, this._mvMatrix);
             var pMatrix = this.getUniform("uPMatrix");
             if (pMatrix)
                 gl.uniformMatrix4fv(pMatrix, false, this._pMatrix);
-            mat4.set(this._mvMatrix, this._nMatrix);
-            mat4.inverse(this._nMatrix);
-            mat4.transpose(this._nMatrix);
             var nMatrix = this.getUniform("uNMatrix");
             if (nMatrix)
                 gl.uniformMatrix4fv(nMatrix, false, this._nMatrix);
@@ -1019,12 +1041,16 @@ var BlazeEngine;
         };
         TransformEntity.prototype.beginDraw = function (matrixStack) {
             matrixStack.push();
-            matrixStack.makeMV();
+            matrixStack.ModelView();
             this._matrix = matrixStack.mvMatrix;
-            mat4.translate(this._matrix, this._position);
-            mat4.scale(this._matrix, this._size);
-            var rad = this._rotation.angle * Math.PI / 180;
-            mat4.rotate(this._matrix, rad, this._rotation.axis);
+            if (this._position != void 0)
+                mat4.translate(this._matrix, this._position);
+            if (this._size != void 0)
+                mat4.scale(this._matrix, this._size);
+            if (this._rotation != void 0) {
+                var rad = this._rotation.angle * Math.PI / 180;
+                mat4.rotate(this._matrix, rad, this._rotation.axis);
+            }
             matrixStack.setUp();
         };
         TransformEntity.prototype.endDraw = function (matrixStack) {
@@ -1158,6 +1184,10 @@ var BlazeEngine;
             this._elevation = 0.0;
             this._steps = 0;
             this._options = options;
+            this.home = this._options.home;
+            this.focus = this._options.focus;
+            this.azimuth = this._options.azimuth;
+            this.elevation = this._options.elevation;
         }
         Object.defineProperty(CameraEntity.prototype, "type", {
             set: function (type) {
@@ -1173,6 +1203,8 @@ var BlazeEngine;
                 }
                 this.position = this._home;
                 this.azimuth = 0;
+                this.elevation = 0;
+                this._steps = 0;
             },
             enumerable: true,
             configurable: true
@@ -1272,10 +1304,6 @@ var BlazeEngine;
             configurable: true
         });
         CameraEntity.prototype.beginDraw = function () {
-            this.home = this._options.home;
-            this.focus = this._options.focus;
-            this.azimuth = this._options.azimuth;
-            this.elevation = this._options.elevation;
         };
         CameraEntity.prototype.endDraw = function () {
         };
@@ -1456,7 +1484,6 @@ var BlazeEngine;
             this._isDrawing = true;
             gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-            this._matrixStack.Perspective();
             this._scene.draw(this._matrixStack);
             this._isDrawing = false;
         };
@@ -1502,19 +1529,6 @@ var BlazeEngine;
                     cb();
             });
         };
-        SceneGraph.prototype.buildDefaultGraph = function () {
-            /* var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity(this.oid));
-             var TrCameraNode = this.createMainChildNode("TRCamera", new TransformEntity(this.oid));
-             
-     
-     
-             var LightNode = TrLightNode.createChildNode("Light", new LightEntity(this.oid));
-     
-             var CameraNode = TrCameraNode.createChildNode("Camera", new CameraEntity(this.oid));
-     
-             var MeshNode1 = TrMeshNode.createChildNode("Mesh", new MeshEntity(this.oid));
-             var MeshNode2 = TrMeshNode.createChildNode("Mesh", new MeshEntity(this.oid));*/
-        };
         SceneGraph.prototype.createMesh = function (config) {
             var mesh = new MeshEntity(this.oid, config.mesh, config.material, config.texture);
             this._loaderBuffer.push(mesh);
@@ -1526,6 +1540,16 @@ var BlazeEngine;
         SceneGraph.prototype.createLight = function (config) {
             return new LightEntity(this.oid, config.ambient, config.diffuse, config.position, config.specular, config.direction, config.cutoff);
         };
+        SceneGraph.prototype.createCamera = function (options, type) {
+            return new CameraEntity(this.oid, options, type);
+        };
+        Object.defineProperty(SceneGraph.prototype, "MainCamera", {
+            set: function (camera) {
+                this._matrixStack.MainCamera = camera;
+            },
+            enumerable: true,
+            configurable: true
+        });
         SceneGraph.prototype.loadAllMeshObjects = function (cb) {
             async.eachSeries(this._loaderBuffer, function (item, next) {
                 item.loadMesh(function () {
@@ -1551,6 +1575,7 @@ var BlazeEngine;
             ], function (err) {
                 Ketch.setAttributeLocations(_this._oid, SceneGraph.ATTRIBUTES);
                 Ketch.setUniformLocations(_this._oid, SceneGraph.UNIFORMS);
+                _this._matrixStack.init();
                 if (cb)
                     cb();
             });

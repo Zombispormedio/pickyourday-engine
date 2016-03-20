@@ -65,7 +65,7 @@ class SceneGraph extends Renderable {
         this._isDrawing = true;
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        this._matrixStack.Perspective();
+
         this._scene.draw(this._matrixStack);
         this._isDrawing = false;
     }
@@ -123,30 +123,6 @@ class SceneGraph extends Renderable {
     }
 
 
-    public buildDefaultGraph(): void {
-
-
-
-
-
-        /* var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity(this.oid));
-         var TrCameraNode = this.createMainChildNode("TRCamera", new TransformEntity(this.oid));
-         
- 
- 
-         var LightNode = TrLightNode.createChildNode("Light", new LightEntity(this.oid));
- 
-         var CameraNode = TrCameraNode.createChildNode("Camera", new CameraEntity(this.oid));
- 
-         var MeshNode1 = TrMeshNode.createChildNode("Mesh", new MeshEntity(this.oid));
-         var MeshNode2 = TrMeshNode.createChildNode("Mesh", new MeshEntity(this.oid));*/
-
-
-
-
-    }
-
-
 
 
     public createMesh(config: { mesh?: string, texture?: string, material?: string }): MeshEntity {
@@ -162,6 +138,16 @@ class SceneGraph extends Renderable {
     public createLight(config: { ambient?: Array<number>, diffuse?: Array<number>, specular?: Array<number>, position?: Array<number>, direction?: Array<number>, cutoff?: number }) {
         return new LightEntity(this.oid, config.ambient, config.diffuse, config.position, config.specular, config.direction, config.cutoff);
     }
+
+    public createCamera(options: { focus: Array<number>, azimuth: number, elevation: number, home: Array<number> }, type?: CAMERA_TYPE) {
+        return new CameraEntity(this.oid, options, type);
+    }
+
+
+    public set MainCamera(camera: CameraEntity) {
+        this._matrixStack.MainCamera = camera;
+    }
+
 
 
     public loadAllMeshObjects(cb) {
@@ -194,7 +180,8 @@ class SceneGraph extends Renderable {
             Ketch.setAttributeLocations(this._oid, SceneGraph.ATTRIBUTES);
             Ketch.setUniformLocations(this._oid, SceneGraph.UNIFORMS);
 
-
+            this._matrixStack.init();
+            
             if (cb) cb();
         })
     }

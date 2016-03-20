@@ -209,7 +209,7 @@ export module utils {
             // ns[3*ind[i]+x] += normal[x];
             // ns[3*ind[i]+y] += normal[y];
             // ns[3*ind[i]+z] += normal[z];
-            for (j = 0; j < 3; j++) { //update the normals of that triangle: sum of vectors
+            for (var j = 0; j < 3; j++) { //update the normals of that triangle: sum of vectors
                 ns[3 * ind[i + j] + x] = ns[3 * ind[i + j] + x] + normal[x];
                 ns[3 * ind[i + j] + y] = ns[3 * ind[i + j] + y] + normal[y];
                 ns[3 * ind[i + j] + z] = ns[3 * ind[i + j] + z] + normal[z];
@@ -330,7 +330,7 @@ export class Ketch {
     }
 
     static renderLoop(cb) {
-        setInterval(cb, 500);
+        setInterval(cb, 50);
     }
 
 
@@ -376,6 +376,7 @@ export class MatrixStack extends Renderable {
     private _mvMatrix: Array<number>;
     private _pMatrix: Array<number>;
     private _nMatrix: Array<number>;
+    private _camera: CameraEntity;
 
     constructor(graph_id: string) {
         super(graph_id);
@@ -397,8 +398,13 @@ export class MatrixStack extends Renderable {
         this._mvMatrix = this._stack.pop();
     }
 
-    makeMV() {
-        mat4.identity(this._mvMatrix);
+    public ModelView() {
+        if (this._camera) {
+            this._mvMatrix = this._camera.modelView;
+        } else {
+            mat4.identity(this._mvMatrix);
+        }
+
     }
     get mvMatrix(): Array<number> {
         return this._mvMatrix;
@@ -412,15 +418,34 @@ export class MatrixStack extends Renderable {
         return this._nMatrix;
     }
 
+    public set MainCamera(camera: CameraEntity) {
+        this._camera = camera;
+    }
 
 
     public Perspective(): void {
         var gl = this.gl;
+        mat4.identity(this._pMatrix);
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, this._pMatrix);
+    }
+
+    public Normal(): void {
+        mat4.identity(this._nMatrix);
+        mat4.set(this._mvMatrix, this._nMatrix);
+        mat4.inverse(this._nMatrix);
+        mat4.transpose(this._nMatrix);
+    }
+    
+    public init(){
+        this.ModelView();
+        this.Perspective();
+        this.Normal();
     }
 
     public setUp() {
         var gl = this.gl;
+
+        this.Normal();
 
         var mvMatrix = this.getUniform("uMVMatrix");
         if (mvMatrix)
@@ -430,15 +455,9 @@ export class MatrixStack extends Renderable {
         if (pMatrix)
             gl.uniformMatrix4fv(pMatrix, false, this._pMatrix);
 
-
-
-        mat4.set(this._mvMatrix, this._nMatrix);
-        mat4.inverse(this._nMatrix);
-        mat4.transpose(this._nMatrix);
-
         var nMatrix = this.getUniform("uNMatrix");
-        if(nMatrix)
-        gl.uniformMatrix4fv(nMatrix, false, this._nMatrix);
+        if (nMatrix)
+            gl.uniformMatrix4fv(nMatrix, false, this._nMatrix);
     }
 
 
@@ -1039,12 +1058,12 @@ export class TransformEntity extends Entity {
     private _position: Array<number>;
     private _size: Array<number>;
     private _rotation: ClassUtils.Rotation;
-    constructor(graph_id:string, position?:Array<number>, size?:Array<number>, rotation?: ClassUtils.Rotation) {
+    constructor(graph_id: string, position?: Array<number>, size?: Array<number>, rotation?: ClassUtils.Rotation) {
         super(graph_id);
         this._matrix = mat4.create();
-        this._position = position||vec3.create();
-        this._size = size||vec3.create([1, 1, 1]);
-        this._rotation = rotation||{ angle: 0, axis: vec3.create() };
+        this._position = position || vec3.create();
+        this._size = size || vec3.create([1, 1, 1]);
+        this._rotation = rotation || { angle: 0, axis: vec3.create() };
     }
 
     identity() {
@@ -1133,19 +1152,22 @@ export class TransformEntity extends Entity {
 
     beginDraw(matrixStack: MatrixStack) {
         matrixStack.push();
-        matrixStack.makeMV();
+        matrixStack.ModelView();
         this._matrix = matrixStack.mvMatrix;
 
-        
-        mat4.translate(this._matrix, this._position);
+        if (this._position != void 0)
+            mat4.translate(this._matrix, this._position);
 
-        mat4.scale(this._matrix, this._size);
+        if (this._size != void 0)
+            mat4.scale(this._matrix, this._size);
 
-        var rad = this._rotation.angle * Math.PI / 180;
-    
-        mat4.rotate(this._matrix, rad, this._rotation.axis);
+        if (this._rotation != void 0) {
+            var rad = this._rotation.angle * Math.PI / 180;
+            mat4.rotate(this._matrix, rad, this._rotation.axis);
+        }
+
         matrixStack.setUp();
-            
+
     }
 
     endDraw(matrixStack: MatrixStack) {
@@ -1308,6 +1330,11 @@ export class CameraEntity extends Entity {
         this._elevation = 0.0;
         this._steps = 0;
         this._options = options;
+        
+        this.home = this._options.home;
+        this.focus = this._options.focus;
+        this.azimuth = this._options.azimuth;
+        this.elevation = this._options.elevation;
     }
 
 
@@ -1322,6 +1349,8 @@ export class CameraEntity extends Entity {
         }
         this.position = this._home;
         this.azimuth = 0;
+        this.elevation=0;
+        this._steps=0;
     }
 
 
@@ -1425,10 +1454,7 @@ export class CameraEntity extends Entity {
     }
 
     beginDraw() {
-        this.home = this._options.home;
-        this.focus = this._options.focus;
-        this.azimuth = this._options.azimuth;
-        this.elevation = this._options.elevation;
+        
     }
 
     endDraw() {
@@ -1656,7 +1682,7 @@ export class SceneGraph extends Renderable {
         this._isDrawing = true;
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        this._matrixStack.Perspective();
+
         this._scene.draw(this._matrixStack);
         this._isDrawing = false;
     }
@@ -1714,30 +1740,6 @@ export class SceneGraph extends Renderable {
     }
 
 
-    public buildDefaultGraph(): void {
-
-
-
-
-
-        /* var TrLightNode = this.createMainChildNode("TRLight", new TransformEntity(this.oid));
-         var TrCameraNode = this.createMainChildNode("TRCamera", new TransformEntity(this.oid));
-         
- 
- 
-         var LightNode = TrLightNode.createChildNode("Light", new LightEntity(this.oid));
- 
-         var CameraNode = TrCameraNode.createChildNode("Camera", new CameraEntity(this.oid));
- 
-         var MeshNode1 = TrMeshNode.createChildNode("Mesh", new MeshEntity(this.oid));
-         var MeshNode2 = TrMeshNode.createChildNode("Mesh", new MeshEntity(this.oid));*/
-
-
-
-
-    }
-
-
 
 
     public createMesh(config: { mesh?: string, texture?: string, material?: string }): MeshEntity {
@@ -1753,6 +1755,16 @@ export class SceneGraph extends Renderable {
     public createLight(config: { ambient?: Array<number>, diffuse?: Array<number>, specular?: Array<number>, position?: Array<number>, direction?: Array<number>, cutoff?: number }) {
         return new LightEntity(this.oid, config.ambient, config.diffuse, config.position, config.specular, config.direction, config.cutoff);
     }
+
+    public createCamera(options: { focus: Array<number>, azimuth: number, elevation: number, home: Array<number> }, type?: CAMERA_TYPE) {
+        return new CameraEntity(this.oid, options, type);
+    }
+
+
+    public set MainCamera(camera: CameraEntity) {
+        this._matrixStack.MainCamera = camera;
+    }
+
 
 
     public loadAllMeshObjects(cb) {
@@ -1785,7 +1797,8 @@ export class SceneGraph extends Renderable {
             Ketch.setAttributeLocations(this._oid, SceneGraph.ATTRIBUTES);
             Ketch.setUniformLocations(this._oid, SceneGraph.UNIFORMS);
 
-
+            this._matrixStack.init();
+            
             if (cb) cb();
         })
     }

@@ -20,6 +20,8 @@
     "gl-matrix": "^1.2.4",
     "angular": "angularjs#^1.4.9",
     "lodash": "^4.3.0",
-    "async": "^1.5.2"
+    "async": "^1.5.2",
+    "angular-material": "^1.0.6",
+    "jquery": "^2.2.2"
   }
 }

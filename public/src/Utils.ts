@@ -74,7 +74,7 @@ module utils {
             // ns[3*ind[i]+x] += normal[x];
             // ns[3*ind[i]+y] += normal[y];
             // ns[3*ind[i]+z] += normal[z];
-            for (j = 0; j < 3; j++) { //update the normals of that triangle: sum of vectors
+            for (var j = 0; j < 3; j++) { //update the normals of that triangle: sum of vectors
                 ns[3 * ind[i + j] + x] = ns[3 * ind[i + j] + x] + normal[x];
                 ns[3 * ind[i + j] + y] = ns[3 * ind[i + j] + y] + normal[y];
                 ns[3 * ind[i + j] + z] = ns[3 * ind[i + j] + z] + normal[z];

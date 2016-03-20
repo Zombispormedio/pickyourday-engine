@@ -28,6 +28,11 @@ class CameraEntity extends Entity {
         this._elevation = 0.0;
         this._steps = 0;
         this._options = options;
+        
+        this.home = this._options.home;
+        this.focus = this._options.focus;
+        this.azimuth = this._options.azimuth;
+        this.elevation = this._options.elevation;
     }
 
 
@@ -42,6 +47,8 @@ class CameraEntity extends Entity {
         }
         this.position = this._home;
         this.azimuth = 0;
+        this.elevation=0;
+        this._steps=0;
     }
 
 
@@ -145,10 +152,7 @@ class CameraEntity extends Entity {
     }
 
     beginDraw() {
-        this.home = this._options.home;
-        this.focus = this._options.focus;
-        this.azimuth = this._options.azimuth;
-        this.elevation = this._options.elevation;
+        
     }
 
     endDraw() {

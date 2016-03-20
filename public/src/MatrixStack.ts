@@ -3,6 +3,7 @@ class MatrixStack extends Renderable {
     private _mvMatrix: Array<number>;
     private _pMatrix: Array<number>;
     private _nMatrix: Array<number>;
+    private _camera: CameraEntity;
 
     constructor(graph_id: string) {
         super(graph_id);
@@ -24,8 +25,13 @@ class MatrixStack extends Renderable {
         this._mvMatrix = this._stack.pop();
     }
 
-    makeMV() {
-        mat4.identity(this._mvMatrix);
+    public ModelView() {
+        if (this._camera) {
+            this._mvMatrix = this._camera.modelView;
+        } else {
+            mat4.identity(this._mvMatrix);
+        }
+
     }
     get mvMatrix(): Array<number> {
         return this._mvMatrix;
@@ -39,15 +45,34 @@ class MatrixStack extends Renderable {
         return this._nMatrix;
     }
 
+    public set MainCamera(camera: CameraEntity) {
+        this._camera = camera;
+    }
 
 
     public Perspective(): void {
         var gl = this.gl;
+        mat4.identity(this._pMatrix);
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, this._pMatrix);
+    }
+
+    public Normal(): void {
+        mat4.identity(this._nMatrix);
+        mat4.set(this._mvMatrix, this._nMatrix);
+        mat4.inverse(this._nMatrix);
+        mat4.transpose(this._nMatrix);
+    }
+    
+    public init(){
+        this.ModelView();
+        this.Perspective();
+        this.Normal();
     }
 
     public setUp() {
         var gl = this.gl;
+
+        this.Normal();
 
         var mvMatrix = this.getUniform("uMVMatrix");
         if (mvMatrix)
@@ -57,15 +82,9 @@ class MatrixStack extends Renderable {
         if (pMatrix)
             gl.uniformMatrix4fv(pMatrix, false, this._pMatrix);
 
-
-
-        mat4.set(this._mvMatrix, this._nMatrix);
-        mat4.inverse(this._nMatrix);
-        mat4.transpose(this._nMatrix);
-
         var nMatrix = this.getUniform("uNMatrix");
-        if(nMatrix)
-        gl.uniformMatrix4fv(nMatrix, false, this._nMatrix);
+        if (nMatrix)
+            gl.uniformMatrix4fv(nMatrix, false, this._nMatrix);
     }
 
 

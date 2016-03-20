@@ -3,12 +3,12 @@ class TransformEntity extends Entity {
     private _position: Array<number>;
     private _size: Array<number>;
     private _rotation: ClassUtils.Rotation;
-    constructor(graph_id:string, position?:Array<number>, size?:Array<number>, rotation?: ClassUtils.Rotation) {
+    constructor(graph_id: string, position?: Array<number>, size?: Array<number>, rotation?: ClassUtils.Rotation) {
         super(graph_id);
         this._matrix = mat4.create();
-        this._position = position||vec3.create();
-        this._size = size||vec3.create([1, 1, 1]);
-        this._rotation = rotation||{ angle: 0, axis: vec3.create() };
+        this._position = position || vec3.create();
+        this._size = size || vec3.create([1, 1, 1]);
+        this._rotation = rotation || { angle: 0, axis: vec3.create() };
     }
 
     identity() {
@@ -97,19 +97,22 @@ class TransformEntity extends Entity {
 
     beginDraw(matrixStack: MatrixStack) {
         matrixStack.push();
-        matrixStack.makeMV();
+        matrixStack.ModelView();
         this._matrix = matrixStack.mvMatrix;
 
-        
-        mat4.translate(this._matrix, this._position);
+        if (this._position != void 0)
+            mat4.translate(this._matrix, this._position);
 
-        mat4.scale(this._matrix, this._size);
+        if (this._size != void 0)
+            mat4.scale(this._matrix, this._size);
 
-        var rad = this._rotation.angle * Math.PI / 180;
-    
-        mat4.rotate(this._matrix, rad, this._rotation.axis);
+        if (this._rotation != void 0) {
+            var rad = this._rotation.angle * Math.PI / 180;
+            mat4.rotate(this._matrix, rad, this._rotation.axis);
+        }
+
         matrixStack.setUp();
-            
+
     }
 
     endDraw(matrixStack: MatrixStack) {
