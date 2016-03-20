@@ -288,7 +288,7 @@ var BlazeEngine;
             gl.disableVertexAttribArray(index);
         };
         Ketch.renderLoop = function (cb) {
-            setInterval(cb, 500);
+            setInterval(cb, 50);
         };
         Ketch._views = {};
         return Ketch;
