@@ -288,7 +288,7 @@ var BlazeEngine;
             gl.disableVertexAttribArray(index);
         };
         Ketch.renderLoop = function (cb) {
-            setInterval(cb, 50);
+            setInterval(cb, 500);
         };
         Ketch._views = {};
         return Ketch;
@@ -1170,20 +1170,18 @@ var BlazeEngine;
     BlazeEngine.LightEntity = LightEntity;
     var CameraEntity = (function (_super) {
         __extends(CameraEntity, _super);
-        function CameraEntity(graph_id, options, type) {
+        function CameraEntity(graph_id, type) {
             _super.call(this, graph_id);
             this._type = type || CAMERA_TYPE.ORBITING;
             this._cmatrix = mat4.create();
+            mat4.identity(this._cmatrix);
             this._up = vec3.create();
             this._right = vec3.create();
             this._normal = vec3.create();
             this._position = vec3.create();
-            this._focus = vec3.create();
-            this._home = vec3.create();
             this._azimuth = 0.0;
             this._elevation = 0.0;
             this._steps = 0;
-            this._options = options;
         }
         Object.defineProperty(CameraEntity.prototype, "type", {
             set: function (type) {
@@ -1192,89 +1190,80 @@ var BlazeEngine;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(CameraEntity.prototype, "home", {
-            set: function (home) {
-                if (home != void 0) {
-                    this._home = home;
-                }
-                this.setPosition(this._home);
-                this.azimuth = 0;
-                this.elevation = 0;
-                this._steps = 0;
+        Object.defineProperty(CameraEntity.prototype, "position", {
+            get: function () {
+                return this._position;
+            },
+            set: function (pos) {
+                this._position = pos;
             },
             enumerable: true,
             configurable: true
         });
-        CameraEntity.prototype.setPosition = function (p) {
-            vec3.set(p, this._position);
-            this.updateMatrix();
-        };
-        CameraEntity.prototype.changeAzimuth = function (az) {
-            this._azimuth += az;
-            if (this._azimuth > 360 || this._azimuth < -360) {
-                this._azimuth %= 360;
-            }
-            this.updateMatrix();
-        };
         Object.defineProperty(CameraEntity.prototype, "azimuth", {
-            set: function (azimuth) {
-                this.changeAzimuth(azimuth - this._azimuth);
+            get: function () {
+                return this._azimuth;
+            },
+            set: function (az) {
+                var temp_az = az - this._azimuth;
+                this._azimuth += temp_az;
+                if (this._azimuth > 360 || this._azimuth < -360) {
+                    this._azimuth = this._azimuth % 360;
+                }
             },
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(CameraEntity.prototype, "focus", {
-            set: function (f) {
-                vec3.set(f, this._focus);
-                this.updateMatrix();
-            },
-            enumerable: true,
-            configurable: true
-        });
-        CameraEntity.prototype.changeElevation = function (el) {
-            this._elevation += el;
-            if (this._elevation > 360 || this._elevation < -360) {
-                this._elevation %= 360;
-            }
-            this.updateMatrix();
-        };
         Object.defineProperty(CameraEntity.prototype, "elevation", {
-            set: function (e) {
-                this.changeElevation(e - this._elevation);
+            get: function () {
+                return this._elevation;
+            },
+            set: function (el) {
+                var temp_el = el - this._elevation;
+                this._elevation += temp_el;
+                if (this._elevation > 360 || this._elevation < -360) {
+                    this._elevation = this._elevation % 360;
+                }
             },
             enumerable: true,
             configurable: true
         });
-        CameraEntity.prototype.zoom = function (offset) {
-            var p = this._position;
-            var n = vec3.create();
-            var step = offset - this._steps;
-            vec3.normalize(this._normal, n);
-            var new_position = vec3.create();
-            if (this._type === CAMERA_TYPE.TRACKING) {
-                new_position.forEach(function (x, index) {
-                    x = p[index] - step * n[index];
-                });
-            }
-            else {
-                new_position.forEach(function (x, index) {
-                    if (index < 2)
-                        x = p[index];
-                    else
-                        x = p[index] - step;
-                });
-            }
-            this.setPosition(new_position);
-            this._steps = offset;
-        };
-        CameraEntity.prototype.applyOrientationMatrix = function () {
+        Object.defineProperty(CameraEntity.prototype, "zoom", {
+            get: function () {
+                return this._steps;
+            },
+            set: function (offset) {
+                var p = vec3.create();
+                var n = vec3.create();
+                p = this.position;
+                var step = offset - this._steps;
+                vec3.normalize(this._normal, n);
+                var new_position = vec3.create();
+                if (this._type === CAMERA_TYPE.TRACKING) {
+                    new_position[0] = p[0] - step * n[0];
+                    new_position[1] = p[1] - step * n[1];
+                    new_position[2] = p[2] - step * n[2];
+                }
+                else {
+                    new_position[0] = p[0];
+                    new_position[1] = p[1];
+                    new_position[2] = p[2] - step;
+                }
+                this.position = new_position;
+                this._steps = offset;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        CameraEntity.prototype.calculateOrientation = function () {
             var m = this._cmatrix;
             mat4.multiplyVec4(m, [1, 0, 0, 0], this._right);
             mat4.multiplyVec4(m, [0, 1, 0, 0], this._up);
             mat4.multiplyVec4(m, [0, 0, 1, 0], this._normal);
         };
-        CameraEntity.prototype.updateMatrix = function () {
+        CameraEntity.prototype.beginDraw = function () {
             mat4.identity(this._cmatrix);
+            this.calculateOrientation();
             if (this._type === CAMERA_TYPE.TRACKING) {
                 mat4.translate(this._cmatrix, this._position);
                 mat4.rotateY(this._cmatrix, this._azimuth * Math.PI / 180);
@@ -1285,9 +1274,9 @@ var BlazeEngine;
                 mat4.rotateX(this._cmatrix, this._elevation * Math.PI / 180);
                 mat4.translate(this._cmatrix, this._position);
             }
-            this.applyOrientationMatrix();
+            this.calculateOrientation();
             if (this._type === CAMERA_TYPE.TRACKING) {
-                mat4.multiplyVec4(this._cmatrix, [0, 0, 0, 1], this._position);
+                mat4.multiplyVec4(m, [0, 0, 0, 1], this._position);
             }
         };
         Object.defineProperty(CameraEntity.prototype, "modelView", {
@@ -1299,12 +1288,6 @@ var BlazeEngine;
             enumerable: true,
             configurable: true
         });
-        CameraEntity.prototype.beginDraw = function () {
-            this.home = this._options.home;
-            this.focus = this._options.focus;
-            this.azimuth = this._options.azimuth;
-            this.elevation = this._options.elevation;
-        };
         CameraEntity.prototype.endDraw = function () {
         };
         return CameraEntity;
@@ -1540,8 +1523,8 @@ var BlazeEngine;
         SceneGraph.prototype.createLight = function (config) {
             return new LightEntity(this.oid, config.ambient, config.diffuse, config.position, config.specular, config.direction, config.cutoff);
         };
-        SceneGraph.prototype.createCamera = function (options, type) {
-            return new CameraEntity(this.oid, options, type);
+        SceneGraph.prototype.createCamera = function (type) {
+            return new CameraEntity(this.oid, type);
         };
         Object.defineProperty(SceneGraph.prototype, "MainCamera", {
             set: function (camera) {

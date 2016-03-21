@@ -83,7 +83,7 @@ class Ketch {
     }
 
     static renderLoop(cb) {
-        setInterval(cb, 50);
+        setInterval(cb, 500);
     }
 
 

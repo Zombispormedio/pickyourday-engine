@@ -257,15 +257,52 @@
                 <md-subheader ng-init="showCamera=false" ng-click="showCamera=!showCamera" class="md-warn">Camera</md-subheader>
                 <md-tabs class="md-accent" ng-if="showCamera">
                     <md-tab>
+                        <md-tab-label>Position</md-tab-label>
+                        <md-tab-body>
+                            <md-slider-container>
+                                <span>X</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="camera.position[0]" step="0.1" min="-20" max="20" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+
+                            <md-slider-container>
+                                <span>Y</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="camera.position[1]" step="0.1" min="-20" max="20" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            <md-slider-container>
+                                <span>Z</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="camera.position[2]" step="0.1" min="-20" max="20" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                        </md-tab-body>
+                    </md-tab>
+                    
+                    <md-tab>
+                        <md-tab-label>Rotation</md-tab-label>
+                        <md-tab-body>
+                            <md-slider-container>
+                                <span>Elevation</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="camera.elevation" step="0.1" min="-360" max="360" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            
+                              <md-slider-container>
+                                <span>Azimuth</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="camera.azimuth" step="0.1" min="-360" max="360" aria-label="positionX">
+                                </md-slider>
+                            </md-slider-container>
+                            
+                        </md-tab-body>
+                    </md-tab>
+                    <md-tab>
                         <md-tab-label>Zoom</md-tab-label>
                         <md-tab-body>
                             <md-slider-container>
-                                <span>Units</span>
-                                <md-slider flex class="md-primary" md-discrete ng-model="values.zoom"  ng-change="changeZoom()" step="10" min="0" max="1000" aria-label="positionX">
+                                 <span>Dolly</span>
+                                <md-slider flex class="md-primary" md-discrete ng-model="camera.zoom" step="0.1" min="-20" max="20" aria-label="positionX">
                                 </md-slider>
                             </md-slider-container>
-                           
-
                         </md-tab-body>
                     </md-tab>
                 </md-tabs>

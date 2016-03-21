@@ -139,8 +139,8 @@ class SceneGraph extends Renderable {
         return new LightEntity(this.oid, config.ambient, config.diffuse, config.position, config.specular, config.direction, config.cutoff);
     }
 
-    public createCamera(options: { focus: Array<number>, azimuth: number, elevation: number, home: Array<number> }, type?: CAMERA_TYPE) {
-        return new CameraEntity(this.oid, options, type);
+    public createCamera(type?: CAMERA_TYPE) {
+        return new CameraEntity(this.oid, type);
     }
 
 

@@ -5,7 +5,7 @@ var app = angular.module("_3dApp", ['ngMaterial']);
 
 app.controller('AppController', function($scope) {
     $scope.loading = true;
-    $scope.values={zoom:5};
+    $scope.values={zoom:0};
     
     $scope.checkAxis=function(axis){
         return axis==1;
@@ -15,7 +15,7 @@ app.controller('AppController', function($scope) {
       axis[index]=axis[index]==1?0:1;  
     };
     $scope.changeZoom=function(){
-        $scope.camera.zoom($scope.values.zoom);
+       $scope.camera.translate($scope.values.zoom);
     };
  
     
@@ -24,8 +24,9 @@ app.controller('AppController', function($scope) {
     $scope.Tree.setContext(document.getElementById("3dView"));
 
 
-    $scope.camera = $scope.Tree.createCamera({ focus: [0.0, 0.0, 0.0], azimuth: 10, elevation: -11, home: [0.0, 0.0, 0.0] });
-
+    $scope.camera = $scope.Tree.createCamera();
+     $scope.camera.position=[0,0,10];
+     
 
     $scope.Tree.createMainChildNode("Camera", $scope.camera);
 
@@ -49,7 +50,7 @@ app.controller('AppController', function($scope) {
     $scope.mesh = $scope.Tree.createMesh({ mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/webgl.png" });
     $scope.TrMeshNode.createChildNode("Mesh", $scope.mesh);
 
-    $scope.tr.position = [0, -1, -7];
+    $scope.tr.position = [0, 0, 0];
     
     $scope.mesh2 = $scope.Tree.createMesh({ mesh: "data/sphere.json", material: "data/test.mtl" });
     $scope.tr2 = $scope.Tree.createTransform();
