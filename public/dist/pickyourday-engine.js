@@ -36,7 +36,7 @@ var BlazeEngine;
             BUFFER_DRAW[BUFFER_DRAW["DYNAMIC"] = 2] = "DYNAMIC";
         })(WebGLUtils.BUFFER_DRAW || (WebGLUtils.BUFFER_DRAW = {}));
         var BUFFER_DRAW = WebGLUtils.BUFFER_DRAW;
-        function createBuffer(gl, data, type_draw) {
+        function createBuffer(gl, data, is2D, type_draw) {
             var buffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
             switch (type_draw) {
@@ -52,8 +52,14 @@ var BlazeEngine;
                 default: gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
             }
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
-            buffer.itemSize = 3;
-            buffer.numItems = data.length / 3;
+            if (is2D) {
+                buffer.itemSize = 2;
+                buffer.numItems = data.length / 2;
+            }
+            else {
+                buffer.itemSize = 3;
+                buffer.numItems = data.length / 3;
+            }
             return buffer;
         }
         WebGLUtils.createBuffer = createBuffer;
@@ -289,6 +295,23 @@ var BlazeEngine;
         };
         Ketch.renderLoop = function (cb) {
             setInterval(cb, 500);
+        };
+        Ketch.addTexture = function (key, texture_id) {
+            var view = Ketch._views[key];
+            view.textures = view.textures || [];
+            view.textures.push(texture_id);
+        };
+        Ketch.activeTexture = function (key, texture_id, texture) {
+            var view = Ketch._views[key];
+            var gl = view.context;
+            var prg = view.program;
+            var index = view.textures.indexOf(texture_id);
+            if (index > -1) {
+                gl.activeTexture(index === 0 ? gl.TEXTURE0 : gl.TEXTURE0 + index);
+                gl.bindTexture(gl.TEXTURE_2D, texture);
+                var uSampler = Ketch.getUniform(key, "uSampler");
+                gl.uniform1i(uSampler, index);
+            }
         };
         Ketch._views = {};
         return Ketch;
@@ -533,8 +556,9 @@ var BlazeEngine;
                         this._nbo = createBuffer(utils.calculateNormals(obj.v, obj.iv));
                     }
                 }
-                if (obj.vt.length > 0)
-                    this._tbo = createBuffer(obj.vt);
+                if (obj.vt.length > 0) {
+                    this._tbo = WebGLUtils.createBuffer(gl, obj.vt, true);
+                }
                 function createIndexBuffer(data) {
                     return WebGLUtils.createIndexBuffer(gl, data);
                 }
@@ -595,6 +619,7 @@ var BlazeEngine;
             function MeshTexture(graph_id) {
                 _super.call(this, graph_id);
                 this._image = new Image();
+                this._oid = utils.uuid(this.constructor.name);
             }
             Object.defineProperty(MeshTexture.prototype, "onload", {
                 set: function (cb) {
@@ -613,13 +638,15 @@ var BlazeEngine;
             });
             MeshTexture.prototype.loadTextureImage = function (cb) {
                 var _this = this;
+                var self = this;
                 return function () {
-                    _this._texture = WebGLUtils.createTexture(_this.gl, _this._image);
+                    _this._texture = WebGLUtils.createTexture(self.gl, self._image);
+                    Ketch.addTexture(self.graphID, self._oid);
                     if (cb)
                         cb();
                 };
             };
-            Object.defineProperty(MeshTexture.prototype, "texture", {
+            Object.defineProperty(MeshTexture.prototype, "content", {
                 get: function () {
                     return this._texture;
                 },
@@ -900,7 +927,7 @@ var BlazeEngine;
                     cb();
             });
         };
-        MeshEntity.prototype.setMaterialUniforms = function () {
+        MeshEntity.prototype.Material = function () {
             if (this._material) {
                 var gl = this.gl;
                 if (this._material.ambient) {
@@ -925,9 +952,22 @@ var BlazeEngine;
                 }
             }
         };
+        MeshEntity.prototype.Texture = function () {
+            var gl = this.gl;
+            var useTexture = this.getUniform("useTexture");
+            if (this._texture) {
+                gl.uniform1f(useTexture, true);
+                gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.tbo);
+                Ketch.enableAttrib(this.graphID, "a_texture_coords");
+                Ketch.Texture(this.graphID, this._texture.content);
+            }
+            else {
+                gl.uniform1f(useTexture, false);
+            }
+        };
         MeshEntity.prototype.beginDraw = function () {
             var gl = this.gl;
-            this.setMaterialUniforms();
+            this.Material();
             gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
             Ketch.enableAttrib(this.graphID, "a_position");
             gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.nbo);
@@ -1576,7 +1616,7 @@ var BlazeEngine;
             'uMaterialDiffuse',
             'uLightSpecular',
             'uMaterialSpecular',
-            'uShininess'
+            'uShininess',
         ];
         SceneGraph.ATTRIBUTES = ['a_position', 'a_normal'];
         return SceneGraph;

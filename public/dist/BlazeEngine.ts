@@ -26,7 +26,7 @@ export module WebGLUtils {
     }
     export enum BUFFER_DRAW { STATIC, STREAM, DYNAMIC }
 
-    export function createBuffer(gl, data, type_draw?: WebGLUtils.BUFFER_DRAW) {
+    export function createBuffer(gl, data, is2D?: boolean, type_draw?: WebGLUtils.BUFFER_DRAW) {
         var buffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
@@ -44,9 +44,14 @@ export module WebGLUtils {
         }
 
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        if (is2D) {
+            buffer.itemSize = 2;
+            buffer.numItems = data.length / 2;
+        } else {
+            buffer.itemSize = 3;
+            buffer.numItems = data.length / 3;
+        }
 
-        buffer.itemSize = 3;
-        buffer.numItems = data.length / 3;
 
 
         return buffer;
@@ -334,6 +339,35 @@ export class Ketch {
     }
 
 
+    static addTexture(key, texture_id) {
+        var view = Ketch._views[key];
+        view.textures = view.textures || [];
+
+        view.textures.push(texture_id);
+
+
+    }
+    static activeTexture(key, texture_id, texture) {
+        var view = Ketch._views[key];
+        var gl = view.context;
+        var prg = view.program;
+
+        var index = view.textures.indexOf(texture_id);
+
+        if (index > -1) {
+            gl.activeTexture(index === 0 ? gl.TEXTURE0 : gl.TEXTURE0 + index);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            var uSampler = Ketch.getUniform(key, "uSampler");
+            gl.uniform1i(uSampler, index);
+        }
+
+
+
+
+
+    }
+
+
 }
 export class Renderable {
     private _graph_id: string;
@@ -515,7 +549,7 @@ export module Resources {
             } catch (e) {
                 console.log(e);
             }
-          
+
             _.defaults(obj, {
                 v: [],
                 vn: [],
@@ -524,7 +558,7 @@ export module Resources {
                 in: [],
                 it: []
             });
-             
+
             return obj;
         }
 
@@ -581,25 +615,27 @@ export module Resources {
 
         private createBuffers(obj: any): void {
             var gl = this.gl;
-            
-             
+
+
             function createBuffer(data) {
                 return WebGLUtils.createBuffer(gl, data);
             }
             if (obj.v.length > 0)
                 this._vbo = createBuffer(obj.v);
 
-            if (obj.vn.length > 0){
+            if (obj.vn.length > 0) {
                 this._nbo = createBuffer(obj.vn);
-            }else{
-                if(obj.v.length>0&&obj.iv.length>0){
-                     this._nbo = createBuffer(utils.calculateNormals(obj.v, obj.iv));
+            } else {
+                if (obj.v.length > 0 && obj.iv.length > 0) {
+                    this._nbo = createBuffer(utils.calculateNormals(obj.v, obj.iv));
                 }
             }
-                
 
-            if (obj.vt.length > 0)
-                this._tbo = createBuffer(obj.vt);
+
+            if (obj.vt.length > 0){
+                 this._tbo =WebGLUtils.createBuffer(gl, obj.vt, true);
+            }
+              
 
 
             function createIndexBuffer(data) {
@@ -652,10 +688,11 @@ export module Resources {
         private _texture;
         private _image;
         private _onload;
+        private _oid:string;
         constructor(graph_id: string) {
             super(graph_id);
             this._image = new Image();
-
+            this._oid=utils.uuid(this.constructor.name);
         }
 
 
@@ -670,17 +707,18 @@ export module Resources {
         }
 
         loadTextureImage(cb) {
+            var self=this;
             return () => {
 
-                this._texture = WebGLUtils.createTexture(this.gl, this._image);
-
+                this._texture = WebGLUtils.createTexture(self.gl, self._image);
+                Ketch.addTexture(self.graphID, self._oid);
 
                 if (cb) cb();
             }
         }
 
 
-        public get texture(): string {
+        public get content(): string {
             return this._texture;
         }
     }
@@ -733,11 +771,11 @@ export module Resources {
                     switch (key) {
                         case "Ns": obj["Ns"] = Number(elems[1]);
                             break;
-                        default:{
-                            var temp=elems.slice(1).map(function(a){return Number(a)});
+                        default: {
+                            var temp = elems.slice(1).map(function(a) { return Number(a) });
                             temp.push(1.0);
                             obj[key] = temp;
-                        } 
+                        }
                     }
                 }
 
@@ -798,7 +836,7 @@ export module Resources {
 
         public set src(src: string) {
 
-            utils.load(src, data=> {
+            utils.load(src, data => {
 
                 this._data = data;
                 this._onload();
@@ -941,12 +979,12 @@ export class MeshEntity extends Entity {
         async.waterfall([
             (next) => {
                 if (!self._meshfile) {
-                    
+
                     return next();
                 }
-                
-                  console.log("Loading Buffers");
-                self.loadBuffers(self._meshfile, ()=> {
+
+                console.log("Loading Buffers");
+                self.loadBuffers(self._meshfile, () => {
                     console.log("Loaded Buffers");
                     next();
                 });
@@ -957,7 +995,7 @@ export class MeshEntity extends Entity {
                     return next();
                 }
                 console.log("Loading Texture");
-                self.loadTexture(self._texturefile, ()=> {
+                self.loadTexture(self._texturefile, () => {
                     console.log("Loaded Texture");
                     next();
                 });
@@ -968,7 +1006,7 @@ export class MeshEntity extends Entity {
                     return next();
                 }
                 console.log("Loading Material");
-                self.loadMaterial(self._materialfile, ()=> {
+                self.loadMaterial(self._materialfile, () => {
                     console.log("Loaded Material");
                     next();
                 });
@@ -983,7 +1021,7 @@ export class MeshEntity extends Entity {
 
     }
 
-    public setMaterialUniforms() {
+    public Material() {
         if (this._material) {
 
             var gl = this.gl;
@@ -1013,9 +1051,27 @@ export class MeshEntity extends Entity {
                     gl.uniform1f(uShininess, this._material.shininess);
             }
 
-
-
         }
+    }
+
+
+    public Texture() {
+        var gl = this.gl;
+        var useTexture = this.getUniform("useTexture");
+         if (this._texture) {
+             gl.uniform1f(useTexture, true);
+ 
+ 
+             gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.tbo);
+             Ketch.enableAttrib(this.graphID, "a_texture_coords");
+             
+             Ketch.Texture(this.graphID, this._texture.content);
+ 
+ 
+ 
+         } else {
+             gl.uniform1f(useTexture, false);
+         }
     }
 
     beginDraw() {
@@ -1024,17 +1080,19 @@ export class MeshEntity extends Entity {
 
 
 
-        this.setMaterialUniforms();
+        this.Material();
+
+    
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 
         Ketch.enableAttrib(this.graphID, "a_position");
-        
-        
-         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.nbo);
+
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.nbo);
 
         Ketch.enableAttrib(this.graphID, "a_normal");
-     
+
 
         var ivbo = this._buffers.ivbo;
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ivbo);
@@ -1637,7 +1695,7 @@ export class SceneGraph extends Renderable {
         'uMaterialDiffuse',
         'uLightSpecular',
         'uMaterialSpecular',
-        'uShininess'
+        'uShininess',
     ];
     private static ATTRIBUTES = ['a_position', 'a_normal'];
 

@@ -46,12 +46,12 @@ class MeshEntity extends Entity {
         async.waterfall([
             (next) => {
                 if (!self._meshfile) {
-                    
+
                     return next();
                 }
-                
-                  console.log("Loading Buffers");
-                self.loadBuffers(self._meshfile, ()=> {
+
+                console.log("Loading Buffers");
+                self.loadBuffers(self._meshfile, () => {
                     console.log("Loaded Buffers");
                     next();
                 });
@@ -62,7 +62,7 @@ class MeshEntity extends Entity {
                     return next();
                 }
                 console.log("Loading Texture");
-                self.loadTexture(self._texturefile, ()=> {
+                self.loadTexture(self._texturefile, () => {
                     console.log("Loaded Texture");
                     next();
                 });
@@ -73,7 +73,7 @@ class MeshEntity extends Entity {
                     return next();
                 }
                 console.log("Loading Material");
-                self.loadMaterial(self._materialfile, ()=> {
+                self.loadMaterial(self._materialfile, () => {
                     console.log("Loaded Material");
                     next();
                 });
@@ -88,7 +88,7 @@ class MeshEntity extends Entity {
 
     }
 
-    public setMaterialUniforms() {
+    public Material() {
         if (this._material) {
 
             var gl = this.gl;
@@ -118,9 +118,27 @@ class MeshEntity extends Entity {
                     gl.uniform1f(uShininess, this._material.shininess);
             }
 
-
-
         }
+    }
+
+
+    public Texture() {
+        var gl = this.gl;
+        var useTexture = this.getUniform("useTexture");
+         if (this._texture) {
+             gl.uniform1f(useTexture, true);
+ 
+ 
+             gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.tbo);
+             Ketch.enableAttrib(this.graphID, "a_texture_coords");
+             
+             Ketch.Texture(this.graphID, this._texture.content);
+ 
+ 
+ 
+         } else {
+             gl.uniform1f(useTexture, false);
+         }
     }
 
     beginDraw() {
@@ -129,17 +147,19 @@ class MeshEntity extends Entity {
 
 
 
-        this.setMaterialUniforms();
+        this.Material();
+
+    
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 
         Ketch.enableAttrib(this.graphID, "a_position");
-        
-        
-         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.nbo);
+
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.nbo);
 
         Ketch.enableAttrib(this.graphID, "a_normal");
-     
+
 
         var ivbo = this._buffers.ivbo;
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ivbo);

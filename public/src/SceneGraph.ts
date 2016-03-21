@@ -20,7 +20,7 @@ class SceneGraph extends Renderable {
         'uMaterialDiffuse',
         'uLightSpecular',
         'uMaterialSpecular',
-        'uShininess'
+        'uShininess',
     ];
     private static ATTRIBUTES = ['a_position', 'a_normal'];
 

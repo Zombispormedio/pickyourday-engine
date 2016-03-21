@@ -87,4 +87,33 @@ class Ketch {
     }
 
 
+    static addTexture(key, texture_id) {
+        var view = Ketch._views[key];
+        view.textures = view.textures || [];
+
+        view.textures.push(texture_id);
+
+
+    }
+    static activeTexture(key, texture_id, texture) {
+        var view = Ketch._views[key];
+        var gl = view.context;
+        var prg = view.program;
+
+        var index = view.textures.indexOf(texture_id);
+
+        if (index > -1) {
+            gl.activeTexture(index === 0 ? gl.TEXTURE0 : gl.TEXTURE0 + index);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            var uSampler = Ketch.getUniform(key, "uSampler");
+            gl.uniform1i(uSampler, index);
+        }
+
+
+
+
+
+    }
+
+
 }

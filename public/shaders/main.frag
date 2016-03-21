@@ -12,8 +12,11 @@ uniform vec4 uMaterialAmbient;
 uniform vec4 uMaterialDiffuse;
 uniform vec4 uMaterialSpecular;
 
+
 varying vec3 vNormal;
 varying vec3 vEyeVec;
+
+
 
 void main(){
         vec3 L= normalize(uLightDirection);
@@ -41,6 +44,7 @@ void main(){
         finalColor.a=1.0;
      
      
+        
         gl_FragColor =finalColor;
     }
 

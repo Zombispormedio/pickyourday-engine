@@ -25,7 +25,7 @@ module WebGLUtils {
     }
     export enum BUFFER_DRAW { STATIC, STREAM, DYNAMIC }
 
-    export function createBuffer(gl, data, type_draw?: WebGLUtils.BUFFER_DRAW) {
+    export function createBuffer(gl, data, is2D?: boolean, type_draw?: WebGLUtils.BUFFER_DRAW) {
         var buffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
@@ -43,9 +43,14 @@ module WebGLUtils {
         }
 
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        if (is2D) {
+            buffer.itemSize = 2;
+            buffer.numItems = data.length / 2;
+        } else {
+            buffer.itemSize = 3;
+            buffer.numItems = data.length / 3;
+        }
 
-        buffer.itemSize = 3;
-        buffer.numItems = data.length / 3;
 
 
         return buffer;

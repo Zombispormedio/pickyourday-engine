@@ -51,7 +51,7 @@ module Resources {
             } catch (e) {
                 console.log(e);
             }
-          
+
             _.defaults(obj, {
                 v: [],
                 vn: [],
@@ -60,7 +60,7 @@ module Resources {
                 in: [],
                 it: []
             });
-             
+
             return obj;
         }
 
@@ -117,25 +117,27 @@ module Resources {
 
         private createBuffers(obj: any): void {
             var gl = this.gl;
-            
-             
+
+
             function createBuffer(data) {
                 return WebGLUtils.createBuffer(gl, data);
             }
             if (obj.v.length > 0)
                 this._vbo = createBuffer(obj.v);
 
-            if (obj.vn.length > 0){
+            if (obj.vn.length > 0) {
                 this._nbo = createBuffer(obj.vn);
-            }else{
-                if(obj.v.length>0&&obj.iv.length>0){
-                     this._nbo = createBuffer(utils.calculateNormals(obj.v, obj.iv));
+            } else {
+                if (obj.v.length > 0 && obj.iv.length > 0) {
+                    this._nbo = createBuffer(utils.calculateNormals(obj.v, obj.iv));
                 }
             }
-                
 
-            if (obj.vt.length > 0)
-                this._tbo = createBuffer(obj.vt);
+
+            if (obj.vt.length > 0){
+                 this._tbo =WebGLUtils.createBuffer(gl, obj.vt, true);
+            }
+              
 
 
             function createIndexBuffer(data) {
@@ -188,10 +190,11 @@ module Resources {
         private _texture;
         private _image;
         private _onload;
+        private _oid:string;
         constructor(graph_id: string) {
             super(graph_id);
             this._image = new Image();
-
+            this._oid=utils.uuid(this.constructor.name);
         }
 
 
@@ -206,17 +209,18 @@ module Resources {
         }
 
         loadTextureImage(cb) {
+            var self=this;
             return () => {
 
-                this._texture = WebGLUtils.createTexture(this.gl, this._image);
-
+                this._texture = WebGLUtils.createTexture(self.gl, self._image);
+                Ketch.addTexture(self.graphID, self._oid);
 
                 if (cb) cb();
             }
         }
 
 
-        public get texture(): string {
+        public get content(): string {
             return this._texture;
         }
     }
@@ -269,11 +273,11 @@ module Resources {
                     switch (key) {
                         case "Ns": obj["Ns"] = Number(elems[1]);
                             break;
-                        default:{
-                            var temp=elems.slice(1).map(function(a){return Number(a)});
+                        default: {
+                            var temp = elems.slice(1).map(function(a) { return Number(a) });
                             temp.push(1.0);
                             obj[key] = temp;
-                        } 
+                        }
                     }
                 }
 
@@ -334,7 +338,7 @@ module Resources {
 
         public set src(src: string) {
 
-            utils.load(src, data=> {
+            utils.load(src, data => {
 
                 this._data = data;
                 this._onload();

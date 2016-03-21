@@ -5,28 +5,29 @@ var app = angular.module("_3dApp", ['ngMaterial']);
 
 app.controller('AppController', function($scope) {
     $scope.loading = true;
-    $scope.values={zoom:0};
-    
-    $scope.checkAxis=function(axis){
-        return axis==1;
+    $scope.values = { zoom: 0 };
+
+    $scope.checkAxis = function(axis) {
+        return axis == 1;
     };
-    
-    $scope.toggleAxis=function(axis, index){
-      axis[index]=axis[index]==1?0:1;  
+
+    $scope.toggleAxis = function(axis, index) {
+        axis[index] = axis[index] == 1 ? 0 : 1;
     };
-    $scope.changeZoom=function(){
-       $scope.camera.translate($scope.values.zoom);
+    $scope.changeZoom = function() {
+        $scope.camera.translate($scope.values.zoom);
     };
- 
-    
+
+
     $scope.Tree = new BlazeEngine.SceneGraph();
 
     $scope.Tree.setContext(document.getElementById("3dView"));
 
 
     $scope.camera = $scope.Tree.createCamera();
-     $scope.camera.position=[0,0,10];
-     
+    $scope.camera.position = [0, 0, 10];
+    $scope.camera.zoom=6;
+
 
     $scope.Tree.createMainChildNode("Camera", $scope.camera);
 
@@ -47,18 +48,22 @@ app.controller('AppController', function($scope) {
     $scope.tr.setAngle(90);
     $scope.tr.setAxis([0, 1, 0]);
     $scope.TrMeshNode = $scope.Tree.createMainChildNode("TRMesh", $scope.tr);
-    $scope.mesh = $scope.Tree.createMesh({ mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/webgl.png" });
+    $scope.mesh = $scope.Tree.createMesh({ mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/texture.jpg" });
     $scope.TrMeshNode.createChildNode("Mesh", $scope.mesh);
 
     $scope.tr.position = [0, 0, 0];
-    
+
     $scope.mesh2 = $scope.Tree.createMesh({ mesh: "data/sphere.json", material: "data/test.mtl" });
     $scope.tr2 = $scope.Tree.createTransform();
     $scope.TrMesh2Node = $scope.Tree.createMainChildNode("TrMesh", $scope.tr2);
-    $scope.TrMesh2Node.createChildNode("Mesh", $scope.mesh2);
-      $scope.tr2.position = [-10, -4, -20];
-    $scope.meshes=[{mesh:$scope.mesh, tr:$scope.tr}, {mesh:$scope.mesh2, tr:$scope.tr2}];
-    $scope.mesh2.diffuse=[0.16, 0.8, 0.65,1];
+    $scope.TrMesh2Node.createChildNode("Mesh", $scope.mesh);
+    $scope.tr2.setAngle(90);
+    $scope.tr2.setAxis([0, 1, 0]);
+
+    $scope.tr2.position = [-2, 0, -1.8];
+    $scope.meshes = [{ mesh: $scope.mesh, tr: $scope.tr }, { mesh: $scope.mesh, tr: $scope.tr2 }];
+
+   
 
 
 
@@ -68,7 +73,7 @@ app.controller('AppController', function($scope) {
         $scope.loading = false;
         BlazeEngine.Ketch.renderLoop(function() {
             $scope.$apply(function() {
-               
+
 
                 $scope.Tree.draw.bind($scope.Tree)();
             });
