@@ -315,7 +315,7 @@ var BlazeEngine;
         };
         Ketch._views = {};
         return Ketch;
-    })();
+    }());
     BlazeEngine.Ketch = Ketch;
     var Renderable = (function () {
         function Renderable(graph_id) {
@@ -346,7 +346,7 @@ var BlazeEngine;
             return Ketch.getUniform(this.graphID, key);
         };
         return Renderable;
-    })();
+    }());
     BlazeEngine.Renderable = Renderable;
     var Entity = (function (_super) {
         __extends(Entity, _super);
@@ -358,7 +358,7 @@ var BlazeEngine;
         Entity.prototype.endDraw = function (matrixStack) {
         };
         return Entity;
-    })(Renderable);
+    }(Renderable));
     BlazeEngine.Entity = Entity;
     var MatrixStack = (function (_super) {
         __extends(MatrixStack, _super);
@@ -445,7 +445,7 @@ var BlazeEngine;
                 gl.uniformMatrix4fv(nMatrix, false, this._nMatrix);
         };
         return MatrixStack;
-    })(Renderable);
+    }(Renderable));
     BlazeEngine.MatrixStack = MatrixStack;
     var Resources;
     (function (Resources) {
@@ -612,7 +612,7 @@ var BlazeEngine;
                 configurable: true
             });
             return MeshBuffers;
-        })(Renderable);
+        }(Renderable));
         Resources.MeshBuffers = MeshBuffers;
         var MeshTexture = (function (_super) {
             __extends(MeshTexture, _super);
@@ -654,7 +654,7 @@ var BlazeEngine;
                 configurable: true
             });
             return MeshTexture;
-        })(Renderable);
+        }(Renderable));
         Resources.MeshTexture = MeshTexture;
         var MeshMaterial = (function (_super) {
             __extends(MeshMaterial, _super);
@@ -752,69 +752,26 @@ var BlazeEngine;
                 configurable: true
             });
             return MeshMaterial;
-        })(Renderable);
+        }(Renderable));
         Resources.MeshMaterial = MeshMaterial;
-        var File = (function () {
-            function File() {
-            }
-            Object.defineProperty(File.prototype, "onload", {
-                set: function (v) {
-                    this._onload = v;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(File.prototype, "src", {
-                set: function (src) {
-                    var _this = this;
-                    utils.load(src, function (data) {
-                        _this._data = data;
-                        _this._onload();
-                    });
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(File.prototype, "data", {
-                get: function () {
-                    return this._data;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            return File;
-        })();
-        Resources.File = File;
-        var Shaders = (function () {
-            function Shaders() {
-                this._fragment = new Resources.File();
-                this._vertex = new Resources.File();
-            }
-            Object.defineProperty(Shaders.prototype, "fragment", {
-                get: function () {
-                    return this._fragment;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(Shaders.prototype, "vertex", {
-                get: function () {
-                    return this._vertex;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(Shaders.prototype, "Sources", {
-                get: function () {
-                    return { fragment: this._fragment.data, vertex: this._vertex.data };
-                },
-                enumerable: true,
-                configurable: true
-            });
-            return Shaders;
-        })();
-        Resources.Shaders = Shaders;
     })(Resources = BlazeEngine.Resources || (BlazeEngine.Resources = {}));
+    var Shaders;
+    (function (Shaders) {
+        var Fragment = (function () {
+            function Fragment() {
+            }
+            Fragment.Main = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform float uShininess;\nuniform vec3 uLightDirection;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\nuniform vec4 uLightSpecular;\n\nuniform vec4 uMaterialAmbient;\nuniform vec4 uMaterialDiffuse;\nuniform vec4 uMaterialSpecular;\n\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\n\n\nvoid main(){\n        vec3 L= normalize(uLightDirection);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient*uMaterialAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        \n        if(lambertTerm>0.0)\n        {\n            Id=uLightDiffuse*uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightSpecular*uMaterialSpecular*specular;\n        }\n        \n        vec4 finalColor=Ia+Id+Is;\n        finalColor.a=1.0;\n     \n     \n        \n        gl_FragColor =finalColor;\n    }\n\n\n";
+            return Fragment;
+        }());
+        Shaders.Fragment = Fragment;
+        var Vertex = (function () {
+            function Vertex() {
+            }
+            Vertex.Main = "attribute vec3 a_position;\nattribute vec3 a_normal;\n\n\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nuniform mat4 uNMatrix;\n\n//uniform bool useTexture;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n//varying vec2 vTextureCoord;\n\nvoid main(){\n\n    vec4 vertex = uMVMatrix * vec4(a_position, 1.0);\n    \n   vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));\n   vEyeVec=-vec3(vertex.xyz);\n   \n\n   \n  gl_Position =uPMatrix * vertex;\n\n}\n\n\n";
+            return Vertex;
+        }());
+        Shaders.Vertex = Vertex;
+    })(Shaders = BlazeEngine.Shaders || (BlazeEngine.Shaders = {}));
     var AnimationEntity = (function (_super) {
         __extends(AnimationEntity, _super);
         function AnimationEntity(graph_id, frequency, times, callback) {
@@ -851,7 +808,7 @@ var BlazeEngine;
         };
         AnimationEntity.Count = 0;
         return AnimationEntity;
-    })(Entity);
+    }(Entity));
     BlazeEngine.AnimationEntity = AnimationEntity;
     var MeshEntity = (function (_super) {
         __extends(MeshEntity, _super);
@@ -952,19 +909,25 @@ var BlazeEngine;
                 }
             }
         };
-        MeshEntity.prototype.Texture = function () {
-            var gl = this.gl;
-            var useTexture = this.getUniform("useTexture");
-            if (this._texture) {
-                gl.uniform1f(useTexture, true);
-                gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.tbo);
-                Ketch.enableAttrib(this.graphID, "a_texture_coords");
-                Ketch.Texture(this.graphID, this._texture.content);
-            }
-            else {
-                gl.uniform1f(useTexture, false);
-            }
-        };
+        /*
+            public Texture() {
+                var gl = this.gl;
+                var useTexture = this.getUniform("useTexture");
+                 if (this._texture) {
+                     gl.uniform1f(useTexture, true);
+         
+         
+                     gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.tbo);
+                     Ketch.enableAttrib(this.graphID, "a_texture_coords");
+                     
+                     Ketch.Texture(this.graphID, this._texture.content);
+         
+         
+         
+                 } else {
+                     gl.uniform1f(useTexture, false);
+                 }
+            }*/
         MeshEntity.prototype.beginDraw = function () {
             var gl = this.gl;
             this.Material();
@@ -983,7 +946,7 @@ var BlazeEngine;
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
         };
         return MeshEntity;
-    })(Entity);
+    }(Entity));
     BlazeEngine.MeshEntity = MeshEntity;
     var TransformEntity = (function (_super) {
         __extends(TransformEntity, _super);
@@ -1097,7 +1060,7 @@ var BlazeEngine;
             matrixStack.pop();
         };
         return TransformEntity;
-    })(Entity);
+    }(Entity));
     BlazeEngine.TransformEntity = TransformEntity;
     var LightEntity = (function (_super) {
         __extends(LightEntity, _super);
@@ -1206,7 +1169,7 @@ var BlazeEngine;
         LightEntity.prototype.endDraw = function () {
         };
         return LightEntity;
-    })(Entity);
+    }(Entity));
     BlazeEngine.LightEntity = LightEntity;
     var CameraEntity = (function (_super) {
         __extends(CameraEntity, _super);
@@ -1331,7 +1294,7 @@ var BlazeEngine;
         CameraEntity.prototype.endDraw = function () {
         };
         return CameraEntity;
-    })(Entity);
+    }(Entity));
     BlazeEngine.CameraEntity = CameraEntity;
     var NodeElement = (function () {
         function NodeElement(parent, type, entity) {
@@ -1376,14 +1339,12 @@ var BlazeEngine;
         });
         NodeElement.prototype.addChildNode = function (child) {
             if (this.indexOf(child) > -1)
-                ;
-            this._childNodes.push(child);
+                this._childNodes.push(child);
         };
         NodeElement.prototype.removeChildNode = function (child) {
             var index = this.indexOf(child);
             if (index > -1)
-                ;
-            this._childNodes.splice(index, 1);
+                this._childNodes.splice(index, 1);
         };
         NodeElement.prototype.getChildNodeByIndex = function (index) {
             return this._childNodes[index] || void 0;
@@ -1463,7 +1424,7 @@ var BlazeEngine;
                 this._entity.endDraw(matrixStack);
         };
         return NodeElement;
-    })();
+    }());
     BlazeEngine.NodeElement = NodeElement;
     var SceneGraph = (function (_super) {
         __extends(SceneGraph, _super);
@@ -1471,7 +1432,6 @@ var BlazeEngine;
             var oid = utils.uuid();
             _super.call(this, oid);
             this._oid = oid;
-            this._shaders = new Resources.Shaders();
             this._scene = new NodeElement(void 0, "Scene");
             this._matrixStack = new MatrixStack(this._oid);
             this._loaderBuffer = [];
@@ -1523,33 +1483,10 @@ var BlazeEngine;
         SceneGraph.prototype.setContext = function (canvas) {
             Ketch.setCanvasToContext(this.oid, canvas);
         };
-        SceneGraph.prototype.loadProgram = function (cb, shaders_config) {
-            var _this = this;
-            if (!shaders_config) {
-                shaders_config = {
-                    fragment: SceneGraph.FRAGMENT_SOURCE,
-                    vertex: SceneGraph.VERTEX_SOURCE
-                };
-            }
-            async.waterfall([
-                function (next) {
-                    _this._shaders.fragment.onload = function () {
-                        next();
-                    };
-                    _this._shaders.fragment.src = shaders_config.fragment || SceneGraph.FRAGMENT_SOURCE;
-                },
-                function (next) {
-                    _this._shaders.vertex.onload = function () {
-                        next();
-                    };
-                    _this._shaders.vertex.src = shaders_config.vertex || SceneGraph.VERTEX_SOURCE;
-                }
-            ], function (err) {
-                if (err)
-                    return console.log(err);
-                Ketch.createProgram(_this._oid, _this._shaders.Sources);
-                if (cb)
-                    cb();
+        SceneGraph.prototype.Program = function () {
+            Ketch.createProgram(this._oid, {
+                fragment: Shaders.Fragment.Main,
+                vertex: Shaders.Vertex.Main
             });
         };
         SceneGraph.prototype.createMesh = function (config) {
@@ -1582,29 +1519,14 @@ var BlazeEngine;
             }, cb);
         };
         SceneGraph.prototype.configure = function (cb) {
-            var _this = this;
             var self = this;
-            var gl = this.gl;
             self.Environment();
-            async.waterfall([
-                function (next) {
-                    self.loadProgram(next);
-                },
-                function (next) {
-                    self.loadAllMeshObjects(function () {
-                        next();
-                    });
-                }
-            ], function (err) {
-                Ketch.setAttributeLocations(_this._oid, SceneGraph.ATTRIBUTES);
-                Ketch.setUniformLocations(_this._oid, SceneGraph.UNIFORMS);
-                _this._matrixStack.init();
-                if (cb)
-                    cb();
-            });
+            self.Program();
+            Ketch.setAttributeLocations(this._oid, SceneGraph.ATTRIBUTES);
+            Ketch.setUniformLocations(this._oid, SceneGraph.UNIFORMS);
+            this._matrixStack.init();
+            self.loadAllMeshObjects(cb);
         };
-        SceneGraph.FRAGMENT_SOURCE = "shaders/main.frag";
-        SceneGraph.VERTEX_SOURCE = "shaders/main.vert";
         SceneGraph.UNIFORMS = [
             'uPMatrix',
             'uMVMatrix',
@@ -1620,6 +1542,6 @@ var BlazeEngine;
         ];
         SceneGraph.ATTRIBUTES = ['a_position', 'a_normal'];
         return SceneGraph;
-    })(Renderable);
+    }(Renderable));
     BlazeEngine.SceneGraph = SceneGraph;
 })(BlazeEngine || (BlazeEngine = {}));

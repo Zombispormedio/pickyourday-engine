@@ -328,54 +328,6 @@ module Resources {
 
     }
 
-    export class File {
-        private _onload;
-        private _data: string;
-        private _src: string
-        public set onload(v) {
-            this._onload = v;
-        }
 
-        public set src(src: string) {
-
-            utils.load(src, data => {
-
-                this._data = data;
-                this._onload();
-            });
-        }
-
-
-        public get data(): string {
-            return this._data;
-        }
-
-    }
-    export class Shaders {
-        public _fragment: Resources.File;
-        public _vertex: Resources.File;
-        constructor() {
-            this._fragment = new Resources.File();
-            this._vertex = new Resources.File();
-
-        }
-
-
-        public get fragment(): Resources.File {
-            return this._fragment;
-        }
-
-        public get vertex(): Resources.File {
-            return this._vertex;
-        }
-
-
-        public get Sources(): any {
-            return { fragment: this._fragment.data, vertex: this._vertex.data }
-        }
-
-
-
-    }
 
 }

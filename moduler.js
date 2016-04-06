@@ -1,7 +1,7 @@
 var fs=require("fs");
 var async=require("async");
-const CONFIG="config_modules.json";
-const PUBLIC="./public/";
+const CONFIG="modules.json";
+const PUBLIC="./public/blaze/";
 const SRC_DIR=PUBLIC+"src/";
 const DST_DIR=PUBLIC+"dist/";
 const MODULE_NAME="BlazeEngine";

@@ -49,7 +49,6 @@ class MeshEntity extends Entity {
 
                     return next();
                 }
-
                 console.log("Loading Buffers");
                 self.loadBuffers(self._meshfile, () => {
                     console.log("Loaded Buffers");
@@ -121,7 +120,7 @@ class MeshEntity extends Entity {
         }
     }
 
-
+/*
     public Texture() {
         var gl = this.gl;
         var useTexture = this.getUniform("useTexture");
@@ -139,7 +138,7 @@ class MeshEntity extends Entity {
          } else {
              gl.uniform1f(useTexture, false);
          }
-    }
+    }*/
 
     beginDraw() {
 
@@ -148,8 +147,6 @@ class MeshEntity extends Entity {
 
 
         this.Material();
-
-    
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 

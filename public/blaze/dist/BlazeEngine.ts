@@ -826,57 +826,97 @@ export module Resources {
 
     }
 
-    export class File {
-        private _onload;
-        private _data: string;
-        private _src: string
-        public set onload(v) {
-            this._onload = v;
-        }
 
-        public set src(src: string) {
-
-            utils.load(src, data => {
-
-                this._data = data;
-                this._onload();
-            });
-        }
-
-
-        public get data(): string {
-            return this._data;
-        }
-
-    }
-    export class Shaders {
-        public _fragment: Resources.File;
-        public _vertex: Resources.File;
-        constructor() {
-            this._fragment = new Resources.File();
-            this._vertex = new Resources.File();
-
-        }
-
-
-        public get fragment(): Resources.File {
-            return this._fragment;
-        }
-
-        public get vertex(): Resources.File {
-            return this._vertex;
-        }
-
-
-        public get Sources(): any {
-            return { fragment: this._fragment.data, vertex: this._vertex.data }
-        }
-
-
-
-    }
 
 }
+export module Shaders{
+export class Fragment{
+static Main:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+uniform float uShininess;
+uniform vec3 uLightDirection;
+
+uniform vec4 uLightAmbient;
+uniform vec4 uLightDiffuse;
+uniform vec4 uLightSpecular;
+
+uniform vec4 uMaterialAmbient;
+uniform vec4 uMaterialDiffuse;
+uniform vec4 uMaterialSpecular;
+
+
+varying vec3 vNormal;
+varying vec3 vEyeVec;
+
+
+
+void main(){
+        vec3 L= normalize(uLightDirection);
+        vec3 N= normalize(vNormal);
+        float lambertTerm=dot(N, -L);
+        
+        vec4 Ia= uLightAmbient*uMaterialAmbient;
+        
+        vec4 Id=vec4(0.0,0.0,0.0,1.0);
+        
+        vec4 Is=vec4(0.0,0.0,0.0,1.0);
+        
+        
+        if(lambertTerm>0.0)
+        {
+            Id=uLightDiffuse*uMaterialDiffuse*lambertTerm;
+            
+            vec3 E= normalize(vEyeVec);
+            vec3 R= reflect(L, N);
+            float specular=pow(max(dot(R,E),0.0), uShininess);
+            Is=uLightSpecular*uMaterialSpecular*specular;
+        }
+        
+        vec4 finalColor=Ia+Id+Is;
+        finalColor.a=1.0;
+     
+     
+        
+        gl_FragColor =finalColor;
+    }
+
+
+`;
+}
+export class Vertex{
+static Main:string=`attribute vec3 a_position;
+attribute vec3 a_normal;
+
+
+uniform mat4 uMVMatrix;
+uniform mat4 uPMatrix;
+uniform mat4 uNMatrix;
+
+//uniform bool useTexture;
+
+varying vec3 vNormal;
+varying vec3 vEyeVec;
+//varying vec2 vTextureCoord;
+
+void main(){
+
+    vec4 vertex = uMVMatrix * vec4(a_position, 1.0);
+    
+   vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));
+   vEyeVec=-vec3(vertex.xyz);
+   
+
+   
+  gl_Position =uPMatrix * vertex;
+
+}
+
+
+`;
+}
+}
+
 export class AnimationEntity extends Entity {
     private _frequency: number;
     private _interval_id:number;
@@ -982,7 +1022,6 @@ export class MeshEntity extends Entity {
 
                     return next();
                 }
-
                 console.log("Loading Buffers");
                 self.loadBuffers(self._meshfile, () => {
                     console.log("Loaded Buffers");
@@ -1054,7 +1093,7 @@ export class MeshEntity extends Entity {
         }
     }
 
-
+/*
     public Texture() {
         var gl = this.gl;
         var useTexture = this.getUniform("useTexture");
@@ -1072,7 +1111,7 @@ export class MeshEntity extends Entity {
          } else {
              gl.uniform1f(useTexture, false);
          }
-    }
+    }*/
 
     beginDraw() {
 
@@ -1081,8 +1120,6 @@ export class MeshEntity extends Entity {
 
 
         this.Material();
-
-    
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 
@@ -1571,12 +1608,12 @@ export class NodeElement implements INodeElement {
 
 
     addChildNode(child: NodeElement) {
-        if (this.indexOf(child) > -1);
+        if (this.indexOf(child) > -1)
         this._childNodes.push(child);
     }
     removeChildNode(child: NodeElement) {
         var index = this.indexOf(child);
-        if (index > -1);
+        if (index > -1)
         this._childNodes.splice(index, 1);
     }
 
@@ -1679,11 +1716,8 @@ export class SceneGraph extends Renderable {
     private _matrixStack: MatrixStack;
     private _oid: string;
 
-    private _shaders: Resources.Shaders;
     private _loaderBuffer: Array<MeshEntity>;
 
-    private static FRAGMENT_SOURCE = "shaders/main.frag";
-    private static VERTEX_SOURCE = "shaders/main.vert";
     private static UNIFORMS = [
         'uPMatrix',
         'uMVMatrix',
@@ -1706,7 +1740,6 @@ export class SceneGraph extends Renderable {
         var oid = utils.uuid();
         super(oid);
         this._oid = oid;
-        this._shaders = new Resources.Shaders();
         this._scene = new NodeElement(void 0, "Scene");
         this._matrixStack = new MatrixStack(this._oid);
         this._loaderBuffer = [];
@@ -1760,41 +1793,15 @@ export class SceneGraph extends Renderable {
 
     }
 
-    private loadProgram(cb, shaders_config?) {
-        if (!shaders_config) {
-            shaders_config = {
-                fragment: SceneGraph.FRAGMENT_SOURCE,
-                vertex: SceneGraph.VERTEX_SOURCE
-            }
-        }
+    private Program() {
 
 
-        async.waterfall([
-            next => {
-
-
-                this._shaders.fragment.onload = () => {
-                    next()
-                };
-                this._shaders.fragment.src = shaders_config.fragment || SceneGraph.FRAGMENT_SOURCE;
-
-
-            },
-            next => {
-                this._shaders.vertex.onload = () => {
-                    next()
-                };
-                this._shaders.vertex.src = shaders_config.vertex || SceneGraph.VERTEX_SOURCE;
-
-            }
-        ], (err) => {
-            if (err) return console.log(err);
-
-            Ketch.createProgram(this._oid, this._shaders.Sources);
-
-
-            if (cb) cb();
+        Ketch.createProgram(this._oid, {
+            fragment: Shaders.Fragment.Main,
+            vertex: Shaders.Vertex.Main
         });
+
+
     }
 
 
@@ -1838,27 +1845,19 @@ export class SceneGraph extends Renderable {
 
     public configure(cb) {
         var self = this;
-        var gl = this.gl;
 
         self.Environment()
-        async.waterfall([
-            (next) => {
-                self.loadProgram(next);
-            },
-            (next) => {
-                self.loadAllMeshObjects(() => {
-                    next();
-                })
-            }
-        ], (err) => {
+        self.Program();
+        
+        Ketch.setAttributeLocations(this._oid, SceneGraph.ATTRIBUTES);
+        Ketch.setUniformLocations(this._oid, SceneGraph.UNIFORMS);
+        this._matrixStack.init();
+        
+        self.loadAllMeshObjects(cb);
 
-            Ketch.setAttributeLocations(this._oid, SceneGraph.ATTRIBUTES);
-            Ketch.setUniformLocations(this._oid, SceneGraph.UNIFORMS);
 
-            this._matrixStack.init();
-            
-            if (cb) cb();
-        })
+
+
     }
 
 

@@ -1,6 +1,6 @@
 [
    "WebGLUtils.ts","ClassUtils.ts","utils.ts","CameraType.ts", "Ketch.ts", "Renderable.ts",
-   "Entity.ts","MatrixStack.ts", "Resources.ts", 
+   "Entity.ts","MatrixStack.ts", "Resources.ts",  "Shaders.ts",
    "AnimationEntity.ts",  "MeshEntity.ts", "TransformEntity.ts", 
    "LightEntity.ts",
    "CameraEntity.ts","OrbitCameraEntity.ts", "TrackingCameraEntity.ts",

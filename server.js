@@ -1,12 +1,13 @@
 var express = require("express");
 var C=require("./config/config.js");
+var serveIndex=require("serve-index");
 
 var app=express();
 //Configuracion
 require(C.config+"express.js")(app);
 
 app.set('port', C.port);
-
+app.use("/",serveIndex(__dirname+"/public"));
 app.use("/", express.static(__dirname+"/public"));
 
 app.listen(C.port, function(){

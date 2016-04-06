@@ -4,11 +4,8 @@ class SceneGraph extends Renderable {
     private _matrixStack: MatrixStack;
     private _oid: string;
 
-    private _shaders: Resources.Shaders;
     private _loaderBuffer: Array<MeshEntity>;
 
-    private static FRAGMENT_SOURCE = "shaders/main.frag";
-    private static VERTEX_SOURCE = "shaders/main.vert";
     private static UNIFORMS = [
         'uPMatrix',
         'uMVMatrix',
@@ -31,7 +28,6 @@ class SceneGraph extends Renderable {
         var oid = utils.uuid();
         super(oid);
         this._oid = oid;
-        this._shaders = new Resources.Shaders();
         this._scene = new NodeElement(void 0, "Scene");
         this._matrixStack = new MatrixStack(this._oid);
         this._loaderBuffer = [];
@@ -85,41 +81,15 @@ class SceneGraph extends Renderable {
 
     }
 
-    private loadProgram(cb, shaders_config?) {
-        if (!shaders_config) {
-            shaders_config = {
-                fragment: SceneGraph.FRAGMENT_SOURCE,
-                vertex: SceneGraph.VERTEX_SOURCE
-            }
-        }
+    private Program() {
 
 
-        async.waterfall([
-            next => {
-
-
-                this._shaders.fragment.onload = () => {
-                    next()
-                };
-                this._shaders.fragment.src = shaders_config.fragment || SceneGraph.FRAGMENT_SOURCE;
-
-
-            },
-            next => {
-                this._shaders.vertex.onload = () => {
-                    next()
-                };
-                this._shaders.vertex.src = shaders_config.vertex || SceneGraph.VERTEX_SOURCE;
-
-            }
-        ], (err) => {
-            if (err) return console.log(err);
-
-            Ketch.createProgram(this._oid, this._shaders.Sources);
-
-
-            if (cb) cb();
+        Ketch.createProgram(this._oid, {
+            fragment: Shaders.Fragment.Main,
+            vertex: Shaders.Vertex.Main
         });
+
+
     }
 
 
@@ -163,27 +133,22 @@ class SceneGraph extends Renderable {
 
     public configure(cb) {
         var self = this;
-        var gl = this.gl;
 
         self.Environment()
-        async.waterfall([
-            (next) => {
-                self.loadProgram(next);
-            },
-            (next) => {
-                self.loadAllMeshObjects(() => {
-                    next();
-                })
-            }
-        ], (err) => {
-
-            Ketch.setAttributeLocations(this._oid, SceneGraph.ATTRIBUTES);
-            Ketch.setUniformLocations(this._oid, SceneGraph.UNIFORMS);
-
-            this._matrixStack.init();
+        self.Program();
+        
+        
+        self.loadAllMeshObjects(function(){
             
-            if (cb) cb();
-        })
+        Ketch.setAttributeLocations(this._oid, SceneGraph.ATTRIBUTES);
+        Ketch.setUniformLocations(this._oid, SceneGraph.UNIFORMS);
+        this._matrixStack.init();
+        if(cb)cb();
+        });
+
+
+
+
     }
 
 
