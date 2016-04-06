@@ -1338,15 +1338,12 @@ var BlazeEngine;
             configurable: true
         });
         NodeElement.prototype.addChildNode = function (child) {
-            if (this.indexOf(child) > -1)
-                ;
             this._childNodes.push(child);
         };
         NodeElement.prototype.removeChildNode = function (child) {
             var index = this.indexOf(child);
             if (index > -1)
-                ;
-            this._childNodes.splice(index, 1);
+                this._childNodes.splice(index, 1);
         };
         NodeElement.prototype.getChildNodeByIndex = function (index) {
             return this._childNodes[index] || void 0;

@@ -183,9 +183,7 @@ module Resources {
 
 
     }
-
-
-
+    
     export class MeshTexture extends Renderable {
         private _texture;
         private _image;
@@ -327,7 +325,5 @@ module Resources {
         }
 
     }
-
-
-
+    
 }

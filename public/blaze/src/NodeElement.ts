@@ -37,12 +37,12 @@ class NodeElement implements INodeElement {
 
 
     addChildNode(child: NodeElement) {
-        if (this.indexOf(child) > -1);
+     
         this._childNodes.push(child);
     }
     removeChildNode(child: NodeElement) {
         var index = this.indexOf(child);
-        if (index > -1);
+        if (index > -1)
         this._childNodes.splice(index, 1);
     }
 
