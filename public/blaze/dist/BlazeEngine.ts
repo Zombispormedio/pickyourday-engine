@@ -1608,12 +1608,12 @@ export class NodeElement implements INodeElement {
 
 
     addChildNode(child: NodeElement) {
-        if (this.indexOf(child) > -1)
+        if (this.indexOf(child) > -1);
         this._childNodes.push(child);
     }
     removeChildNode(child: NodeElement) {
         var index = this.indexOf(child);
-        if (index > -1)
+        if (index > -1);
         this._childNodes.splice(index, 1);
     }
 
@@ -1848,9 +1848,9 @@ export class SceneGraph extends Renderable {
 
         self.Environment()
         self.Program();
-        
-        Ketch.setAttributeLocations(this._oid, SceneGraph.ATTRIBUTES);
-        Ketch.setUniformLocations(this._oid, SceneGraph.UNIFORMS);
+
+        Ketch.setAttributeLocations(self._oid, SceneGraph.ATTRIBUTES);
+        Ketch.setUniformLocations(self._oid, SceneGraph.UNIFORMS);
         this._matrixStack.init();
         
         self.loadAllMeshObjects(cb);

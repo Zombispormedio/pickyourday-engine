@@ -136,15 +136,12 @@ class SceneGraph extends Renderable {
 
         self.Environment()
         self.Program();
-        
-        
-        self.loadAllMeshObjects(function(){
-            
-        Ketch.setAttributeLocations(this._oid, SceneGraph.ATTRIBUTES);
-        Ketch.setUniformLocations(this._oid, SceneGraph.UNIFORMS);
+
+        Ketch.setAttributeLocations(self._oid, SceneGraph.ATTRIBUTES);
+        Ketch.setUniformLocations(self._oid, SceneGraph.UNIFORMS);
         this._matrixStack.init();
-        if(cb)cb();
-        });
+        
+        self.loadAllMeshObjects(cb);
 
 
 
