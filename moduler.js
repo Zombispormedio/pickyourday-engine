@@ -4,8 +4,8 @@ const CONFIG="modules.json";
 const PUBLIC="./public/blaze/";
 const SRC_DIR=PUBLIC+"src/";
 const DST_DIR=PUBLIC+"dist/";
-const MODULE_NAME="BlazeEngine";
-const DST_FILE="pickyourday-engine";
+const MODULE_NAME="Blaze";
+const DST_FILE="blaze";
 
 
 function run_cmd(cmd, args, out,end) {

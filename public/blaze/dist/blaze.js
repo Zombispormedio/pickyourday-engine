@@ -3,8 +3,8 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var BlazeEngine;
-(function (BlazeEngine) {
+var Blaze;
+(function (Blaze) {
     var WebGLUtils;
     (function (WebGLUtils) {
         function getGLContext(canvas) {
@@ -119,7 +119,7 @@ var BlazeEngine;
             return program;
         }
         WebGLUtils.createProgram = createProgram;
-    })(WebGLUtils = BlazeEngine.WebGLUtils || (BlazeEngine.WebGLUtils = {}));
+    })(WebGLUtils = Blaze.WebGLUtils || (Blaze.WebGLUtils = {}));
     var utils;
     (function (utils) {
         function s4() {
@@ -220,12 +220,12 @@ var BlazeEngine;
             return ns;
         }
         utils.calculateNormals = calculateNormals;
-    })(utils = BlazeEngine.utils || (BlazeEngine.utils = {}));
+    })(utils = Blaze.utils || (Blaze.utils = {}));
     (function (CAMERA_TYPE) {
         CAMERA_TYPE[CAMERA_TYPE["ORBITING"] = 0] = "ORBITING";
         CAMERA_TYPE[CAMERA_TYPE["TRACKING"] = 1] = "TRACKING";
-    })(BlazeEngine.CAMERA_TYPE || (BlazeEngine.CAMERA_TYPE = {}));
-    var CAMERA_TYPE = BlazeEngine.CAMERA_TYPE;
+    })(Blaze.CAMERA_TYPE || (Blaze.CAMERA_TYPE = {}));
+    var CAMERA_TYPE = Blaze.CAMERA_TYPE;
     var Ketch = (function () {
         function Ketch() {
         }
@@ -316,7 +316,7 @@ var BlazeEngine;
         Ketch._views = {};
         return Ketch;
     }());
-    BlazeEngine.Ketch = Ketch;
+    Blaze.Ketch = Ketch;
     var Renderable = (function () {
         function Renderable(graph_id) {
             this._graph_id = graph_id;
@@ -347,7 +347,7 @@ var BlazeEngine;
         };
         return Renderable;
     }());
-    BlazeEngine.Renderable = Renderable;
+    Blaze.Renderable = Renderable;
     var Entity = (function (_super) {
         __extends(Entity, _super);
         function Entity(graph_id) {
@@ -359,7 +359,7 @@ var BlazeEngine;
         };
         return Entity;
     }(Renderable));
-    BlazeEngine.Entity = Entity;
+    Blaze.Entity = Entity;
     var MatrixStack = (function (_super) {
         __extends(MatrixStack, _super);
         function MatrixStack(graph_id) {
@@ -446,7 +446,7 @@ var BlazeEngine;
         };
         return MatrixStack;
     }(Renderable));
-    BlazeEngine.MatrixStack = MatrixStack;
+    Blaze.MatrixStack = MatrixStack;
     var Resources;
     (function (Resources) {
         var MeshBuffers = (function (_super) {
@@ -754,24 +754,24 @@ var BlazeEngine;
             return MeshMaterial;
         }(Renderable));
         Resources.MeshMaterial = MeshMaterial;
-    })(Resources = BlazeEngine.Resources || (BlazeEngine.Resources = {}));
+    })(Resources = Blaze.Resources || (Blaze.Resources = {}));
     var Shaders;
     (function (Shaders) {
         var Fragment = (function () {
             function Fragment() {
             }
-            Fragment.Main = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform float uShininess;\nuniform vec3 uLightDirection;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\nuniform vec4 uLightSpecular;\n\nuniform vec4 uMaterialAmbient;\nuniform vec4 uMaterialDiffuse;\nuniform vec4 uMaterialSpecular;\n\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\n\n\nvoid main(){\n        vec3 L= normalize(uLightDirection);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient*uMaterialAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        \n        if(lambertTerm>0.0)\n        {\n            Id=uLightDiffuse*uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightSpecular*uMaterialSpecular*specular;\n        }\n        \n        vec4 finalColor=Ia+Id+Is;\n        finalColor.a=1.0;\n     \n     \n        \n        gl_FragColor =finalColor;\n    }\n\n\n";
+            Fragment.Main = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform float uShininess;\nuniform vec3 uLightDirection;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\nuniform vec4 uLightSpecular;\n\nuniform vec4 uMaterialAmbient;\nuniform vec4 uMaterialDiffuse;\nuniform vec4 uMaterialSpecular;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\nvoid main(){\n        vec3 L= normalize(uLightDirection);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient*uMaterialAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        if(lambertTerm>0.0)\n        {\n            Id=uLightDiffuse*uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightSpecular*uMaterialSpecular*specular;\n        }\n        \n        vec4 finalColor=Ia+Id+Is;\n        finalColor.a=1.0;\n    \n        gl_FragColor =finalColor;\n    }\n\n\n";
             return Fragment;
         }());
         Shaders.Fragment = Fragment;
         var Vertex = (function () {
             function Vertex() {
             }
-            Vertex.Main = "attribute vec3 a_position;\nattribute vec3 a_normal;\n\n\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nuniform mat4 uNMatrix;\n\n//uniform bool useTexture;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n//varying vec2 vTextureCoord;\n\nvoid main(){\n\n    vec4 vertex = uMVMatrix * vec4(a_position, 1.0);\n    \n   vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));\n   vEyeVec=-vec3(vertex.xyz);\n   \n\n   \n  gl_Position =uPMatrix * vertex;\n\n}\n\n\n";
+            Vertex.Main = "attribute vec3 a_position;\nattribute vec3 a_normal;\n\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nuniform mat4 uNMatrix;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\nvoid main(){\n\n    vec4 vertex = uMVMatrix * vec4(a_position, 1.0);\n    \n   vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));\n   vEyeVec=-vec3(vertex.xyz);   \n  gl_Position =uPMatrix * vertex;\n\n}\n\n\n";
             return Vertex;
         }());
         Shaders.Vertex = Vertex;
-    })(Shaders = BlazeEngine.Shaders || (BlazeEngine.Shaders = {}));
+    })(Shaders = Blaze.Shaders || (Blaze.Shaders = {}));
     var AnimationEntity = (function (_super) {
         __extends(AnimationEntity, _super);
         function AnimationEntity(graph_id, frequency, times, callback) {
@@ -809,7 +809,7 @@ var BlazeEngine;
         AnimationEntity.Count = 0;
         return AnimationEntity;
     }(Entity));
-    BlazeEngine.AnimationEntity = AnimationEntity;
+    Blaze.AnimationEntity = AnimationEntity;
     var MeshEntity = (function (_super) {
         __extends(MeshEntity, _super);
         function MeshEntity(graph_id, meshfile, materialfile, texturefile) {
@@ -947,7 +947,7 @@ var BlazeEngine;
         };
         return MeshEntity;
     }(Entity));
-    BlazeEngine.MeshEntity = MeshEntity;
+    Blaze.MeshEntity = MeshEntity;
     var TransformEntity = (function (_super) {
         __extends(TransformEntity, _super);
         function TransformEntity(graph_id, position, size, rotation) {
@@ -1061,7 +1061,7 @@ var BlazeEngine;
         };
         return TransformEntity;
     }(Entity));
-    BlazeEngine.TransformEntity = TransformEntity;
+    Blaze.TransformEntity = TransformEntity;
     var LightEntity = (function (_super) {
         __extends(LightEntity, _super);
         function LightEntity(graph_id, ambient, diffuse, position, specular, direction, cutoff) {
@@ -1170,7 +1170,7 @@ var BlazeEngine;
         };
         return LightEntity;
     }(Entity));
-    BlazeEngine.LightEntity = LightEntity;
+    Blaze.LightEntity = LightEntity;
     var CameraEntity = (function (_super) {
         __extends(CameraEntity, _super);
         function CameraEntity(graph_id, type) {
@@ -1295,7 +1295,7 @@ var BlazeEngine;
         };
         return CameraEntity;
     }(Entity));
-    BlazeEngine.CameraEntity = CameraEntity;
+    Blaze.CameraEntity = CameraEntity;
     var NodeElement = (function () {
         function NodeElement(parent, type, entity) {
             this._parentNode = parent;
@@ -1424,7 +1424,7 @@ var BlazeEngine;
         };
         return NodeElement;
     }());
-    BlazeEngine.NodeElement = NodeElement;
+    Blaze.NodeElement = NodeElement;
     var SceneGraph = (function (_super) {
         __extends(SceneGraph, _super);
         function SceneGraph() {
@@ -1509,7 +1509,7 @@ var BlazeEngine;
             enumerable: true,
             configurable: true
         });
-        SceneGraph.prototype.loadAllMeshObjects = function (cb) {
+        SceneGraph.prototype.startLoader = function (cb) {
             async.eachSeries(this._loaderBuffer, function (item, next) {
                 item.loadMesh(function () {
                     console.log(item);
@@ -1517,14 +1517,18 @@ var BlazeEngine;
                 });
             }, cb);
         };
-        SceneGraph.prototype.configure = function (cb) {
+        SceneGraph.prototype.configure = function () {
             var self = this;
             self.Environment();
             self.Program();
             Ketch.setAttributeLocations(self._oid, SceneGraph.ATTRIBUTES);
             Ketch.setUniformLocations(self._oid, SceneGraph.UNIFORMS);
             this._matrixStack.init();
-            self.loadAllMeshObjects(cb);
+        };
+        SceneGraph.prototype.configureWithLoader = function (cb) {
+            var self = this;
+            self.configure();
+            self.startLoader(cb);
         };
         SceneGraph.UNIFORMS = [
             'uPMatrix',
@@ -1542,5 +1546,5 @@ var BlazeEngine;
         SceneGraph.ATTRIBUTES = ['a_position', 'a_normal'];
         return SceneGraph;
     }(Renderable));
-    BlazeEngine.SceneGraph = SceneGraph;
-})(BlazeEngine || (BlazeEngine = {}));
+    Blaze.SceneGraph = SceneGraph;
+})(Blaze || (Blaze = {}));

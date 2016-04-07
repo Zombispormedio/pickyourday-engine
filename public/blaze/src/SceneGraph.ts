@@ -120,7 +120,7 @@ class SceneGraph extends Renderable {
 
 
 
-    public loadAllMeshObjects(cb) {
+    public startLoader(cb) {
         async.eachSeries(this._loaderBuffer, (item, next) => {
             item.loadMesh(() => {
                 console.log(item);
@@ -129,9 +129,7 @@ class SceneGraph extends Renderable {
         }, cb);
     }
 
-
-
-    public configure(cb) {
+    public configure() {
         var self = this;
 
         self.Environment()
@@ -140,12 +138,16 @@ class SceneGraph extends Renderable {
         Ketch.setAttributeLocations(self._oid, SceneGraph.ATTRIBUTES);
         Ketch.setUniformLocations(self._oid, SceneGraph.UNIFORMS);
         this._matrixStack.init();
+    }
+
+
+    public configureWithLoader(cb) {
+        var self = this;
         
-        self.loadAllMeshObjects(cb);
+        self.configure();
 
-
-
-
+        self.startLoader(cb);
+        
     }
 
 

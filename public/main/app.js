@@ -19,7 +19,7 @@ app.controller('AppController', function($scope) {
     };
 
 
-    $scope.Tree = new BlazeEngine.SceneGraph();
+    $scope.Tree = new Blaze.SceneGraph();
 
     $scope.Tree.setContext(document.getElementById("3dView"));
 
@@ -56,22 +56,19 @@ app.controller('AppController', function($scope) {
     $scope.mesh2 = $scope.Tree.createMesh({ mesh: "data/sphere.json", material: "data/test.mtl" });
     $scope.tr2 = $scope.Tree.createTransform();
     $scope.TrMesh2Node = $scope.Tree.createMainChildNode("TrMesh", $scope.tr2);
-    $scope.TrMesh2Node.createChildNode("Mesh", $scope.mesh);
+    $scope.TrMesh2Node.createChildNode("Mesh", $scope.mesh2);
     $scope.tr2.setAngle(90);
     $scope.tr2.setAxis([0, 1, 0]);
 
     $scope.tr2.position = [-2, 0, -1.8];
     $scope.meshes = [{ mesh: $scope.mesh, tr: $scope.tr }, { mesh: $scope.mesh, tr: $scope.tr2 }];
 
-   
 
-
-
-    $scope.Tree.configure(function() {
+    $scope.Tree.configureWithLoader(function() {
         console.log($scope.Tree);
 
         $scope.loading = false;
-        BlazeEngine.Ketch.renderLoop(function() {
+        Blaze.Ketch.renderLoop(function() {
             $scope.$apply(function() {
 
 

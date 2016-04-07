@@ -12,11 +12,8 @@ uniform vec4 uMaterialAmbient;
 uniform vec4 uMaterialDiffuse;
 uniform vec4 uMaterialSpecular;
 
-
 varying vec3 vNormal;
 varying vec3 vEyeVec;
-
-
 
 void main(){
         vec3 L= normalize(uLightDirection);
@@ -28,7 +25,6 @@ void main(){
         vec4 Id=vec4(0.0,0.0,0.0,1.0);
         
         vec4 Is=vec4(0.0,0.0,0.0,1.0);
-        
         
         if(lambertTerm>0.0)
         {
@@ -42,9 +38,7 @@ void main(){
         
         vec4 finalColor=Ia+Id+Is;
         finalColor.a=1.0;
-     
-     
-        
+    
         gl_FragColor =finalColor;
     }
 
