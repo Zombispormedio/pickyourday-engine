@@ -4,7 +4,7 @@ angular.module('alexandra')
         restrict: 'A',
         link:function(scope, tElement, attrs){
             var element=tElement[0];
-            console.log(attrs);
+            
             if(attrs.fullpage=="true"){
                 $alexandraUtils.fullPage(element);
             }
@@ -24,10 +24,11 @@ angular.module('alexandra')
             tree.configureCamera();
             
             tree.configureLights();
+            
+            tree.configureMesh();
+            
             tree.configure();
-            
-            
-       
+        
             if(attrs.auto==="" && attrs.auto!=="false"){
                   tree.run();
             }

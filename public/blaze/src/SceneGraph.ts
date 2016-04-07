@@ -82,20 +82,28 @@ class SceneGraph extends Renderable {
     }
 
     private Program() {
-
-
         Ketch.createProgram(this._oid, {
             fragment: Shaders.Fragment.Main,
             vertex: Shaders.Vertex.Main
         });
+    }
 
-
+    public createMesh(mesh?, material?): MeshEntity {
+        var meshEntity = new MeshEntity(this.oid);
+        
+        if(mesh){
+            meshEntity.loadMeshByObject(mesh);
+        }
+        
+        if(material){
+            meshEntity.loadMaterialByObject(material);
+        }
+        
+        return meshEntity;
     }
 
 
-
-
-    public createMesh(config: { mesh?: string, texture?: string, material?: string }): MeshEntity {
+    public createMeshByLoader(config: { mesh?: string, texture?: string, material?: string }): MeshEntity {
         var mesh = new MeshEntity(this.oid, config.mesh, config.material, config.texture);
         this._loaderBuffer.push(mesh);
         return mesh;
@@ -143,11 +151,11 @@ class SceneGraph extends Renderable {
 
     public configureWithLoader(cb) {
         var self = this;
-        
+
         self.configure();
 
         self.startLoader(cb);
-        
+
     }
 
 

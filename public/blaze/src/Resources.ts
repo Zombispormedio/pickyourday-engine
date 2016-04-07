@@ -52,15 +52,6 @@ module Resources {
                 console.log(e);
             }
 
-            _.defaults(obj, {
-                v: [],
-                vn: [],
-                vt: [],
-                iv: [],
-                in: [],
-                it: []
-            });
-
             return obj;
         }
 
@@ -82,9 +73,6 @@ module Resources {
             var index = lines.filter((a) => {
                 return a[0] === 'f';
             });
-
-
-
             vertex.forEach((item) => {
                 var elems = item.replace("\r", "").split(" ");
                 var key = elems[0];
@@ -115,10 +103,18 @@ module Resources {
         }
 
 
-        private createBuffers(obj: any): void {
+        public createBuffers(obj: any): void {
             var gl = this.gl;
-
-
+           
+             _.defaults(obj, {
+                v: [],
+                vn: [],
+                vt: [],
+                iv: [],
+                in: [],
+                it: []
+            });
+           
             function createBuffer(data) {
                 return WebGLUtils.createBuffer(gl, data);
             }

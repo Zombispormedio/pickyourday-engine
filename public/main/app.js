@@ -48,12 +48,12 @@ app.controller('AppController', function($scope) {
     $scope.tr.setAngle(90);
     $scope.tr.setAxis([0, 1, 0]);
     $scope.TrMeshNode = $scope.Tree.createMainChildNode("TRMesh", $scope.tr);
-    $scope.mesh = $scope.Tree.createMesh({ mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/texture.jpg" });
+    $scope.mesh = $scope.Tree.createMeshByLoader({ mesh: "data/picky.obj", material: "data/test.mtl", texture: "data/texture.jpg" });
     $scope.TrMeshNode.createChildNode("Mesh", $scope.mesh);
 
     $scope.tr.position = [0, 0, 0];
 
-    $scope.mesh2 = $scope.Tree.createMesh({ mesh: "data/sphere.json", material: "data/test.mtl" });
+    $scope.mesh2 = $scope.Tree.createMeshByLoader({ mesh: "data/sphere.json", material: "data/test.mtl" });
     $scope.tr2 = $scope.Tree.createTransform();
     $scope.TrMesh2Node = $scope.Tree.createMainChildNode("TrMesh", $scope.tr2);
     $scope.TrMesh2Node.createChildNode("Mesh", $scope.mesh2);

@@ -492,14 +492,6 @@ var Blaze;
                 catch (e) {
                     console.log(e);
                 }
-                _.defaults(obj, {
-                    v: [],
-                    vn: [],
-                    vt: [],
-                    iv: [],
-                    in: [],
-                    it: []
-                });
                 return obj;
             };
             MeshBuffers.prototype.parseOBJ = function (data) {
@@ -543,6 +535,14 @@ var Blaze;
             };
             MeshBuffers.prototype.createBuffers = function (obj) {
                 var gl = this.gl;
+                _.defaults(obj, {
+                    v: [],
+                    vn: [],
+                    vt: [],
+                    iv: [],
+                    in: [],
+                    it: []
+                });
                 function createBuffer(data) {
                     return WebGLUtils.createBuffer(gl, data);
                 }
@@ -884,7 +884,26 @@ var Blaze;
                     cb();
             });
         };
-        MeshEntity.prototype.Material = function () {
+        MeshEntity.prototype.loadMeshByObject = function (obj) {
+            this._buffers = new Resources.MeshBuffers(this.graphID);
+            this._buffers.createBuffers(obj);
+        };
+        MeshEntity.prototype.loadMaterialByObject = function (obj) {
+            this._material = new Resources.MeshMaterial(this.graphID);
+            if (obj.ambient) {
+                this._material.ambient = obj.ambient;
+            }
+            if (obj.specular) {
+                this._material.specular = obj.specular;
+            }
+            if (obj.diffuse) {
+                this._material.diffuse = obj.diffuse;
+            }
+            if (obj.shininess) {
+                this._material.shininess = obj.shininess;
+            }
+        };
+        MeshEntity.prototype.setMaterialUniforms = function () {
             if (this._material) {
                 var gl = this.gl;
                 if (this._material.ambient) {
@@ -910,27 +929,21 @@ var Blaze;
             }
         };
         /*
-            public Texture() {
+            public setTextureUniforms() {
                 var gl = this.gl;
                 var useTexture = this.getUniform("useTexture");
                  if (this._texture) {
                      gl.uniform1f(useTexture, true);
-         
-         
                      gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.tbo);
                      Ketch.enableAttrib(this.graphID, "a_texture_coords");
-                     
                      Ketch.Texture(this.graphID, this._texture.content);
-         
-         
-         
                  } else {
                      gl.uniform1f(useTexture, false);
                  }
             }*/
         MeshEntity.prototype.beginDraw = function () {
             var gl = this.gl;
-            this.Material();
+            this.setMaterialUniforms();
             gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
             Ketch.enableAttrib(this.graphID, "a_position");
             gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.nbo);
@@ -1488,7 +1501,17 @@ var Blaze;
                 vertex: Shaders.Vertex.Main
             });
         };
-        SceneGraph.prototype.createMesh = function (config) {
+        SceneGraph.prototype.createMesh = function (mesh, material) {
+            var meshEntity = new MeshEntity(this.oid);
+            if (mesh) {
+                meshEntity.loadMeshByObject(mesh);
+            }
+            if (material) {
+                meshEntity.loadMaterialByObject(material);
+            }
+            return meshEntity;
+        };
+        SceneGraph.prototype.createMeshByLoader = function (config) {
             var mesh = new MeshEntity(this.oid, config.mesh, config.material, config.texture);
             this._loaderBuffer.push(mesh);
             return mesh;

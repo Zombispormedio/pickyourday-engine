@@ -1,5 +1,5 @@
 angular.module('alexandra')
-    .factory('$alexandra', function($alexandraForest, $interval) {
+    .factory('$alexandra', function($alexandraForest, $interval, SphereValue, DefaultMaterial) {
 
     return function(id){
 
@@ -10,7 +10,7 @@ angular.module('alexandra')
 
         console.log(Tree)
 
-        var camera, light;
+        var camera, light, mesh;
 
 
         return {
@@ -33,9 +33,33 @@ angular.module('alexandra')
                 });
                 Tree.createMainChildNode("Light", light);
             },
-            configure:function(){
+
+            configureMesh:function(){
+                config=config||{}
+
+                switch(config.type){
+                    case "sphere":
+                    default:
+                        mesh=Tree.createMesh(SphereValue, DefaultMaterial);
+                        break;
+                }
+                console.log(mesh);
+                
+                
+                var tr=Tree.createTransform();
+                var trnode=Tree.createMainChildNode("TrMesh", tr);
+                trnode.createChildNode("Mesh", mesh);
+                
+                tr.setAngle(90);
+                tr.setAxis([0,1,0]);
+                tr.position=[-2, 0, -1.8];
+
+            },
+
+            configure:function(){    
                 Tree.configure();
             },
+
             run:function(){
                 $interval(function(){
                     Tree.draw();
