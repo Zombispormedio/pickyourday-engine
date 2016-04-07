@@ -8,7 +8,6 @@ angular.module('alexandra')
         var Tree=group.tree;
         var config=group.config;
 
-        console.log(Tree)
 
         var camera, light, mesh;
 
@@ -20,9 +19,10 @@ angular.module('alexandra')
 
             configureCamera:function(){
                 camera=Tree.createCamera();
-                camera.position=[0,0,10];
-                camera.zoom=6;
+                camera.position=[0,0,100];
+                Tree.MainCamera = camera;
                 Tree.createMainChildNode("Camera", camera);
+
             },
             configureLights:function(){
                 light=Tree.createLight({
@@ -43,16 +43,15 @@ angular.module('alexandra')
                         mesh=Tree.createMesh(SphereValue, DefaultMaterial);
                         break;
                 }
-                console.log(mesh);
-                
-                
+
+
                 var tr=Tree.createTransform();
                 var trnode=Tree.createMainChildNode("TrMesh", tr);
                 trnode.createChildNode("Mesh", mesh);
-                
+
                 tr.setAngle(90);
                 tr.setAxis([0,1,0]);
-                tr.position=[-2, 0, -1.8];
+                tr.position=[0, 0, 0];
 
             },
 
