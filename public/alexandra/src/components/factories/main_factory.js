@@ -1,5 +1,5 @@
 angular.module('alexandra')
-    .factory('$alexandra', function($alexandraForest, $interval, SphereValue, DefaultMaterial) {
+    .factory('$alexandra', function($alexandraForest, $interval, SphereValue, DefaultMaterial, DefaultLightsConfig, DefaultCameraConfig) {
 
     return function(id){
 
@@ -19,18 +19,13 @@ angular.module('alexandra')
 
             configureCamera:function(){
                 camera=Tree.createCamera();
-                camera.position=[0,0,100];
+                camera.position=DefaultCameraConfig.position;
                 Tree.MainCamera = camera;
                 Tree.createMainChildNode("Camera", camera);
 
             },
             configureLights:function(){
-                light=Tree.createLight({
-                    direction: [0.0, -1.0, -1.0],
-                    ambient: [0.03, 0.03, 0.03, 1.0],
-                    diffuse: [1.0, 1.0, 1.0, 1.0],
-                    specular: [1.0, 1.0, 1.0, 1.0]
-                });
+                light=Tree.createLight(DefaultLightsConfig);
                 Tree.createMainChildNode("Light", light);
             },
 
@@ -58,7 +53,18 @@ angular.module('alexandra')
             configure:function(){    
                 Tree.configure();
             },
-
+            
+            getCamera:function(){
+                
+                return {
+                    
+                    
+                    
+                    
+                };
+                
+            },
+            
             run:function(){
                 $interval(function(){
                     Tree.draw();

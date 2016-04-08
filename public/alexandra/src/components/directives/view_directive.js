@@ -1,5 +1,5 @@
 angular.module('alexandra')
-    .directive('alexandraView', function($alexandraUtils, $alexandraForest, $alexandra) {
+    .directive('alexandraView', function($alexandraUtils, $alexandraForest, $alexandra, $alexandraInteractor) {
     return {
         restrict: 'A',
         link:function(scope, tElement, attrs){
@@ -28,7 +28,9 @@ angular.module('alexandra')
             tree.configureMesh();
             
             tree.configure();
-        
+            
+            $alexandraInteractor(element, tree.getCamera());
+            
             if(attrs.auto==="" && attrs.auto!=="false"){
                   tree.run();
             }

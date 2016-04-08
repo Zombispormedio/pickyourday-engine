@@ -21,9 +21,6 @@ class SceneGraph extends Renderable {
     ];
     private static ATTRIBUTES = ['a_position', 'a_normal'];
 
-
-
-
     constructor() {
         var oid = utils.uuid();
         super(oid);
