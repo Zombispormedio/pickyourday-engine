@@ -83,7 +83,7 @@ angular.module('alexandra')
                     },
                      setPositionY:function(y){
                         camera.position[1]+=y;
-                    },
+                    }
                 };
 
             },
