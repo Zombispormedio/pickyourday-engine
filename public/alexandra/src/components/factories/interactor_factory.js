@@ -98,6 +98,10 @@ angular.module('alexandra')
         }
     }
 
+    var OnWheel=function(ev){
+        dolly(ev.wheelDeltaY);
+    }
+
 
 
     return function(e, c){
@@ -106,6 +110,8 @@ angular.module('alexandra')
         element.bind("mousedown", OnMouseDown);
         element.bind("mouseup", OnMouseUp);
         element.bind("mousemove", OnMouseMove);
+        element.bind("wheel", OnWheel);
+
         var $=angular.element($window);
         $.bind("keydown", OnKeyDown);
         $.bind("keyup", OnKeyUp);
