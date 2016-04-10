@@ -1,4 +1,4 @@
 angular.module('alexandra')
     .value('DefaultCameraConfig',{
-  position:[0,0,15]
+  position:[50,50,100]
 });

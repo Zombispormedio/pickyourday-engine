@@ -52,12 +52,39 @@ angular.module('alexandra')
                 trnode.createChildNode("Mesh", mesh);
                 tr.position=[0, 0, 0];
 
-                var mesh2=Tree.createMesh(SphereValue, DefaultMaterial);
-                var tr2=Tree.createTransform();
-                var trnode2=Tree.createMainChildNode("TrMesh", tr2);
-                trnode2.createChildNode("Mesh", mesh2);
-                tr2.position=[-2, 0, -1.8];
-                tr2.size=[0.5,0.5,0.5];
+                var trans_vec=[];
+
+
+                for(var i=10;i<100;i+=10){
+                    var t_x=Tree.createTransform();
+
+                    var x_node=Tree.createMainChildNode("TrMesh", t_x);
+                    x_node.createChildNode("Mesh", mesh);
+
+                    t_x.position=[i, 0,0];
+
+
+                    var t_y=Tree.createTransform();
+
+                    var y_node=Tree.createMainChildNode("TrMesh", t_y);
+                    y_node.createChildNode("Mesh", mesh);
+
+                    t_y.position=[0, i,0];
+
+
+
+                    var t_z=Tree.createTransform();
+
+                    var z_node=Tree.createMainChildNode("TrMesh", t_z);
+                    z_node.createChildNode("Mesh", mesh);
+
+                    t_z.position=[0, 0,i];
+                }
+
+
+
+
+
             },
 
             configure:function(){    
