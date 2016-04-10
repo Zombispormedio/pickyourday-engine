@@ -1447,12 +1447,16 @@ export class CameraEntity extends Entity {
 
     public set azimuth(az: number) {
         var temp_az = az - this._azimuth;
-        this._azimuth += temp_az;
+       
+        this.changeAzimuth(temp_az);
+    }
+    
+    public changeAzimuth(az: number){
+         this._azimuth += az;
 
         if (this._azimuth > 360 || this._azimuth < -360) {
             this._azimuth = this._azimuth % 360;
         }
-
     }
 
     public get azimuth(): number {
@@ -1466,12 +1470,16 @@ export class CameraEntity extends Entity {
 
     public set elevation(el: number) {
         var temp_el = el - this._elevation;
-        this._elevation += temp_el;
+       
+        this.changeElevation(temp_el);
+    }
+    
+    public changeElevation(el:number){
+         this._elevation += el;
 
         if (this._elevation > 360 || this._elevation < -360) {
             this._elevation = this._elevation % 360;
         }
-
     }
 
     public set zoom(offset:number) {

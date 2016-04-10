@@ -1216,28 +1216,34 @@ var Blaze;
             },
             set: function (az) {
                 var temp_az = az - this._azimuth;
-                this._azimuth += temp_az;
-                if (this._azimuth > 360 || this._azimuth < -360) {
-                    this._azimuth = this._azimuth % 360;
-                }
+                this.changeAzimuth(temp_az);
             },
             enumerable: true,
             configurable: true
         });
+        CameraEntity.prototype.changeAzimuth = function (az) {
+            this._azimuth += az;
+            if (this._azimuth > 360 || this._azimuth < -360) {
+                this._azimuth = this._azimuth % 360;
+            }
+        };
         Object.defineProperty(CameraEntity.prototype, "elevation", {
             get: function () {
                 return this._elevation;
             },
             set: function (el) {
                 var temp_el = el - this._elevation;
-                this._elevation += temp_el;
-                if (this._elevation > 360 || this._elevation < -360) {
-                    this._elevation = this._elevation % 360;
-                }
+                this.changeElevation(temp_el);
             },
             enumerable: true,
             configurable: true
         });
+        CameraEntity.prototype.changeElevation = function (el) {
+            this._elevation += el;
+            if (this._elevation > 360 || this._elevation < -360) {
+                this._elevation = this._elevation % 360;
+            }
+        };
         Object.defineProperty(CameraEntity.prototype, "zoom", {
             get: function () {
                 return this._steps;

@@ -79,10 +79,10 @@ angular.module('alexandra')
                         return camera.position;
                     },
                     changeAzimuth:function(v){
-                        camera.azimuth=v;
+                        camera.changeAzimuth(v);
                     },
                     changeElevation:function(v){
-                        camera.elevation=v;
+                        camera.changeElevation(v);
                     }
 
 

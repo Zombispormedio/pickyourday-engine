@@ -9,7 +9,7 @@ angular.module('alexandra')
                 $alexandraUtils.fullPage(element);
             }
 
-            var id=attrs.id||$alexandraUtils.createID();
+            var id=attrs.id||$alexandraUtils.createForestID();
 
             var config={
                 type:attrs.type
