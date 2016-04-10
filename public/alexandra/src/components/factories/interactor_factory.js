@@ -41,12 +41,17 @@ angular.module('alexandra')
 
         if(button===0){
             if(ctrl){
-                dolly(dy);
+                pan(dx, dy);
             }else{
                 rotate(dx, dy); 
             }
         }
 
+    }
+    
+    function pan(dx, dy){
+        console.log(dx);
+        console.log(dy);
     }
 
     function rotate(dx, dy){
@@ -101,6 +106,9 @@ angular.module('alexandra')
     var OnWheel=function(ev){
         dolly(ev.wheelDeltaY);
     }
+    
+    
+   
 
 
 

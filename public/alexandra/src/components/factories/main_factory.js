@@ -18,7 +18,8 @@ angular.module('alexandra')
             configureCamera:function(){
                 camera=Tree.createCamera();
                 camera.position=DefaultCameraConfig.position;
-
+                camera.azimuth=DefaultCameraConfig.azimuth;
+                camera.elevation=DefaultCameraConfig.elevation;
                 Tree.MainCamera = camera;
                 Tree.createMainChildNode("Camera", camera);
 
@@ -71,8 +72,6 @@ angular.module('alexandra')
 
                     t_y.position=[0, i,0];
 
-
-
                     var t_z=Tree.createTransform();
 
                     var z_node=Tree.createMainChildNode("TrMesh", t_z);
@@ -81,8 +80,12 @@ angular.module('alexandra')
                     t_z.position=[0, 0,i];
                 }
 
+                var t_all=Tree.createTransform();
 
+                var all_node=Tree.createMainChildNode("TrMesh", t_all);
+                all_node.createChildNode("Mesh", mesh);
 
+                t_all.position=[50, 50,50];
 
 
             },

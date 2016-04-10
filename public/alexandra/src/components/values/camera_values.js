@@ -1,4 +1,7 @@
 angular.module('alexandra')
     .value('DefaultCameraConfig',{
-  position:[50,50,100]
+  position:[50,40,300],
+    azimuth:25,
+    elevation:-6.5
+    
 });
