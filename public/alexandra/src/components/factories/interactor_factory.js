@@ -79,16 +79,16 @@ angular.module('alexandra')
 
             if(!ctrl){
                 if(key===38){
-                    camera.changeElevation(10);
+                    camera.setPositionY(10);
                 }
                 else if(key===40){
-                    camera.changeElevation(-10);
+                    camera.setPositionY(-10);
                 }
                 else if(key===37){
-                    camera.changeAzimuth(-10);
+                    camera.setPositionX(-10);
                 }
                 else if(key===39){
-                    camera.changeAzimuth(10);
+                    camera.setPositionX(10);
                 }
             }
 

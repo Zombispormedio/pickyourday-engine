@@ -61,7 +61,6 @@ angular.module('alexandra')
 
             configureRenderer:function(){    
                 Tree.configure();
-                console.log(Tree)
             },
 
             getCamera:function(){
@@ -78,7 +77,13 @@ angular.module('alexandra')
                     },
                     zoom:function(v){
                         camera.zoom=v;
-                    }
+                    },
+                    setPositionX:function(x){
+                        camera.position[0]+=x;
+                    },
+                     setPositionY:function(y){
+                        camera.position[1]+=y;
+                    },
                 };
 
             },
