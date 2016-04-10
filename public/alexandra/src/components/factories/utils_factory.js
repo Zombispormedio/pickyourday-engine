@@ -25,7 +25,11 @@ angular.module('alexandra')
             fn();
         },
         
-        createForestID:ID
+        createForestID:ID,
+        
+        validAttribute:function(value){
+            return (value===""||value=="true") && value!=="false";
+        }
         
         
 

@@ -8,7 +8,7 @@ angular.module('alexandra')
         var Tree=group.tree;
         var config=group.config;
 
-        var camera, light, mesh;
+        var camera, light, mesh, transformation_buffer=[];
 
         return {
             setContext:function(canvas){
@@ -32,13 +32,9 @@ angular.module('alexandra')
             configureMesh:function(){
                 config=config||{}
 
-                var tr=Tree.createTransform();
-
                 switch(config.type){
                     case "cone":
                         mesh=Tree.createMesh(ConeValue, DefaultMaterial);
-                        tr.setAngle(90);
-                        tr.setAxis([0,0,1]);
                         break;
                     case "cube":
                         mesh=Tree.createMesh(CubeValue, DefaultMaterial);
@@ -49,48 +45,10 @@ angular.module('alexandra')
                         break;
                 }
 
-                var trnode=Tree.createMainChildNode("TrMesh", tr);
-                trnode.createChildNode("Mesh", mesh);
-                tr.position=[0, 0, 0];
-
-                var trans_vec=[];
-
-
-                for(var i=10;i<100;i+=10){
-                    var t_x=Tree.createTransform();
-
-                    var x_node=Tree.createMainChildNode("TrMesh", t_x);
-                    x_node.createChildNode("Mesh", mesh);
-
-                    t_x.position=[i, 0,0];
-
-
-                    var t_y=Tree.createTransform();
-
-                    var y_node=Tree.createMainChildNode("TrMesh", t_y);
-                    y_node.createChildNode("Mesh", mesh);
-
-                    t_y.position=[0, i,0];
-
-                    var t_z=Tree.createTransform();
-
-                    var z_node=Tree.createMainChildNode("TrMesh", t_z);
-                    z_node.createChildNode("Mesh", mesh);
-
-                    t_z.position=[0, 0,i];
-                }
-
-                var t_all=Tree.createTransform();
-
-                var all_node=Tree.createMainChildNode("TrMesh", t_all);
-                all_node.createChildNode("Mesh", mesh);
-
-                t_all.position=[50, 50,50];
-
-
             },
 
-            configure:function(){    
+
+            configureRenderer:function(){    
                 Tree.configure();
             },
 
@@ -111,6 +69,24 @@ angular.module('alexandra')
                     }
                 };
 
+            },
+
+            build:function(source){
+                transformation_buffer=source.map(function(item){
+                    var tr=Tree.createTransform();
+                    var trnode=Tree.createMainChildNode("TrMesh", tr);
+                    trnode.createChildNode("Mesh", mesh);
+                    tr.position=item;
+                    return trnode;
+
+                });
+            },
+
+            reset: function(){
+                 transformation_buffer.forEach(function(item){
+                     Tree.removeMainChildNode(item);
+                 });
+                transformation_buffer=[];
             },
 
             run:function(){

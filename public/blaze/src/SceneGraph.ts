@@ -66,6 +66,10 @@ class SceneGraph extends Renderable {
     public createMainChildNode(type: string, entity: Entity): NodeElement {
         return this._scene.createChildNode(type, entity);
     }
+    
+    public removeMainChildNode(node:NodeElement){
+        this._scene.removeChildNode(node);
+    }
 
 
     public get oid(): string {

@@ -12,17 +12,18 @@
         <script defer type="text/javascript" src="../packages/lodash/dist/lodash.min.js"></script>
         <script defer type="text/javascript" src="../packages/async/dist/async.min.js"></script>
 
+        <script defer type="text/javascript" src="../packages/chance/dist/chance.min.js"></script>
 
         <script defer type="text/javascript" src="../blaze/dist/blaze.min.js"></script>
 
         <script defer type="text/javascript" src="dist/alexandra.min.js"></script>
-     <script defer type="text/javascript" src="app.js"></script>
+        <script defer type="text/javascript" src="app.js"></script>
 
 
     </head>
     <body ng-controller="AlexandraExampleController">
 
-        <canvas alexandra-view data-fullpage="true" data-id="view_1" data-type="sphere" data-auto></canvas>
+        <canvas alexandra-view full-page data-id="view_1" data-type="sphere" auto-run streaming source="data"></canvas>
 
     </body>
 </html>

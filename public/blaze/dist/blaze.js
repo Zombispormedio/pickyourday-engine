@@ -1485,6 +1485,9 @@ var Blaze;
         SceneGraph.prototype.createMainChildNode = function (type, entity) {
             return this._scene.createChildNode(type, entity);
         };
+        SceneGraph.prototype.removeMainChildNode = function (node) {
+            this._scene.removeChildNode(node);
+        };
         Object.defineProperty(SceneGraph.prototype, "oid", {
             get: function () {
                 return this._oid;
