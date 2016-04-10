@@ -1,5 +1,5 @@
 angular.module('alexandra')
-    .factory('$alexandra', function($alexandraForest, $interval, SphereValue, ConeValue, CubeValue, DefaultMaterial, DefaultLightsConfig, DefaultCameraConfig) {
+    .factory('$alexandra', function($alexandraForest, $interval, SphereValue,CylinderValue, WallValue, ConeValue, CubeValue, DefaultMaterial, DefaultLightsConfig, DefaultCameraConfig) {
 
     return function(id){
 
@@ -33,19 +33,22 @@ angular.module('alexandra')
                 config=config||{}
 
                 var mesh_config={};
-                switch(config.type){
+                switch(config.type){               
+                    case "cylinder":
+                        mesh_config.mesh=CylinderValue;
+                        break;
+                    case "wall":
+                        mesh_config.mesh=WallValue;
+                        break;
                     case "cone":
                         mesh_config.mesh=ConeValue;
-            
                         break;
                     case "cube":
-                        mesh_config.mesh=CubeValue;
-                       
+                        mesh_config.mesh=CubeValue; 
                         break;
                     case "sphere":
                     default:
                         mesh_config.mesh=SphereValue;
-           
                         break;
                 }
                 
