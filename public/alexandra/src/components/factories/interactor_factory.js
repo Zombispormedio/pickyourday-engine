@@ -1,13 +1,13 @@
 angular.module('alexandra')
-    .factory('$alexandraInteractor', function(){
+    .factory('$alexandraInteractor', function($window){
 
     var element, camera, 
         dragging=false,
         x=0, y=0, lastX=0, lastY=0, 
         button=0, ctrl=false, key=0,
-        dstep=0,
+        dstep=0, dloc=0,
         MOTION_FACTOR=10.0;
-    
+
 
 
     var OnMouseUp=function(ev){
@@ -32,38 +32,71 @@ angular.module('alexandra')
         x=ev.clientX;
         y=ev.clientY;
         if(!dragging)return;
+
         ctrl=ev.ctrlKey;
         alt=ev.altKey;
-        
+
         var dx=x-lastX;
         var dy=y-lastY;
-        
+
         if(button===0){
-            
-           rotate(dx, dy);  
-            
+            if(ctrl){
+                dolly(dy);
+            }else{
+                rotate(dx, dy); 
+            }
         }
-        
-        
+
     }
-    
+
     function rotate(dx, dy){
-        
-       
         var delta_elevation=-20.0/element[0].height;
         var delta_azimuth=-20.0/element[0].width;
-        
+
         var nAzimuth=dx*delta_azimuth*MOTION_FACTOR;
         var nElevation=dy*delta_elevation*MOTION_FACTOR;
-        
+
         camera.changeAzimuth(nAzimuth);
         camera.changeElevation(nElevation);
-        
     }
 
 
+    function dolly(dy){
+        if(dy>0){
+            dloc+=dstep;
+        }else{
+            dloc-=dstep;
+        }
+        camera.zoom(dloc);
+    }
 
 
+    var OnKeyDown=function(ev){
+        key=ev.keyCode;
+        ctrl=ev.ctrlKey;
+
+        if(!ctrl){
+            if(key===38){
+                camera.changeElevation(10);
+            }
+            else if(key===40){
+                camera.changeElevation(-10);
+            }
+            else if(key===37){
+                camera.changeAzimuth(-10);
+            }
+            else if(key===39){
+                camera.changeAzimuth(10);
+            }
+        }
+
+    }
+
+    var OnKeyUp=function(ev){
+        if(ev.keyCode==17){
+            ctrl=false;
+        }
+    }
 
 
 
@@ -73,6 +106,9 @@ angular.module('alexandra')
         element.bind("mousedown", OnMouseDown);
         element.bind("mouseup", OnMouseUp);
         element.bind("mousemove", OnMouseMove);
+        var $=angular.element($window);
+        $.bind("keydown", OnKeyDown);
+        $.bind("keyup", OnKeyUp);
     }
 
 });
