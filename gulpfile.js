@@ -22,7 +22,7 @@ gulp.task("models", ["obj"], function() {
     return gulp.src("public/alexandra/assets/models/*.json")
         .pipe(json2js({ moduleName: "alexandra" }))
         .pipe(concat("models_values.js"))
-        .pipe(gulp.dest("./public/alexandra/components/values"));
+        .pipe(gulp.dest("./public/alexandra/src/components/values"));
 });
 
 

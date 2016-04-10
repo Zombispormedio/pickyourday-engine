@@ -1,5 +1,5 @@
 angular.module('alexandra')
-    .factory('$alexandra', function($alexandraForest, $interval, SphereValue, DefaultMaterial, DefaultLightsConfig, DefaultCameraConfig) {
+    .factory('$alexandra', function($alexandraForest, $interval, SphereValue, ConeValue, CubeValue, DefaultMaterial, DefaultLightsConfig, DefaultCameraConfig) {
 
     return function(id){
 
@@ -20,6 +20,7 @@ angular.module('alexandra')
             configureCamera:function(){
                 camera=Tree.createCamera();
                 camera.position=DefaultCameraConfig.position;
+                camera.zoom=6;
                 Tree.MainCamera = camera;
                 Tree.createMainChildNode("Camera", camera);
 
@@ -32,39 +33,64 @@ angular.module('alexandra')
             configureMesh:function(){
                 config=config||{}
 
+                var tr=Tree.createTransform();
+
                 switch(config.type){
+                    case "cone":
+                        mesh=Tree.createMesh(ConeValue, DefaultMaterial);
+                        tr.setAngle(90);
+                        tr.setAxis([0,0,1]);
+                        break;
+                    case "cube":
+                        mesh=Tree.createMesh(CubeValue, DefaultMaterial);
+                        break;
                     case "sphere":
                     default:
                         mesh=Tree.createMesh(SphereValue, DefaultMaterial);
+
                         break;
                 }
 
 
-                var tr=Tree.createTransform();
                 var trnode=Tree.createMainChildNode("TrMesh", tr);
                 trnode.createChildNode("Mesh", mesh);
-
-                tr.setAngle(90);
-                tr.setAxis([0,1,0]);
                 tr.position=[0, 0, 0];
+
+
+                var mesh2=Tree.createMesh(SphereValue, DefaultMaterial);
+                var tr2=Tree.createTransform();
+                var trnode2=Tree.createMainChildNode("TrMesh", tr2);
+                trnode2.createChildNode("Mesh", mesh2);
+                tr2.position=[-2, 0, -1.8];
+                tr2.size=[0.5,0.5,0.5];
 
             },
 
             configure:function(){    
                 Tree.configure();
+                console.log(Tree);
             },
-            
+
             getCamera:function(){
-                
+
                 return {
-                    
-                    
-                    
-                    
+
+                    getPosition:function(){
+                        return camera.position;
+                    },
+                    changeAzimuth:function(v){
+                        camera.azimuth=v;
+                    },
+                    changeElevation:function(v){
+                        camera.elevation=v;
+                    }
+
+
+
                 };
-                
+
             },
-            
+
             run:function(){
                 $interval(function(){
                     Tree.draw();

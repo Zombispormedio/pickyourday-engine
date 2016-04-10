@@ -29,7 +29,8 @@ angular.module('alexandra')
             
             tree.configure();
             
-            $alexandraInteractor(element, tree.getCamera());
+            
+            $alexandraInteractor(tElement, tree.getCamera());
             
             if(attrs.auto==="" && attrs.auto!=="false"){
                   tree.run();

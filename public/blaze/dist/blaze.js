@@ -513,10 +513,9 @@ var Blaze;
                 vertex.forEach(function (item) {
                     var elems = item.replace("\r", "").split(" ");
                     var key = elems[0];
-                    if (key !== "vn")
-                        obj[key] = obj[key].concat(elems.slice(1).filter(function (a) {
-                            return a !== "";
-                        }));
+                    obj[key] = obj[key].concat(elems.slice(1).filter(function (a) {
+                        return a !== "";
+                    }));
                 });
                 var tempIndex = [];
                 index.forEach(function (item) {
@@ -548,13 +547,8 @@ var Blaze;
                 }
                 if (obj.v.length > 0)
                     this._vbo = createBuffer(obj.v);
-                if (obj.vn.length > 0) {
-                    this._nbo = createBuffer(obj.vn);
-                }
-                else {
-                    if (obj.v.length > 0 && obj.iv.length > 0) {
-                        this._nbo = createBuffer(utils.calculateNormals(obj.v, obj.iv));
-                    }
+                if (obj.v.length > 0 && obj.iv.length > 0) {
+                    this._nbo = createBuffer(utils.calculateNormals(obj.v, obj.iv));
                 }
                 if (obj.vt.length > 0) {
                     this._tbo = WebGLUtils.createBuffer(gl, obj.vt, true);

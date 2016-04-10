@@ -574,7 +574,6 @@ export module Resources {
             vertex.forEach((item) => {
                 var elems = item.replace("\r", "").split(" ");
                 var key = elems[0];
-                if(key!=="vn")
                 obj[key] = obj[key].concat(elems.slice(1).filter((a) => {
                     return a !== "";
                 }));
@@ -603,8 +602,8 @@ export module Resources {
 
         public createBuffers(obj: any): void {
             var gl = this.gl;
-           
-             _.defaults(obj, {
+
+            _.defaults(obj, {
                 v: [],
                 vn: [],
                 vt: [],
@@ -612,26 +611,24 @@ export module Resources {
                 in: [],
                 it: []
             });
-           
+
             function createBuffer(data) {
                 return WebGLUtils.createBuffer(gl, data);
             }
             if (obj.v.length > 0)
                 this._vbo = createBuffer(obj.v);
 
-            if (obj.vn.length > 0) {
-                this._nbo = createBuffer(obj.vn);
-            } else {
-                if (obj.v.length > 0 && obj.iv.length > 0) {
-                    this._nbo = createBuffer(utils.calculateNormals(obj.v, obj.iv));
-                }
+
+            if (obj.v.length > 0 && obj.iv.length > 0) {
+                this._nbo = createBuffer(utils.calculateNormals(obj.v, obj.iv));
             }
 
 
-            if (obj.vt.length > 0){
-                 this._tbo =WebGLUtils.createBuffer(gl, obj.vt, true);
+
+            if (obj.vt.length > 0) {
+                this._tbo = WebGLUtils.createBuffer(gl, obj.vt, true);
             }
-              
+
 
 
             function createIndexBuffer(data) {
@@ -677,16 +674,16 @@ export module Resources {
 
 
     }
-    
+
     export class MeshTexture extends Renderable {
         private _texture;
         private _image;
         private _onload;
-        private _oid:string;
+        private _oid: string;
         constructor(graph_id: string) {
             super(graph_id);
             this._image = new Image();
-            this._oid=utils.uuid(this.constructor.name);
+            this._oid = utils.uuid(this.constructor.name);
         }
 
 
@@ -701,7 +698,7 @@ export module Resources {
         }
 
         loadTextureImage(cb) {
-            var self=this;
+            var self = this;
             return () => {
 
                 this._texture = WebGLUtils.createTexture(self.gl, self._image);
@@ -819,7 +816,7 @@ export module Resources {
         }
 
     }
-    
+
 }
 export module Shaders{
 export class Fragment{
