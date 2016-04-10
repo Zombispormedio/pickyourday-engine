@@ -15,7 +15,8 @@ angular.module('alexandra')
             var id=attrs.id||$alexandraUtils.createForestID();
 
             var config={
-                type:attrs.type
+                type:attrs.type,
+                color: attrs.color
             };
 
             $alexandraForest.createTree(id, config);

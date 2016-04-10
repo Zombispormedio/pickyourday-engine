@@ -1,5 +1,5 @@
 angular.module('alexandra')
-    .factory('$alexandra', function($alexandraForest, $interval, SphereValue,CylinderValue, WallValue, ConeValue, CubeValue, VaribleDiffuseMaterial, DefaultLightsConfig, DefaultCameraConfig) {
+    .factory('$alexandra', function($alexandraForest, $interval, SphereValue,CylinderValue, WallValue, ConeValue, CubeValue, VaribleDiffuseMaterial, DefaultMaterial, DefaultLightsConfig, DefaultCameraConfig) {
 
     return function(id){
 
@@ -51,9 +51,18 @@ angular.module('alexandra')
                         mesh_config.mesh=SphereValue;
                         break;
                 }
-                
-                mesh_config.material=VaribleDiffuseMaterial;
-                
+
+                switch(config.color){
+                    case "variable":
+                        mesh_config.material=VaribleDiffuseMaterial;
+                        break;
+                    default:
+                        mesh_config.material=DefaultMaterial; 
+
+                }
+
+
+
                 mesh=Tree.createMesh(mesh_config);
 
             },
@@ -61,7 +70,7 @@ angular.module('alexandra')
 
             configureRenderer:function(){    
                 Tree.configure();
-             
+
             },
 
             getCamera:function(){
@@ -82,7 +91,7 @@ angular.module('alexandra')
                     setPositionX:function(x){
                         camera.position[0]+=x;
                     },
-                     setPositionY:function(y){
+                    setPositionY:function(y){
                         camera.position[1]+=y;
                     }
                 };
@@ -93,11 +102,19 @@ angular.module('alexandra')
                 transformation_buffer=source.map(function(item){
                     var tr=Tree.createTransform();
                     var trnode=Tree.createMainChildNode("TrMesh", tr);
-                    var diffuse=Tree.createDiffuse(item.diffuseColor);
-                    
-                    var dnode=trnode.createChildNode("Diffuse", diffuse);
-                    
-                    dnode.createChildNode("Mesh", mesh);
+                    var parent_node;
+                    switch(config.color){
+                        case "variable":
+                            var diffuse=Tree.createDiffuse(item.diffuseColor);
+
+                            parent_node=trnode.createChildNode("Diffuse", diffuse);  
+                            break;
+                        default:
+                            parent_node=trnode;
+                    }
+
+
+                    parent_node.createChildNode("Mesh", mesh);
                     tr.position=item.position;
                     return trnode;
 

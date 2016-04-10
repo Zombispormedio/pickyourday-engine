@@ -10,7 +10,7 @@ angular.module('alexandraExample')
             var x=chance.floating({min: 0, max: 100});
             var y=chance.floating({min: 0, max: 100});
             var z=chance.floating({min: 0, max: 100});
-            return [x,y,z];
+            return {position:[x,y,z]};
         });
     }
 
