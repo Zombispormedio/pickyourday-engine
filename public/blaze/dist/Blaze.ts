@@ -114,7 +114,7 @@ export module WebGLUtils {
         gl.linkProgram(program);
 
         if (!gl.getProgramParameter(program, gl.LINK_STATUS))
-            alert("No pueden iniciarse los shaders");
+              console.log(gl.getProgramInfoLog(program));
 
         gl.useProgram(program);
 
@@ -834,10 +834,19 @@ uniform vec4 uMaterialAmbient;
 uniform vec4 uMaterialDiffuse;
 uniform vec4 uMaterialSpecular;
 
+
+uniform bool uWireframe;
+uniform vec4 uWireframeColor;
+
 varying vec3 vNormal;
 varying vec3 vEyeVec;
 
 void main(){
+
+if(uWireframe){
+          gl_FragColor =uWireframeColor;
+        
+        }else{
         vec3 L= normalize(uLightDirection);
         vec3 N= normalize(vNormal);
         float lambertTerm=dot(N, -L);
@@ -862,6 +871,7 @@ void main(){
         finalColor.a=1.0;
     
         gl_FragColor =finalColor;
+        }
     }
 
 
@@ -875,15 +885,18 @@ uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;
 uniform mat4 uNMatrix;
 
+uniform bool uWireframe;
+
 varying vec3 vNormal;
 varying vec3 vEyeVec;
 
 void main(){
 
     vec4 vertex = uMVMatrix * vec4(a_position, 1.0);
-    
+      if (!uWireframe) {
    vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));
    vEyeVec=-vec3(vertex.xyz);   
+   }
   gl_Position =uPMatrix * vertex;
 
 }
@@ -951,6 +964,8 @@ export class MeshEntity extends Entity {
     private _material: Resources.MeshMaterial;
     private _texture: Resources.MeshTexture;
     private _buffers: Resources.MeshBuffers;
+    private _wireframe: Boolean;
+    private _wireframeColor: Array<Number>;
 
     private _meshfile: string;
     private _materialfile: string;
@@ -1037,39 +1052,52 @@ export class MeshEntity extends Entity {
     }
 
 
-    public loadMeshByObject(obj){
-         this._buffers = new Resources.MeshBuffers(this.graphID);
-         this._buffers.createBuffers(obj);
-    }
-    
-    public loadMaterialByObject(obj){
-          this._material = new Resources.MeshMaterial(this.graphID);
-
-          if(obj.ambient){
-              this._material.ambient=obj.ambient;
-          }
-          
-          if(obj.specular){
-              this._material.specular=obj.specular;
-          }
-           
-          if(obj.diffuse){
-                this._material.diffuse=obj.diffuse;
-          }
-          
-          if(obj.shininess){
-               this._material.shininess=obj.shininess;
-          }
-          
+    public loadMeshByObject(obj) {
+        this._buffers = new Resources.MeshBuffers(this.graphID);
+        this._buffers.createBuffers(obj);
     }
 
+    public loadMaterialByObject(obj) {
+        this._material = new Resources.MeshMaterial(this.graphID);
+
+        if (obj.ambient) {
+            this._material.ambient = obj.ambient;
+        }
+
+        if (obj.specular) {
+            this._material.specular = obj.specular;
+        }
+
+        if (obj.diffuse) {
+            this._material.diffuse = obj.diffuse;
+        }
+
+        if (obj.shininess) {
+            this._material.shininess = obj.shininess;
+        }
+
+    }
 
 
+    public setWireFrame(is_wireframe: Boolean, color: Array<Number>) {
+        this._wireframe = is_wireframe;
+        if (this._wireframe) {
+            this._wireframeColor = color;
+        }
+    }
 
 
-
-
-
+    public WireFrame() {
+        var gl = this.gl;
+        var uWireframe = this.getUniform("uWireframe");
+        if (uWireframe)
+            gl.uniform1i(uWireframe, this._wireframe);
+        if (this._wireframe) {
+            var uWireframeColor = this.getUniform("uWireframeColor");
+            if (uWireframeColor)
+                gl.uniform4fv(uWireframeColor, this._wireframeColor);
+        }
+    }
 
     public setMaterialUniforms() {
         if (this._material) {
@@ -1104,26 +1132,14 @@ export class MeshEntity extends Entity {
         }
     }
 
-/*
-    public setTextureUniforms() {
-        var gl = this.gl;
-        var useTexture = this.getUniform("useTexture");
-         if (this._texture) {
-             gl.uniform1f(useTexture, true);
-             gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.tbo);
-             Ketch.enableAttrib(this.graphID, "a_texture_coords");
-             Ketch.Texture(this.graphID, this._texture.content);
-         } else {
-             gl.uniform1f(useTexture, false);
-         }
-    }*/
+
 
     beginDraw() {
 
         var gl = this.gl;
 
         this.setMaterialUniforms();
-
+        this.WireFrame();
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 
         Ketch.enableAttrib(this.graphID, "a_position");
@@ -1147,6 +1163,19 @@ export class MeshEntity extends Entity {
     }
 
 
+    /*
+        public setTextureUniforms() {
+            var gl = this.gl;
+            var useTexture = this.getUniform("useTexture");
+             if (this._texture) {
+                 gl.uniform1f(useTexture, true);
+                 gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.tbo);
+                 Ketch.enableAttrib(this.graphID, "a_texture_coords");
+                 Ketch.Texture(this.graphID, this._texture.content);
+             } else {
+                 gl.uniform1f(useTexture, false);
+             }
+        }*/
 
 }
 export class TransformEntity extends Entity {
@@ -1739,6 +1768,8 @@ export class SceneGraph extends Renderable {
         'uLightSpecular',
         'uMaterialSpecular',
         'uShininess',
+        'uWireframe',
+        'uWireframeColor'
     ];
     private static ATTRIBUTES = ['a_position', 'a_normal'];
 
@@ -1810,15 +1841,20 @@ export class SceneGraph extends Renderable {
         });
     }
 
-    public createMesh(mesh?, material?): MeshEntity {
+    public createMesh(config?:{mesh?, material?, texture?, wireframe?:{is:Boolean, color:Array<Number>} }): MeshEntity {
         var meshEntity = new MeshEntity(this.oid);
         
-        if(mesh){
-            meshEntity.loadMeshByObject(mesh);
+        if(config.mesh){
+            meshEntity.loadMeshByObject(config.mesh);
         }
         
-        if(material){
-            meshEntity.loadMaterialByObject(material);
+        if(config.material){
+            meshEntity.loadMaterialByObject(config.material);
+        }
+        
+        if(config.wireframe){
+            var wireframe=config.wireframe;
+            meshEntity.setWireFrame(wireframe.is, wireframe.color);
         }
         
         return meshEntity;

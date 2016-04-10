@@ -113,7 +113,7 @@ module WebGLUtils {
         gl.linkProgram(program);
 
         if (!gl.getProgramParameter(program, gl.LINK_STATUS))
-            alert("No pueden iniciarse los shaders");
+              console.log(gl.getProgramInfoLog(program));
 
         gl.useProgram(program);
 

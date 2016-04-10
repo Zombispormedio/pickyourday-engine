@@ -32,24 +32,33 @@ angular.module('alexandra')
             configureMesh:function(){
                 config=config||{}
 
+                var mesh_config={};
                 switch(config.type){
                     case "cone":
-                        mesh=Tree.createMesh(ConeValue, DefaultMaterial);
+                        mesh_config.mesh=ConeValue;
+            
                         break;
                     case "cube":
-                        mesh=Tree.createMesh(CubeValue, DefaultMaterial);
+                        mesh_config.mesh=CubeValue;
+                       
                         break;
                     case "sphere":
                     default:
-                        mesh=Tree.createMesh(SphereValue, DefaultMaterial);
+                        mesh_config.mesh=SphereValue;
+           
                         break;
                 }
+                
+                mesh_config.material=DefaultMaterial;
+                
+                mesh=Tree.createMesh(mesh_config);
 
             },
 
 
             configureRenderer:function(){    
                 Tree.configure();
+                console.log(Tree)
             },
 
             getCamera:function(){
@@ -83,9 +92,9 @@ angular.module('alexandra')
             },
 
             reset: function(){
-                 transformation_buffer.forEach(function(item){
-                     Tree.removeMainChildNode(item);
-                 });
+                transformation_buffer.forEach(function(item){
+                    Tree.removeMainChildNode(item);
+                });
                 transformation_buffer=[];
             },
 

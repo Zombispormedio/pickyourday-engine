@@ -2,6 +2,8 @@ class MeshEntity extends Entity {
     private _material: Resources.MeshMaterial;
     private _texture: Resources.MeshTexture;
     private _buffers: Resources.MeshBuffers;
+    private _wireframe: Boolean;
+    private _wireframeColor: Array<Number>;
 
     private _meshfile: string;
     private _materialfile: string;
@@ -88,39 +90,52 @@ class MeshEntity extends Entity {
     }
 
 
-    public loadMeshByObject(obj){
-         this._buffers = new Resources.MeshBuffers(this.graphID);
-         this._buffers.createBuffers(obj);
-    }
-    
-    public loadMaterialByObject(obj){
-          this._material = new Resources.MeshMaterial(this.graphID);
-
-          if(obj.ambient){
-              this._material.ambient=obj.ambient;
-          }
-          
-          if(obj.specular){
-              this._material.specular=obj.specular;
-          }
-           
-          if(obj.diffuse){
-                this._material.diffuse=obj.diffuse;
-          }
-          
-          if(obj.shininess){
-               this._material.shininess=obj.shininess;
-          }
-          
+    public loadMeshByObject(obj) {
+        this._buffers = new Resources.MeshBuffers(this.graphID);
+        this._buffers.createBuffers(obj);
     }
 
+    public loadMaterialByObject(obj) {
+        this._material = new Resources.MeshMaterial(this.graphID);
+
+        if (obj.ambient) {
+            this._material.ambient = obj.ambient;
+        }
+
+        if (obj.specular) {
+            this._material.specular = obj.specular;
+        }
+
+        if (obj.diffuse) {
+            this._material.diffuse = obj.diffuse;
+        }
+
+        if (obj.shininess) {
+            this._material.shininess = obj.shininess;
+        }
+
+    }
 
 
+    public setWireFrame(is_wireframe: Boolean, color: Array<Number>) {
+        this._wireframe = is_wireframe;
+        if (this._wireframe) {
+            this._wireframeColor = color;
+        }
+    }
 
 
-
-
-
+    public WireFrame() {
+        var gl = this.gl;
+        var uWireframe = this.getUniform("uWireframe");
+        if (uWireframe)
+            gl.uniform1i(uWireframe, this._wireframe);
+        if (this._wireframe) {
+            var uWireframeColor = this.getUniform("uWireframeColor");
+            if (uWireframeColor)
+                gl.uniform4fv(uWireframeColor, this._wireframeColor);
+        }
+    }
 
     public setMaterialUniforms() {
         if (this._material) {
@@ -155,26 +170,14 @@ class MeshEntity extends Entity {
         }
     }
 
-/*
-    public setTextureUniforms() {
-        var gl = this.gl;
-        var useTexture = this.getUniform("useTexture");
-         if (this._texture) {
-             gl.uniform1f(useTexture, true);
-             gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.tbo);
-             Ketch.enableAttrib(this.graphID, "a_texture_coords");
-             Ketch.Texture(this.graphID, this._texture.content);
-         } else {
-             gl.uniform1f(useTexture, false);
-         }
-    }*/
+
 
     beginDraw() {
 
         var gl = this.gl;
 
         this.setMaterialUniforms();
-
+        this.WireFrame();
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 
         Ketch.enableAttrib(this.graphID, "a_position");
@@ -198,5 +201,18 @@ class MeshEntity extends Entity {
     }
 
 
+    /*
+        public setTextureUniforms() {
+            var gl = this.gl;
+            var useTexture = this.getUniform("useTexture");
+             if (this._texture) {
+                 gl.uniform1f(useTexture, true);
+                 gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.tbo);
+                 Ketch.enableAttrib(this.graphID, "a_texture_coords");
+                 Ketch.Texture(this.graphID, this._texture.content);
+             } else {
+                 gl.uniform1f(useTexture, false);
+             }
+        }*/
 
 }

@@ -114,7 +114,7 @@ var Blaze;
             gl.attachShader(program, fragmentShader);
             gl.linkProgram(program);
             if (!gl.getProgramParameter(program, gl.LINK_STATUS))
-                alert("No pueden iniciarse los shaders");
+                console.log(gl.getProgramInfoLog(program));
             gl.useProgram(program);
             return program;
         }
@@ -754,14 +754,14 @@ var Blaze;
         var Fragment = (function () {
             function Fragment() {
             }
-            Fragment.Main = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform float uShininess;\nuniform vec3 uLightDirection;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\nuniform vec4 uLightSpecular;\n\nuniform vec4 uMaterialAmbient;\nuniform vec4 uMaterialDiffuse;\nuniform vec4 uMaterialSpecular;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\nvoid main(){\n        vec3 L= normalize(uLightDirection);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient*uMaterialAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        if(lambertTerm>0.0)\n        {\n            Id=uLightDiffuse*uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightSpecular*uMaterialSpecular*specular;\n        }\n        \n        vec4 finalColor=Ia+Id+Is;\n        finalColor.a=1.0;\n    \n        gl_FragColor =finalColor;\n    }\n\n\n";
+            Fragment.Main = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform float uShininess;\nuniform vec3 uLightDirection;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\nuniform vec4 uLightSpecular;\n\nuniform vec4 uMaterialAmbient;\nuniform vec4 uMaterialDiffuse;\nuniform vec4 uMaterialSpecular;\n\n\nuniform bool uWireframe;\nuniform vec4 uWireframeColor;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\nvoid main(){\n\nif(uWireframe){\n          gl_FragColor =uWireframeColor;\n        \n        }else{\n        vec3 L= normalize(uLightDirection);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient*uMaterialAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        if(lambertTerm>0.0)\n        {\n            Id=uLightDiffuse*uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightSpecular*uMaterialSpecular*specular;\n        }\n        \n        vec4 finalColor=Ia+Id+Is;\n        finalColor.a=1.0;\n    \n        gl_FragColor =finalColor;\n        }\n    }\n\n\n";
             return Fragment;
         }());
         Shaders.Fragment = Fragment;
         var Vertex = (function () {
             function Vertex() {
             }
-            Vertex.Main = "attribute vec3 a_position;\nattribute vec3 a_normal;\n\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nuniform mat4 uNMatrix;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\nvoid main(){\n\n    vec4 vertex = uMVMatrix * vec4(a_position, 1.0);\n    \n   vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));\n   vEyeVec=-vec3(vertex.xyz);   \n  gl_Position =uPMatrix * vertex;\n\n}\n\n\n";
+            Vertex.Main = "attribute vec3 a_position;\nattribute vec3 a_normal;\n\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nuniform mat4 uNMatrix;\n\nuniform bool uWireframe;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\nvoid main(){\n\n    vec4 vertex = uMVMatrix * vec4(a_position, 1.0);\n      if (!uWireframe) {\n   vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));\n   vEyeVec=-vec3(vertex.xyz);   \n   }\n  gl_Position =uPMatrix * vertex;\n\n}\n\n\n";
             return Vertex;
         }());
         Shaders.Vertex = Vertex;
@@ -897,6 +897,23 @@ var Blaze;
                 this._material.shininess = obj.shininess;
             }
         };
+        MeshEntity.prototype.setWireFrame = function (is_wireframe, color) {
+            this._wireframe = is_wireframe;
+            if (this._wireframe) {
+                this._wireframeColor = color;
+            }
+        };
+        MeshEntity.prototype.WireFrame = function () {
+            var gl = this.gl;
+            var uWireframe = this.getUniform("uWireframe");
+            if (uWireframe)
+                gl.uniform1i(uWireframe, this._wireframe);
+            if (this._wireframe) {
+                var uWireframeColor = this.getUniform("uWireframeColor");
+                if (uWireframeColor)
+                    gl.uniform4fv(uWireframeColor, this._wireframeColor);
+            }
+        };
         MeshEntity.prototype.setMaterialUniforms = function () {
             if (this._material) {
                 var gl = this.gl;
@@ -922,22 +939,10 @@ var Blaze;
                 }
             }
         };
-        /*
-            public setTextureUniforms() {
-                var gl = this.gl;
-                var useTexture = this.getUniform("useTexture");
-                 if (this._texture) {
-                     gl.uniform1f(useTexture, true);
-                     gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.tbo);
-                     Ketch.enableAttrib(this.graphID, "a_texture_coords");
-                     Ketch.Texture(this.graphID, this._texture.content);
-                 } else {
-                     gl.uniform1f(useTexture, false);
-                 }
-            }*/
         MeshEntity.prototype.beginDraw = function () {
             var gl = this.gl;
             this.setMaterialUniforms();
+            this.WireFrame();
             gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
             Ketch.enableAttrib(this.graphID, "a_position");
             gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.nbo);
@@ -1504,13 +1509,17 @@ var Blaze;
                 vertex: Shaders.Vertex.Main
             });
         };
-        SceneGraph.prototype.createMesh = function (mesh, material) {
+        SceneGraph.prototype.createMesh = function (config) {
             var meshEntity = new MeshEntity(this.oid);
-            if (mesh) {
-                meshEntity.loadMeshByObject(mesh);
+            if (config.mesh) {
+                meshEntity.loadMeshByObject(config.mesh);
             }
-            if (material) {
-                meshEntity.loadMaterialByObject(material);
+            if (config.material) {
+                meshEntity.loadMaterialByObject(config.material);
+            }
+            if (config.wireframe) {
+                var wireframe = config.wireframe;
+                meshEntity.setWireFrame(wireframe.is, wireframe.color);
             }
             return meshEntity;
         };
@@ -1568,6 +1577,8 @@ var Blaze;
             'uLightSpecular',
             'uMaterialSpecular',
             'uShininess',
+            'uWireframe',
+            'uWireframeColor'
         ];
         SceneGraph.ATTRIBUTES = ['a_position', 'a_normal'];
         return SceneGraph;

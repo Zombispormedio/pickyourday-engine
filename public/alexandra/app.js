@@ -16,6 +16,6 @@ angular.module('alexandraExample')
 
     generate();
     
-    $interval(generate, 1000);
+ 
 
 });

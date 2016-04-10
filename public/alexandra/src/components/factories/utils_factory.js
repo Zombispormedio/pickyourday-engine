@@ -24,14 +24,14 @@ angular.module('alexandra')
             window.addEventListener('resize', fn, false);
             fn();
         },
-        
+
         createForestID:ID,
-        
+
         validAttribute:function(value){
             return (value===""||value=="true") && value!=="false";
         }
-        
-        
+
+
 
     }
 });

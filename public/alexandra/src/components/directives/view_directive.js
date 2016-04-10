@@ -27,8 +27,10 @@ angular.module('alexandra')
             tree.configureCamera();
 
             tree.configureLights();
+       
 
             tree.configureMesh();
+            
 
             tree.build(scope.source);
 
