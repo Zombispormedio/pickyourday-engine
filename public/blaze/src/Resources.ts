@@ -227,7 +227,7 @@ module Resources {
         constructor(graph_id: string, ambient?: Array<number>, diffuse?: Array<number>, specular?: Array<number>, shininess?: number) {
             super(graph_id);
             this._ambient = ambient ? vec4.create(ambient) : vec4.create();
-            this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
+            this._diffuse = diffuse ? vec4.create(diffuse) : void 0;
             this._specular = specular ? vec4.create(specular) : vec4.create();
             this._shininess = shininess || 200.0;
         }

@@ -725,7 +725,7 @@ export module Resources {
         constructor(graph_id: string, ambient?: Array<number>, diffuse?: Array<number>, specular?: Array<number>, shininess?: number) {
             super(graph_id);
             this._ambient = ambient ? vec4.create(ambient) : vec4.create();
-            this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
+            this._diffuse = diffuse ? vec4.create(diffuse) : void 0;
             this._specular = specular ? vec4.create(specular) : vec4.create();
             this._shininess = shininess || 200.0;
         }
@@ -1075,6 +1075,7 @@ export class MeshEntity extends Entity {
         if (obj.shininess) {
             this._material.shininess = obj.shininess;
         }
+        
 
     }
 
@@ -1424,6 +1425,38 @@ export class LightEntity extends Entity {
 
 
 
+}
+export class DiffuseEntity extends Entity {
+    private _value: Array<number>;
+
+    constructor(graph_id: string, v?: Array<number>) {
+        super(graph_id);
+        this._value=v;
+        
+    }
+
+    public set value(v: Array<number>) {
+        this._value = v;
+    }
+    
+    
+    public get value() : Array<number> {
+        return this._value;
+    }
+    
+
+
+    beginDraw() {
+        var gl=this.gl;
+  
+        var uMaterialDiffuse = this.getUniform("uMaterialDiffuse");
+        if (uMaterialDiffuse)
+            gl.uniform4fv(uMaterialDiffuse, this._value);
+    }
+
+    endDraw() {
+
+    }
 }
 export class CameraEntity extends Entity {
     private _type: CAMERA_TYPE;
@@ -1859,7 +1892,9 @@ export class SceneGraph extends Renderable {
         
         return meshEntity;
     }
-
+    public createDiffuse(v:Array<number>){
+        return new DiffuseEntity(this.oid, v);
+    }
 
     public createMeshByLoader(config: { mesh?: string, texture?: string, material?: string }): MeshEntity {
         var mesh = new MeshEntity(this.oid, config.mesh, config.material, config.texture);

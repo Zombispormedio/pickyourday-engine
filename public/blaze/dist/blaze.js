@@ -655,7 +655,7 @@ var Blaze;
             function MeshMaterial(graph_id, ambient, diffuse, specular, shininess) {
                 _super.call(this, graph_id);
                 this._ambient = ambient ? vec4.create(ambient) : vec4.create();
-                this._diffuse = diffuse ? vec4.create(diffuse) : vec4.create();
+                this._diffuse = diffuse ? vec4.create(diffuse) : void 0;
                 this._specular = specular ? vec4.create(specular) : vec4.create();
                 this._shininess = shininess || 200.0;
             }
@@ -1183,6 +1183,33 @@ var Blaze;
         return LightEntity;
     }(Entity));
     Blaze.LightEntity = LightEntity;
+    var DiffuseEntity = (function (_super) {
+        __extends(DiffuseEntity, _super);
+        function DiffuseEntity(graph_id, v) {
+            _super.call(this, graph_id);
+            this._value = v;
+        }
+        Object.defineProperty(DiffuseEntity.prototype, "value", {
+            get: function () {
+                return this._value;
+            },
+            set: function (v) {
+                this._value = v;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        DiffuseEntity.prototype.beginDraw = function () {
+            var gl = this.gl;
+            var uMaterialDiffuse = this.getUniform("uMaterialDiffuse");
+            if (uMaterialDiffuse)
+                gl.uniform4fv(uMaterialDiffuse, this._value);
+        };
+        DiffuseEntity.prototype.endDraw = function () {
+        };
+        return DiffuseEntity;
+    }(Entity));
+    Blaze.DiffuseEntity = DiffuseEntity;
     var CameraEntity = (function (_super) {
         __extends(CameraEntity, _super);
         function CameraEntity(graph_id, type) {
@@ -1522,6 +1549,9 @@ var Blaze;
                 meshEntity.setWireFrame(wireframe.is, wireframe.color);
             }
             return meshEntity;
+        };
+        SceneGraph.prototype.createDiffuse = function (v) {
+            return new DiffuseEntity(this.oid, v);
         };
         SceneGraph.prototype.createMeshByLoader = function (config) {
             var mesh = new MeshEntity(this.oid, config.mesh, config.material, config.texture);

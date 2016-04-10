@@ -4,14 +4,23 @@ angular.module('alexandraExample')
     .controller('AlexandraExampleController', function($scope, $interval, $timeout) {
 
     function generate(){
-      
-        var count=chance.integer({min: 0, max: 100});
+      var range={min: 0, max: 100};
+        var rangeColor={min:0, max:1, fixed:2};
+        var count=10||chance.integer(range);
         $scope.data=Array.apply(0, Array(count)).map(function(){
-            var x=chance.floating({min: 0, max: 100});
-            var y=chance.floating({min: 0, max: 100});
-            var z=chance.floating({min: 0, max: 100});
-            return [x,y,z];
+            var x=chance.floating(range);
+            var y=chance.floating(range);
+            var z=chance.floating(range);
+            
+            var r=chance.floating(rangeColor);
+            var g=chance.floating(rangeColor);
+            var b=chance.floating(rangeColor);
+            return {
+                position:[x,y,z],
+                diffuseColor:[r,g,b,1]
+            };
         });
+   
     }
 
     generate();

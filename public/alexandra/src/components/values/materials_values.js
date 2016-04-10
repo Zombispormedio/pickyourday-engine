@@ -5,3 +5,10 @@ angular.module('alexandra')
     shininess:230,
     specular:[1,1,1,1]
 });
+
+angular.module('alexandra')
+    .value('VaribleDiffuseMaterial',{
+    ambient:[1,1,1,1],
+    shininess:230,
+    specular:[1,1,1,1]
+});

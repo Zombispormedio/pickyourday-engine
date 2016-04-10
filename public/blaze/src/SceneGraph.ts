@@ -109,7 +109,9 @@ class SceneGraph extends Renderable {
         
         return meshEntity;
     }
-
+    public createDiffuse(v:Array<number>){
+        return new DiffuseEntity(this.oid, v);
+    }
 
     public createMeshByLoader(config: { mesh?: string, texture?: string, material?: string }): MeshEntity {
         var mesh = new MeshEntity(this.oid, config.mesh, config.material, config.texture);

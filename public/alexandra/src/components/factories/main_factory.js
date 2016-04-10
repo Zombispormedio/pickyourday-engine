@@ -1,5 +1,5 @@
 angular.module('alexandra')
-    .factory('$alexandra', function($alexandraForest, $interval, SphereValue,CylinderValue, WallValue, ConeValue, CubeValue, DefaultMaterial, DefaultLightsConfig, DefaultCameraConfig) {
+    .factory('$alexandra', function($alexandraForest, $interval, SphereValue,CylinderValue, WallValue, ConeValue, CubeValue, VaribleDiffuseMaterial, DefaultLightsConfig, DefaultCameraConfig) {
 
     return function(id){
 
@@ -52,7 +52,7 @@ angular.module('alexandra')
                         break;
                 }
                 
-                mesh_config.material=DefaultMaterial;
+                mesh_config.material=VaribleDiffuseMaterial;
                 
                 mesh=Tree.createMesh(mesh_config);
 
@@ -61,6 +61,7 @@ angular.module('alexandra')
 
             configureRenderer:function(){    
                 Tree.configure();
+             
             },
 
             getCamera:function(){
@@ -92,8 +93,12 @@ angular.module('alexandra')
                 transformation_buffer=source.map(function(item){
                     var tr=Tree.createTransform();
                     var trnode=Tree.createMainChildNode("TrMesh", tr);
-                    trnode.createChildNode("Mesh", mesh);
-                    tr.position=item;
+                    var diffuse=Tree.createDiffuse(item.diffuseColor);
+                    
+                    var dnode=trnode.createChildNode("Diffuse", diffuse);
+                    
+                    dnode.createChildNode("Mesh", mesh);
+                    tr.position=item.position;
                     return trnode;
 
                 });
