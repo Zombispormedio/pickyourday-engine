@@ -155,7 +155,7 @@ angular.module('alexandra')
             run:function(){
                 $interval(function(){
                     Tree.draw();
-                }, 500);
+                }, 30);
             }
 
 

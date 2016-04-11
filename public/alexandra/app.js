@@ -19,7 +19,7 @@ angular.module('alexandraExample')
     $scope.config={
         streaming:true,
         fullpage:true,
-        type:"cube",
+
         colortype:"variable"
     };
     

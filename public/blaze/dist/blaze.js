@@ -294,7 +294,7 @@ var Blaze;
             gl.disableVertexAttribArray(index);
         };
         Ketch.renderLoop = function (cb) {
-            setInterval(cb, 500);
+            setInterval(cb, 30);
         };
         Ketch.addTexture = function (key, texture_id) {
             var view = Ketch._views[key];

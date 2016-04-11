@@ -335,7 +335,7 @@ export class Ketch {
     }
 
     static renderLoop(cb) {
-        setInterval(cb, 500);
+        setInterval(cb, 30);
     }
 
 
