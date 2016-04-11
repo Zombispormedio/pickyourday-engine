@@ -3,23 +3,25 @@ angular.module('alexandra')
     return {
         restrict: 'A',
         scope:{
-            source:"=source"
+            source:"=alexandraSource",
+            config:"=alexandraConfig"
         },
         link:function(scope, tElement, attrs){
             var element=tElement[0];
-
-            if($alexandraUtils.validAttribute(attrs.fullPage)){
+            var config=scope.config;
+            
+            if(config.fullpage){
                 $alexandraUtils.fullPage(element);
             }
 
             var id=attrs.id||$alexandraUtils.createForestID();
 
-            var config={
-                type:attrs.type,
-                color: attrs.color
+            var configTree={
+                type:config.type,
+                colortype: config.colortype
             };
 
-            $alexandraForest.createTree(id, config);
+            $alexandraForest.createTree(id, configTree);
 
             var tree=$alexandra(id);
 
@@ -32,7 +34,7 @@ angular.module('alexandra')
 
             tree.configureMesh();
             
-
+            
             tree.build(scope.source);
 
             tree.configureRenderer();
@@ -40,12 +42,16 @@ angular.module('alexandra')
 
 
             $alexandraInteractor(tElement, tree.getCamera());
-
-            if($alexandraUtils.validAttribute(attrs.autoRun)){
+            
+            if(config.autorun){
                 tree.run();
+            }else{
+                console.warn("No AutoRun")
             }
+            
+            
 
-            if($alexandraUtils.validAttribute(attrs.streaming)){
+            if(config.streaming){
                 scope.$watch("source", function(){
                     tree.reset();
                     tree.build(scope.source);

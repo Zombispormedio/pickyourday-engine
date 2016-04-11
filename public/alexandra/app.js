@@ -12,12 +12,18 @@ angular.module('alexandraExample')
             var y=chance.floating(range);
             var z=chance.floating(range);
             
+            
             var r=chance.floating(rangeColor);
             var g=chance.floating(rangeColor);
             var b=chance.floating(rangeColor);
+            
+            
+            var size=chance.floating({min:0, max:2, fixed:1});
+            
             return {
                 position:[x,y,z],
-                diffuseColor:[r,g,b,1]
+                color:[r,g,b,1],
+                size:[size, size, size]
             };
         });
    
@@ -25,6 +31,12 @@ angular.module('alexandraExample')
 
     generate();
     
+    $scope.config={
+        fullpage:true,
+        type:"sphere",
+        autorun:true,
+        colortype:"variable"
+    };
  
 
 });

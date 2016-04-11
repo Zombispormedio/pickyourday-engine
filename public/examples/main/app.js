@@ -61,7 +61,7 @@ app.controller('AppController', function($scope) {
     $scope.tr2.setAxis([0, 1, 0]);
 
     $scope.tr2.position = [-2, 0, -1.8];
-    $scope.meshes = [{ mesh: $scope.mesh, tr: $scope.tr }, { mesh: $scope.mesh, tr: $scope.tr2 }];
+    $scope.meshes = [{ mesh: $scope.mesh, tr: $scope.tr }, { mesh: $scope.mesh2, tr: $scope.tr2 }];
 
 
     $scope.Tree.configureWithLoader(function() {

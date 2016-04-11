@@ -51,8 +51,10 @@ angular.module('alexandra')
                         mesh_config.mesh=SphereValue;
                         break;
                 }
-
-                switch(config.color){
+             
+                
+                
+                switch(config.colortype){
                     case "variable":
                         mesh_config.material=VaribleDiffuseMaterial;
                         break;
@@ -103,10 +105,10 @@ angular.module('alexandra')
                     var tr=Tree.createTransform();
                     var trnode=Tree.createMainChildNode("TrMesh", tr);
                     var parent_node;
-                    switch(config.color){
+                    
+                    switch(config.colortype){
                         case "variable":
-                            var diffuse=Tree.createDiffuse(item.diffuseColor);
-
+                            var diffuse=Tree.createDiffuse(item.color);
                             parent_node=trnode.createChildNode("Diffuse", diffuse);  
                             break;
                         default:
@@ -115,7 +117,15 @@ angular.module('alexandra')
 
 
                     parent_node.createChildNode("Mesh", mesh);
-                    tr.position=item.position;
+                    
+                    if(item.position){
+                        tr.position=item.position;
+                    }
+                    
+                    if(item.size){
+                        tr.size=item.size;
+                    }
+                    
                     return trnode;
 
                 });

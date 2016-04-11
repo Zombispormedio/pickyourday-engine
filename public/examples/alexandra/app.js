@@ -17,5 +17,13 @@ angular.module('alexandraExample')
     generate();
     
     $interval(generate, 1000);
+	
+	$scope.config_1={
+			autorun:true,
+			streaming:true
+	};
+	$scope.config_2={
+		autorun:true
+	};
 
 });
