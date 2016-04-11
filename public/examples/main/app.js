@@ -14,9 +14,7 @@ app.controller('AppController', function($scope) {
     $scope.toggleAxis = function(axis, index) {
         axis[index] = axis[index] == 1 ? 0 : 1;
     };
-    $scope.changeZoom = function() {
-        $scope.camera.translate($scope.values.zoom);
-    };
+   
 
 
     $scope.Tree = new Blaze.SceneGraph();

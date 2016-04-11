@@ -1,12 +1,10 @@
 angular.module('alexandra')
     .factory('$alexandra', function($alexandraForest, $interval, SphereValue,CylinderValue, WallValue, ConeValue, CubeValue, VaribleDiffuseMaterial, DefaultMaterial, DefaultLightsConfig, DefaultCameraConfig) {
 
-    return function(id){
+    return function(id, c){
 
-        var group=$alexandraForest.getTree(id);
-
-        var Tree=group.tree;
-        var config=group.config;
+        var Tree=$alexandraForest.getTree(id);
+        var config=c;
 
         var camera, light, mesh, transformation_buffer=[];
 
@@ -126,11 +124,27 @@ angular.module('alexandra')
                         tr.size=item.size;
                     }
                     
+                    if(item.rotation){
+                        
+                        if(item.rotation.angle){
+                            tr.rotation.angle=item.rotation.angle;
+                        }
+                        if(item.rotation.axis){
+                             tr.rotation.axis=item.rotation.axis;
+                        }
+                        
+                        
+                    }
+                    
+                    
                     return trnode;
 
                 });
             },
-
+            
+            setConfig:function(new_config){
+                config=new_config;
+            },
             reset: function(){
                 transformation_buffer.forEach(function(item){
                     Tree.removeMainChildNode(item);

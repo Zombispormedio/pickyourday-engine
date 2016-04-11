@@ -1,6 +1,9 @@
 angular.module('alexandra')
-    .factory('$alexandraUtils', function() {
+    .factory('$alexandraUtils', function($timeout) {
 
+    var watch=false;
+
+    $timeout(function() { watch = true; });
     var FullPage=function(elem){
         return function(){
             elem.width=window.innerWidth;
@@ -29,6 +32,17 @@ angular.module('alexandra')
 
         validAttribute:function(value){
             return (value===""||value=="true") && value!=="false";
+        },
+
+        watch:function(scope, key, cb){
+
+            scope.$watch(key, function(){
+                if(watch){
+                    cb();
+                }
+            });
+
+
         }
 
 
