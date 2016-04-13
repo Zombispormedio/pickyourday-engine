@@ -25,13 +25,28 @@ angular.module('alexandra')
 
             tree.configureCamera();
 
-            tree.configureLights();
 
 
-            tree.configureMesh();
-            tree.build(scope.source);
+            switch(config.type){
+                case "particle":{
+                    tree.configureParticle();
+                    tree.buildParticle(scope.source);
+                     tree.configureRenderer();
+                    break;
+                }
 
-            tree.configureRenderer();
+
+                default:{
+                    tree.configureLights();
+                    tree.configureMesh();
+                    tree.buildMeshBranch(scope.source);
+                    tree.configureRenderer();
+                }
+
+
+            }
+
+
 
 
 
@@ -43,19 +58,26 @@ angular.module('alexandra')
                 tree.run();
             }
 
-            
+
             if(config.streaming){
-               $alexandraUtils.watch(scope, "source", function(){
+                $alexandraUtils.watch(scope, "source", function(){
                     tree.reset();
                     tree.build(scope.source);
                 });
             }
 
-           $alexandraUtils.watch(scope, "config.type", function(){
+            $alexandraUtils.watch(scope, "config.type", function(){
                 tree.setConfig(scope.config);
-                tree.reset();
-                tree.configureMesh();
-                tree.build(scope.source);
+
+                switch(scope.config.type){
+                    case "particle":
+                        break;
+                    default:
+                        tree.resetMeshBranch();
+                        tree.configureMesh();
+                        tree.buildMeshBranch(scope.source);
+                }
+
             });
 
 

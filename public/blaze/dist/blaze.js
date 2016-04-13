@@ -754,16 +754,16 @@ var Blaze;
         var Fragment = (function () {
             function Fragment() {
             }
-            Fragment.Particle = "";
-            Fragment.Phong = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform float uShininess;\nuniform vec3 uLightDirection;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\nuniform vec4 uLightSpecular;\n\nuniform vec4 uMaterialAmbient;\nuniform vec4 uMaterialDiffuse;\nuniform vec4 uMaterialSpecular;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\nvoid main(){\n\n\t\t\n        vec3 L= normalize(uLightDirection);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient*uMaterialAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        if(lambertTerm>0.0)\n        {\n            Id=uLightDiffuse*uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightSpecular*uMaterialSpecular*specular;\n        }\n        \n        vec4 finalColor=Ia+Id+Is;\n        finalColor.a=1.0;\n    \n        gl_FragColor =finalColor;\n        \n    }\n\n\n";
+            Fragment.Particle = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\n\n\nvoid main(void) { \n    gl_FragColor = vec4(0,1,0,1);\n}";
+            Fragment.Phong = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform float uShininess;\nuniform vec3 uLightDirection;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\nuniform vec4 uLightSpecular;\n\nuniform vec4 uMaterialAmbient;\nuniform vec4 uMaterialDiffuse;\nuniform vec4 uMaterialSpecular;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\nvoid main(){\n\n\t\t\n        vec3 L= normalize(uLightDirection);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient*uMaterialAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        if(lambertTerm>0.0)\n        {\n            Id=uLightDiffuse*uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightSpecular*uMaterialSpecular*specular;\n        }\n        \n        vec4 finalColor=Ia+Id+Is;\n        finalColor.a=1.0;\n    \n        gl_FragColor =finalColor;\n        \n}\n\n\n";
             return Fragment;
         }());
         Shaders.Fragment = Fragment;
         var Vertex = (function () {
             function Vertex() {
             }
-            Vertex.Particle = "";
-            Vertex.Phong = "attribute vec3 a_position;\nattribute vec3 a_normal;\n\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nuniform mat4 uNMatrix;\n\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\nvoid main(){\n\n    vec4 vertex = uMVMatrix * vec4(a_position, 1.0);\n\t\n\t\n\n\t\t\tvNormal = vec3(uNMatrix * vec4(a_normal, 1.0));\n\t\t\tvEyeVec=-vec3(vertex.xyz);   \n\n  gl_Position =uPMatrix * vertex;\n\n}\n\n\n";
+            Vertex.Particle = "attribute vec3 a_position;\n\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nuniform float uPointSize;\n\nvoid main(void) {\n    gl_Position = uPMatrix * uMVMatrix * vec4(a_position.xyz, 1.0);\n    gl_PointSize = uPointSize;\n}";
+            Vertex.Phong = "attribute vec3 a_position;\nattribute vec3 a_normal;\n\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nuniform mat4 uNMatrix;\n\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\nvoid main(){\n\n    vec4 vertex = uMVMatrix * vec4(a_position, 1.0);\n\tvNormal = vec3(uNMatrix * vec4(a_normal, 1.0));\n\tvEyeVec=-vec3(vertex.xyz);   \n\tgl_Position =uPMatrix * vertex;\n\n}\n\n\n";
             return Vertex;
         }());
         Shaders.Vertex = Vertex;
@@ -1194,6 +1194,52 @@ var Blaze;
         return DiffuseEntity;
     }(Entity));
     Blaze.DiffuseEntity = DiffuseEntity;
+    var ParticleEntity = (function (_super) {
+        __extends(ParticleEntity, _super);
+        function ParticleEntity(graph_id, pointSize) {
+            _super.call(this, graph_id);
+            this._pointSize = pointSize || 1;
+            this._buffer = null;
+        }
+        ParticleEntity.prototype.configure = function (data) {
+            var gl = this.gl;
+            this._buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            this._numItems = data.length;
+        };
+        ParticleEntity.prototype.update = function (data) {
+            var gl = this.gl;
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            this._numItems = data.length;
+        };
+        Object.defineProperty(ParticleEntity.prototype, "pointSize", {
+            set: function (v) {
+                this._pointSize = v;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        ParticleEntity.prototype.beginDraw = function () {
+            var gl = this.gl;
+            var uPointSize = this.getUniform("uPointSize");
+            if (uPointSize)
+                gl.uniform1f(uPointSize, this._pointSize);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._buffer);
+            Ketch.enableAttrib(this.graphID, "a_position");
+            gl.drawArrays(gl.POINTS, 0, this._numItems / 3);
+        };
+        ParticleEntity.prototype.endDraw = function () {
+            var gl = this.gl;
+            Ketch.disableAttrib(this.graphID, "a_position");
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        };
+        return ParticleEntity;
+    }(Entity));
+    Blaze.ParticleEntity = ParticleEntity;
     var CameraEntity = (function (_super) {
         __extends(CameraEntity, _super);
         function CameraEntity(graph_id, type) {
@@ -1548,6 +1594,9 @@ var Blaze;
         SceneGraph.prototype.createCamera = function (type) {
             return new CameraEntity(this.oid, type);
         };
+        SceneGraph.prototype.createParticle = function (pointSize) {
+            return new ParticleEntity(this.oid, pointSize);
+        };
         Object.defineProperty(SceneGraph.prototype, "MainCamera", {
             set: function (camera) {
                 this._matrixStack.MainCamera = camera;
@@ -1563,10 +1612,11 @@ var Blaze;
                 });
             }, cb);
         };
-        SceneGraph.prototype.configure = function () {
+        SceneGraph.prototype.configure = function (config) {
             var self = this;
+            config = config || {};
             self.Environment();
-            self.Program();
+            self.Program(config.typeShader);
             Ketch.setAttributeLocations(self._oid, SceneGraph.ATTRIBUTES);
             Ketch.setUniformLocations(self._oid, SceneGraph.UNIFORMS);
             this._matrixStack.init();
@@ -1587,7 +1637,8 @@ var Blaze;
             'uMaterialDiffuse',
             'uLightSpecular',
             'uMaterialSpecular',
-            'uShininess'
+            'uShininess',
+            'uPointSize'
         ];
         SceneGraph.ATTRIBUTES = ['a_position', 'a_normal'];
         return SceneGraph;

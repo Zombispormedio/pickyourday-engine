@@ -17,7 +17,8 @@ class SceneGraph extends Renderable {
         'uMaterialDiffuse',
         'uLightSpecular',
         'uMaterialSpecular',
-        'uShininess'
+        'uShininess',
+        'uPointSize'
     ];
     private static ATTRIBUTES = ['a_position', 'a_normal'];
 
@@ -126,6 +127,10 @@ class SceneGraph extends Renderable {
     public createCamera(type?: CAMERA_TYPE) {
         return new CameraEntity(this.oid, type);
     }
+    
+    public createParticle(pointSize?:number){
+        return new ParticleEntity(this.oid,pointSize);
+    }
 
 
     public set MainCamera(camera: CameraEntity) {
@@ -143,11 +148,12 @@ class SceneGraph extends Renderable {
         }, cb);
     }
 
-    public configure() {
+    public configure(config?:{typeShader?:string}) {
         var self = this;
-
+        config=config||{};
+        
         self.Environment()
-        self.Program();
+        self.Program(config.typeShader);
 
         Ketch.setAttributeLocations(self._oid, SceneGraph.ATTRIBUTES);
         Ketch.setUniformLocations(self._oid, SceneGraph.UNIFORMS);

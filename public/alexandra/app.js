@@ -4,23 +4,21 @@ angular.module('alexandraExample')
     .controller('AlexandraExampleController', function($scope, $interval, $timeout) {
 
 
-    var ColorSizePosition = generate(function() {
-        return {
-            position: RandPosition(),
-            color: RandColor(),
-            size: RandSize({ min: 4, max: 8, fixed: 1 }),
-            rotation:RandRotation()
-        };
-    });
-    
-    $scope.data=ColorSizePosition();
-    
+
+    var count=chance.integer({ min: 0, max: 100 });
+    $scope.data=Array.apply(0, Array(count)).reduce(function(prev){
+        prev.push(chance.integer({ min: 0, max: 100 }));
+        prev.push(chance.integer({ min: 0, max: 100 }));
+        prev.push(chance.integer({ min: 0, max: 100 }));
+        return prev;
+    }, []);
+    console.log($scope.data);
 
     $scope.config={
-        streaming:true,
-        fullpage:true,
+        type:"particle",
+        fullpage:true
 
-        colortype:"variable"
+
     };
-    
+
 });

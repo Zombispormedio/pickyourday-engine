@@ -6,7 +6,7 @@ angular.module('alexandra')
         var Tree=$alexandraForest.getTree(id);
         var config=c;
 
-        var camera, light, mesh, transformation_buffer=[];
+        var camera, light, mesh, particle, transformation_buffer=[];
 
         return {
             setContext:function(canvas){
@@ -49,9 +49,9 @@ angular.module('alexandra')
                         mesh_config.mesh=SphereValue;
                         break;
                 }
-             
-                
-                
+
+
+
                 switch(config.colortype){
                     case "variable":
                         mesh_config.material=VaribleDiffuseMaterial;
@@ -68,8 +68,15 @@ angular.module('alexandra')
             },
 
 
-            configureRenderer:function(){    
-                Tree.configure();
+            configureRenderer:function(){ 
+                var renderConfig={};
+                switch(config.type){
+                    case "particle":
+                        renderConfig.typeShader="Particle";
+                        break;
+                        
+                }
+                Tree.configure(renderConfig);
 
             },
 
@@ -98,12 +105,12 @@ angular.module('alexandra')
 
             },
 
-            build:function(source){
+            buildMeshBranch:function(source){
                 transformation_buffer=source.map(function(item){
                     var tr=Tree.createTransform();
                     var trnode=Tree.createMainChildNode("TrMesh", tr);
                     var parent_node;
-                    
+
                     switch(config.colortype){
                         case "variable":
                             var diffuse=Tree.createDiffuse(item.color);
@@ -115,37 +122,51 @@ angular.module('alexandra')
 
 
                     parent_node.createChildNode("Mesh", mesh);
-                    
+
                     if(item.position){
                         tr.position=item.position;
                     }
-                    
+
                     if(item.size){
                         tr.size=item.size;
                     }
-                    
+
                     if(item.rotation){
-                        
+
                         if(item.rotation.angle){
                             tr.rotation.angle=item.rotation.angle;
                         }
                         if(item.rotation.axis){
-                             tr.rotation.axis=item.rotation.axis;
+                            tr.rotation.axis=item.rotation.axis;
                         }
-                        
-                        
+
+
                     }
-                    
-                    
+
+
                     return trnode;
 
                 });
             },
-            
+
+            configureParticle:function(){
+                particle=Tree.createParticle(50);
+
+
+            },
+
+            buildParticle:function(source){
+                particle.configure(source);
+                var tr=Tree.createTransform();
+                var trnode=Tree.createMainChildNode("TrParticle", tr);
+                trnode.createChildNode("Particle", particle);
+                console.log(Tree);
+
+            },
             setConfig:function(new_config){
                 config=new_config;
             },
-            reset: function(){
+            resetMeshBranch: function(){
                 transformation_buffer.forEach(function(item){
                     Tree.removeMainChildNode(item);
                 });

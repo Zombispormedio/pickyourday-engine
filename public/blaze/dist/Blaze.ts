@@ -820,7 +820,15 @@ export module Resources {
 }
 export module Shaders{
 export class Fragment{
-static Particle:string=``;
+static Particle:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+
+
+void main(void) { 
+    gl_FragColor = vec4(0,1,0,1);
+}`;
 static Phong:string=`#ifdef GL_ES
 precision mediump float;
 #endif
@@ -866,13 +874,22 @@ void main(){
     
         gl_FragColor =finalColor;
         
-    }
+}
 
 
 `;
 }
 export class Vertex{
-static Particle:string=``;
+static Particle:string=`attribute vec3 a_position;
+
+uniform mat4 uMVMatrix;
+uniform mat4 uPMatrix;
+uniform float uPointSize;
+
+void main(void) {
+    gl_Position = uPMatrix * uMVMatrix * vec4(a_position.xyz, 1.0);
+    gl_PointSize = uPointSize;
+}`;
 static Phong:string=`attribute vec3 a_position;
 attribute vec3 a_normal;
 
@@ -887,13 +904,9 @@ varying vec3 vEyeVec;
 void main(){
 
     vec4 vertex = uMVMatrix * vec4(a_position, 1.0);
-	
-	
-
-			vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));
-			vEyeVec=-vec3(vertex.xyz);   
-
-  gl_Position =uPMatrix * vertex;
+	vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));
+	vEyeVec=-vec3(vertex.xyz);   
+	gl_Position =uPMatrix * vertex;
 
 }
 
@@ -1436,6 +1449,65 @@ export class DiffuseEntity extends Entity {
 
     }
 }
+export class ParticleEntity extends Entity {
+
+    private _buffer;
+    private _pointSize: number;
+    private _numItems: number;
+
+    constructor(graph_id: string, pointSize?: number) {
+        super(graph_id);
+        this._pointSize = pointSize || 1;
+        this._buffer = null;
+    }
+
+    public configure(data: Array<number>) {
+        var gl = this.gl;
+
+        this._buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+        this._numItems = data.length;
+    }
+    public update(data: Array<number>) {
+        var gl = this.gl;
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        this._numItems = data.length;
+    }
+    
+    
+    public set pointSize(v : number) {
+        this._pointSize = v;
+    }
+    
+
+
+    beginDraw() {
+
+        var gl = this.gl;
+
+        var uPointSize = this.getUniform("uPointSize");
+        if (uPointSize)
+            gl.uniform1f(uPointSize, this._pointSize);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._buffer);
+
+        Ketch.enableAttrib(this.graphID, "a_position");
+        gl.drawArrays(gl.POINTS, 0, this._numItems/3);
+    }
+
+    endDraw() {
+        var gl = this.gl;
+        Ketch.disableAttrib(this.graphID, "a_position");
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+    }
+
+}
 export class CameraEntity extends Entity {
     private _type: CAMERA_TYPE;
     private _cmatrix: Array<Array<number>>;
@@ -1778,7 +1850,8 @@ export class SceneGraph extends Renderable {
         'uMaterialDiffuse',
         'uLightSpecular',
         'uMaterialSpecular',
-        'uShininess'
+        'uShininess',
+        'uPointSize'
     ];
     private static ATTRIBUTES = ['a_position', 'a_normal'];
 
@@ -1887,6 +1960,10 @@ export class SceneGraph extends Renderable {
     public createCamera(type?: CAMERA_TYPE) {
         return new CameraEntity(this.oid, type);
     }
+    
+    public createParticle(pointSize?:number){
+        return new ParticleEntity(this.oid,pointSize);
+    }
 
 
     public set MainCamera(camera: CameraEntity) {
@@ -1904,11 +1981,12 @@ export class SceneGraph extends Renderable {
         }, cb);
     }
 
-    public configure() {
+    public configure(config?:{typeShader?:string}) {
         var self = this;
-
+        config=config||{};
+        
         self.Environment()
-        self.Program();
+        self.Program(config.typeShader);
 
         Ketch.setAttributeLocations(self._oid, SceneGraph.ATTRIBUTES);
         Ketch.setUniformLocations(self._oid, SceneGraph.UNIFORMS);

@@ -1,6 +1,14 @@
 module Shaders{
 export class Fragment{
-static Particle:string=``;
+static Particle:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+
+
+void main(void) { 
+    gl_FragColor = vec4(0,1,0,1);
+}`;
 static Phong:string=`#ifdef GL_ES
 precision mediump float;
 #endif
@@ -46,13 +54,22 @@ void main(){
     
         gl_FragColor =finalColor;
         
-    }
+}
 
 
 `;
 }
 export class Vertex{
-static Particle:string=``;
+static Particle:string=`attribute vec3 a_position;
+
+uniform mat4 uMVMatrix;
+uniform mat4 uPMatrix;
+uniform float uPointSize;
+
+void main(void) {
+    gl_Position = uPMatrix * uMVMatrix * vec4(a_position.xyz, 1.0);
+    gl_PointSize = uPointSize;
+}`;
 static Phong:string=`attribute vec3 a_position;
 attribute vec3 a_normal;
 
@@ -67,13 +84,9 @@ varying vec3 vEyeVec;
 void main(){
 
     vec4 vertex = uMVMatrix * vec4(a_position, 1.0);
-	
-	
-
-			vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));
-			vEyeVec=-vec3(vertex.xyz);   
-
-  gl_Position =uPMatrix * vertex;
+	vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));
+	vEyeVec=-vec3(vertex.xyz);   
+	gl_Position =uPMatrix * vertex;
 
 }
 
