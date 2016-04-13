@@ -2,8 +2,7 @@ class MeshEntity extends Entity {
     private _material: Resources.MeshMaterial;
     private _texture: Resources.MeshTexture;
     private _buffers: Resources.MeshBuffers;
-    private _wireframe: Boolean;
-    private _wireframeColor: Array<Number>;
+
 
     private _meshfile: string;
     private _materialfile: string;
@@ -118,25 +117,8 @@ class MeshEntity extends Entity {
     }
 
 
-    public setWireFrame(is_wireframe: Boolean, color: Array<Number>) {
-        this._wireframe = is_wireframe;
-        if (this._wireframe) {
-            this._wireframeColor = color;
-        }
-    }
 
 
-    public WireFrame() {
-        var gl = this.gl;
-        var uWireframe = this.getUniform("uWireframe");
-        if (uWireframe)
-            gl.uniform1i(uWireframe, this._wireframe);
-        if (this._wireframe) {
-            var uWireframeColor = this.getUniform("uWireframeColor");
-            if (uWireframeColor)
-                gl.uniform4fv(uWireframeColor, this._wireframeColor);
-        }
-    }
 
     public setMaterialUniforms() {
         if (this._material) {
@@ -178,7 +160,7 @@ class MeshEntity extends Entity {
         var gl = this.gl;
 
         this.setMaterialUniforms();
-        this.WireFrame();
+    
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 
         Ketch.enableAttrib(this.graphID, "a_position");

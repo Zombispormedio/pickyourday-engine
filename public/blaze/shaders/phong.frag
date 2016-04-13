@@ -12,19 +12,12 @@ uniform vec4 uMaterialAmbient;
 uniform vec4 uMaterialDiffuse;
 uniform vec4 uMaterialSpecular;
 
-
-uniform bool uWireframe;
-uniform vec4 uWireframeColor;
-
 varying vec3 vNormal;
 varying vec3 vEyeVec;
 
 void main(){
 
-if(uWireframe){
-          gl_FragColor =uWireframeColor;
-        
-        }else{
+		
         vec3 L= normalize(uLightDirection);
         vec3 N= normalize(vNormal);
         float lambertTerm=dot(N, -L);
@@ -49,7 +42,7 @@ if(uWireframe){
         finalColor.a=1.0;
     
         gl_FragColor =finalColor;
-        }
+        
     }
 
 

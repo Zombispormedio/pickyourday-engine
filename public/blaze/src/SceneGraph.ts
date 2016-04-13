@@ -17,9 +17,7 @@ class SceneGraph extends Renderable {
         'uMaterialDiffuse',
         'uLightSpecular',
         'uMaterialSpecular',
-        'uShininess',
-        'uWireframe',
-        'uWireframeColor'
+        'uShininess'
     ];
     private static ATTRIBUTES = ['a_position', 'a_normal'];
 
@@ -93,7 +91,7 @@ class SceneGraph extends Renderable {
         });
     }
 
-    public createMesh(config?:{mesh?, material?, texture?, wireframe?:{is:Boolean, color:Array<Number>} }): MeshEntity {
+    public createMesh(config?:{mesh?, material?, texture? }): MeshEntity {
         var meshEntity = new MeshEntity(this.oid);
         
         if(config.mesh){
@@ -103,11 +101,7 @@ class SceneGraph extends Renderable {
         if(config.material){
             meshEntity.loadMaterialByObject(config.material);
         }
-        
-        if(config.wireframe){
-            var wireframe=config.wireframe;
-            meshEntity.setWireFrame(wireframe.is, wireframe.color);
-        }
+      
         
         return meshEntity;
     }

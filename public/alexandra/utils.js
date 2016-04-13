@@ -33,9 +33,10 @@ function RandRotation(v){
 }
 
 
-function generate(fn) {
+function generate(fn, count) {
+    var count = count || chance.integer({ min: 0, max: 100 });
     return function() {
-        var count = chance.integer({ min: 0, max: 100 });
+
         return Array.apply(0, Array(count)).map(fn);
     };
 }

@@ -1,5 +1,6 @@
 module Shaders{
 export class Fragment{
+static Particle:string=``;
 static Phong:string=`#ifdef GL_ES
 precision mediump float;
 #endif
@@ -14,19 +15,12 @@ uniform vec4 uMaterialAmbient;
 uniform vec4 uMaterialDiffuse;
 uniform vec4 uMaterialSpecular;
 
-
-uniform bool uWireframe;
-uniform vec4 uWireframeColor;
-
 varying vec3 vNormal;
 varying vec3 vEyeVec;
 
 void main(){
 
-if(uWireframe){
-          gl_FragColor =uWireframeColor;
-        
-        }else{
+		
         vec3 L= normalize(uLightDirection);
         vec3 N= normalize(vNormal);
         float lambertTerm=dot(N, -L);
@@ -51,13 +45,14 @@ if(uWireframe){
         finalColor.a=1.0;
     
         gl_FragColor =finalColor;
-        }
+        
     }
 
 
 `;
 }
 export class Vertex{
+static Particle:string=``;
 static Phong:string=`attribute vec3 a_position;
 attribute vec3 a_normal;
 
@@ -65,7 +60,6 @@ uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;
 uniform mat4 uNMatrix;
 
-uniform bool uWireframe;
 
 varying vec3 vNormal;
 varying vec3 vEyeVec;
@@ -73,10 +67,12 @@ varying vec3 vEyeVec;
 void main(){
 
     vec4 vertex = uMVMatrix * vec4(a_position, 1.0);
-      if (!uWireframe) {
-   vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));
-   vEyeVec=-vec3(vertex.xyz);   
-   }
+	
+	
+
+			vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));
+			vEyeVec=-vec3(vertex.xyz);   
+
   gl_Position =uPMatrix * vertex;
 
 }

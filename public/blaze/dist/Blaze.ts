@@ -820,6 +820,7 @@ export module Resources {
 }
 export module Shaders{
 export class Fragment{
+static Particle:string=``;
 static Phong:string=`#ifdef GL_ES
 precision mediump float;
 #endif
@@ -834,19 +835,12 @@ uniform vec4 uMaterialAmbient;
 uniform vec4 uMaterialDiffuse;
 uniform vec4 uMaterialSpecular;
 
-
-uniform bool uWireframe;
-uniform vec4 uWireframeColor;
-
 varying vec3 vNormal;
 varying vec3 vEyeVec;
 
 void main(){
 
-if(uWireframe){
-          gl_FragColor =uWireframeColor;
-        
-        }else{
+		
         vec3 L= normalize(uLightDirection);
         vec3 N= normalize(vNormal);
         float lambertTerm=dot(N, -L);
@@ -871,13 +865,14 @@ if(uWireframe){
         finalColor.a=1.0;
     
         gl_FragColor =finalColor;
-        }
+        
     }
 
 
 `;
 }
 export class Vertex{
+static Particle:string=``;
 static Phong:string=`attribute vec3 a_position;
 attribute vec3 a_normal;
 
@@ -885,7 +880,6 @@ uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;
 uniform mat4 uNMatrix;
 
-uniform bool uWireframe;
 
 varying vec3 vNormal;
 varying vec3 vEyeVec;
@@ -893,10 +887,12 @@ varying vec3 vEyeVec;
 void main(){
 
     vec4 vertex = uMVMatrix * vec4(a_position, 1.0);
-      if (!uWireframe) {
-   vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));
-   vEyeVec=-vec3(vertex.xyz);   
-   }
+	
+	
+
+			vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));
+			vEyeVec=-vec3(vertex.xyz);   
+
   gl_Position =uPMatrix * vertex;
 
 }
@@ -964,8 +960,7 @@ export class MeshEntity extends Entity {
     private _material: Resources.MeshMaterial;
     private _texture: Resources.MeshTexture;
     private _buffers: Resources.MeshBuffers;
-    private _wireframe: Boolean;
-    private _wireframeColor: Array<Number>;
+
 
     private _meshfile: string;
     private _materialfile: string;
@@ -1080,25 +1075,8 @@ export class MeshEntity extends Entity {
     }
 
 
-    public setWireFrame(is_wireframe: Boolean, color: Array<Number>) {
-        this._wireframe = is_wireframe;
-        if (this._wireframe) {
-            this._wireframeColor = color;
-        }
-    }
 
 
-    public WireFrame() {
-        var gl = this.gl;
-        var uWireframe = this.getUniform("uWireframe");
-        if (uWireframe)
-            gl.uniform1i(uWireframe, this._wireframe);
-        if (this._wireframe) {
-            var uWireframeColor = this.getUniform("uWireframeColor");
-            if (uWireframeColor)
-                gl.uniform4fv(uWireframeColor, this._wireframeColor);
-        }
-    }
 
     public setMaterialUniforms() {
         if (this._material) {
@@ -1140,7 +1118,7 @@ export class MeshEntity extends Entity {
         var gl = this.gl;
 
         this.setMaterialUniforms();
-        this.WireFrame();
+    
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 
         Ketch.enableAttrib(this.graphID, "a_position");
@@ -1800,9 +1778,7 @@ export class SceneGraph extends Renderable {
         'uMaterialDiffuse',
         'uLightSpecular',
         'uMaterialSpecular',
-        'uShininess',
-        'uWireframe',
-        'uWireframeColor'
+        'uShininess'
     ];
     private static ATTRIBUTES = ['a_position', 'a_normal'];
 
@@ -1876,7 +1852,7 @@ export class SceneGraph extends Renderable {
         });
     }
 
-    public createMesh(config?:{mesh?, material?, texture?, wireframe?:{is:Boolean, color:Array<Number>} }): MeshEntity {
+    public createMesh(config?:{mesh?, material?, texture? }): MeshEntity {
         var meshEntity = new MeshEntity(this.oid);
         
         if(config.mesh){
@@ -1886,11 +1862,7 @@ export class SceneGraph extends Renderable {
         if(config.material){
             meshEntity.loadMaterialByObject(config.material);
         }
-        
-        if(config.wireframe){
-            var wireframe=config.wireframe;
-            meshEntity.setWireFrame(wireframe.is, wireframe.color);
-        }
+      
         
         return meshEntity;
     }
