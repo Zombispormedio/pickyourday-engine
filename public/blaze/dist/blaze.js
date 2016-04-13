@@ -754,14 +754,14 @@ var Blaze;
         var Fragment = (function () {
             function Fragment() {
             }
-            Fragment.Main = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform float uShininess;\nuniform vec3 uLightDirection;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\nuniform vec4 uLightSpecular;\n\nuniform vec4 uMaterialAmbient;\nuniform vec4 uMaterialDiffuse;\nuniform vec4 uMaterialSpecular;\n\n\nuniform bool uWireframe;\nuniform vec4 uWireframeColor;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\nvoid main(){\n\nif(uWireframe){\n          gl_FragColor =uWireframeColor;\n        \n        }else{\n        vec3 L= normalize(uLightDirection);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient*uMaterialAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        if(lambertTerm>0.0)\n        {\n            Id=uLightDiffuse*uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightSpecular*uMaterialSpecular*specular;\n        }\n        \n        vec4 finalColor=Ia+Id+Is;\n        finalColor.a=1.0;\n    \n        gl_FragColor =finalColor;\n        }\n    }\n\n\n";
+            Fragment.Phong = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform float uShininess;\nuniform vec3 uLightDirection;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\nuniform vec4 uLightSpecular;\n\nuniform vec4 uMaterialAmbient;\nuniform vec4 uMaterialDiffuse;\nuniform vec4 uMaterialSpecular;\n\n\nuniform bool uWireframe;\nuniform vec4 uWireframeColor;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\nvoid main(){\n\nif(uWireframe){\n          gl_FragColor =uWireframeColor;\n        \n        }else{\n        vec3 L= normalize(uLightDirection);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient*uMaterialAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        if(lambertTerm>0.0)\n        {\n            Id=uLightDiffuse*uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightSpecular*uMaterialSpecular*specular;\n        }\n        \n        vec4 finalColor=Ia+Id+Is;\n        finalColor.a=1.0;\n    \n        gl_FragColor =finalColor;\n        }\n    }\n\n\n";
             return Fragment;
         }());
         Shaders.Fragment = Fragment;
         var Vertex = (function () {
             function Vertex() {
             }
-            Vertex.Main = "attribute vec3 a_position;\nattribute vec3 a_normal;\n\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nuniform mat4 uNMatrix;\n\nuniform bool uWireframe;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\nvoid main(){\n\n    vec4 vertex = uMVMatrix * vec4(a_position, 1.0);\n      if (!uWireframe) {\n   vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));\n   vEyeVec=-vec3(vertex.xyz);   \n   }\n  gl_Position =uPMatrix * vertex;\n\n}\n\n\n";
+            Vertex.Phong = "attribute vec3 a_position;\nattribute vec3 a_normal;\n\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nuniform mat4 uNMatrix;\n\nuniform bool uWireframe;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\nvoid main(){\n\n    vec4 vertex = uMVMatrix * vec4(a_position, 1.0);\n      if (!uWireframe) {\n   vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));\n   vEyeVec=-vec3(vertex.xyz);   \n   }\n  gl_Position =uPMatrix * vertex;\n\n}\n\n\n";
             return Vertex;
         }());
         Shaders.Vertex = Vertex;
@@ -1530,10 +1530,11 @@ var Blaze;
         SceneGraph.prototype.setContext = function (canvas) {
             Ketch.setCanvasToContext(this.oid, canvas);
         };
-        SceneGraph.prototype.Program = function () {
+        SceneGraph.prototype.Program = function (type) {
+            type = type || "Phong";
             Ketch.createProgram(this._oid, {
-                fragment: Shaders.Fragment.Main,
-                vertex: Shaders.Vertex.Main
+                fragment: Shaders.Fragment[type],
+                vertex: Shaders.Vertex[type]
             });
         };
         SceneGraph.prototype.createMesh = function (config) {

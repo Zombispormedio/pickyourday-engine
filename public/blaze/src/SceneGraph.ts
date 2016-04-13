@@ -84,10 +84,12 @@ class SceneGraph extends Renderable {
 
     }
 
-    private Program() {
+    private Program(type?:string) {
+       type=type||"Phong";
+   
         Ketch.createProgram(this._oid, {
-            fragment: Shaders.Fragment.Main,
-            vertex: Shaders.Vertex.Main
+            fragment: Shaders.Fragment[type],
+            vertex: Shaders.Vertex[type]
         });
     }
 

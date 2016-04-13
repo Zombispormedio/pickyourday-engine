@@ -1,6 +1,6 @@
 module Shaders{
 export class Fragment{
-static Main:string=`#ifdef GL_ES
+static Phong:string=`#ifdef GL_ES
 precision mediump float;
 #endif
 uniform float uShininess;
@@ -58,7 +58,7 @@ if(uWireframe){
 `;
 }
 export class Vertex{
-static Main:string=`attribute vec3 a_position;
+static Phong:string=`attribute vec3 a_position;
 attribute vec3 a_normal;
 
 uniform mat4 uMVMatrix;
