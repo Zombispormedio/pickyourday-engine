@@ -10,7 +10,7 @@ angular.module('alexandra')
         link:function(scope, tElement, attrs){
             var element=tElement[0];
             var config=scope.config || {};
-
+    
             if(config.fullpage){
                 $alexandraUtils.fullPage(element);
             }

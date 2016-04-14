@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "del": "2.2.0",
+    "get-pixels": "3.3.0",
     "gulp": "3.9.1",
     "gulp-concat": "2.6.0",
     "gulp-jshint": "2.0.0",

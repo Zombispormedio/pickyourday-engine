@@ -26,6 +26,14 @@ gulp.task("models", ["obj"], function() {
 });
 
 
+gulp.task("textures", function() {
+    return gulp.src("public/alexandra/assets/textures/*.json")
+        .pipe(json2js({ moduleName: "alexandra" }))
+        .pipe(concat("textures_values.js"))
+        .pipe(gulp.dest("./public/alexandra/assets/textures/"));
+});
+
+
 gulp.task("clean-alexandra", function(cb) {
     del(['./public/alexandra/dist/alexandra.min.js'], cb);
 });
@@ -72,3 +80,5 @@ gulp.task("build-blaze", ["clean-blaze", "build-js-blaze"]);
 gulp.task("blaze", function() {
     return gulp.watch(["./public/blaze/dist/blaze.js"], ["build-blaze"]);
 });
+
+

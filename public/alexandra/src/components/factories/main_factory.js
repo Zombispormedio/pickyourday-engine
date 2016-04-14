@@ -160,7 +160,7 @@ angular.module('alexandra')
                 var tr=Tree.createTransform();
                 var trnode=Tree.createMainChildNode("TrParticle", tr);
                 trnode.createChildNode("Particle", particle);
-                console.log(Tree);
+            
 
             },
             setConfig:function(new_config){
