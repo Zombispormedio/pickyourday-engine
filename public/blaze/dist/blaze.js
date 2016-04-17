@@ -89,8 +89,7 @@ var Blaze;
             gl.bindTexture(gl.TEXTURE_2D, texture);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, data);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-            gl.generateMipmap(gl.TEXTURE_2D);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             gl.bindTexture(gl.TEXTURE_2D, null);
             return texture;
         }
@@ -754,7 +753,7 @@ var Blaze;
         var Fragment = (function () {
             function Fragment() {
             }
-            Fragment.Particle = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\n\n\nvoid main(void) { \n    gl_FragColor = vec4(0,1,0,1);\n}";
+            Fragment.Particle = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform sampler2D uSampler;\n\nbool isBlack(vec4 color){\nreturn color.r==0.0 &&color.g==0.0&&color.b==0.0;\n}\nvoid main(void) { \n    gl_FragColor = texture2D(uSampler, gl_PointCoord);\n    if(gl_FragColor.a < 0.5 || isBlack(gl_FragColor)) discard;\n}";
             Fragment.Phong = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform float uShininess;\nuniform vec3 uLightDirection;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\nuniform vec4 uLightSpecular;\n\nuniform vec4 uMaterialAmbient;\nuniform vec4 uMaterialDiffuse;\nuniform vec4 uMaterialSpecular;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\nvoid main(){\n\n\t\t\n        vec3 L= normalize(uLightDirection);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient*uMaterialAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        if(lambertTerm>0.0)\n        {\n            Id=uLightDiffuse*uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightSpecular*uMaterialSpecular*specular;\n        }\n        \n        vec4 finalColor=Ia+Id+Is;\n        finalColor.a=1.0;\n    \n        gl_FragColor =finalColor;\n        \n}\n\n\n";
             return Fragment;
         }());
@@ -1201,13 +1200,16 @@ var Blaze;
             this._pointSize = pointSize || 1;
             this._buffer = null;
         }
-        ParticleEntity.prototype.configure = function (data) {
+        ParticleEntity.prototype.configure = function (data_mesh, data_texture) {
             var gl = this.gl;
             this._buffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, this._buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data_mesh), gl.STATIC_DRAW);
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
-            this._numItems = data.length;
+            this._numItems = data_mesh.length;
+            this._texture_id = utils.uuid("Texture");
+            this._texture = WebGLUtils.createTexture(gl, data_texture);
+            Ketch.addTexture(this.graphID, this._texture_id);
         };
         ParticleEntity.prototype.update = function (data) {
             var gl = this.gl;
@@ -1230,6 +1232,7 @@ var Blaze;
                 gl.uniform1f(uPointSize, this._pointSize);
             gl.bindBuffer(gl.ARRAY_BUFFER, this._buffer);
             Ketch.enableAttrib(this.graphID, "a_position");
+            Ketch.activeTexture(this.graphID, this._texture_id, this._texture);
             gl.drawArrays(gl.POINTS, 0, this._numItems / 3);
         };
         ParticleEntity.prototype.endDraw = function () {
@@ -1638,7 +1641,8 @@ var Blaze;
             'uLightSpecular',
             'uMaterialSpecular',
             'uShininess',
-            'uPointSize'
+            'uPointSize',
+            "uSampler"
         ];
         SceneGraph.ATTRIBUTES = ['a_position', 'a_normal'];
         return SceneGraph;

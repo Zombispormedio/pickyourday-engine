@@ -87,8 +87,7 @@ export module WebGLUtils {
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, data);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.bindTexture(gl.TEXTURE_2D, null);
         return texture;
     }
@@ -342,10 +341,7 @@ export class Ketch {
     static addTexture(key, texture_id) {
         var view = Ketch._views[key];
         view.textures = view.textures || [];
-
         view.textures.push(texture_id);
-
-
     }
     static activeTexture(key, texture_id, texture) {
         var view = Ketch._views[key];
@@ -360,13 +356,7 @@ export class Ketch {
             var uSampler = Ketch.getUniform(key, "uSampler");
             gl.uniform1i(uSampler, index);
         }
-
-
-
-
-
     }
-
 
 }
 export class Renderable {
@@ -824,10 +814,14 @@ static Particle:string=`#ifdef GL_ES
 precision mediump float;
 #endif
 
+uniform sampler2D uSampler;
 
-
+bool isBlack(vec4 color){
+return color.r==0.0 &&color.g==0.0&&color.b==0.0;
+}
 void main(void) { 
-    gl_FragColor = vec4(0,1,0,1);
+    gl_FragColor = texture2D(uSampler, gl_PointCoord);
+    if(gl_FragColor.a < 0.5 || isBlack(gl_FragColor)) discard;
 }`;
 static Phong:string=`#ifdef GL_ES
 precision mediump float;
@@ -1083,12 +1077,8 @@ export class MeshEntity extends Entity {
         if (obj.shininess) {
             this._material.shininess = obj.shininess;
         }
-        
-
+       
     }
-
-
-
 
 
     public setMaterialUniforms() {
@@ -1454,6 +1444,8 @@ export class ParticleEntity extends Entity {
     private _buffer;
     private _pointSize: number;
     private _numItems: number;
+    private _texture;
+    private _texture_id: string;
 
     constructor(graph_id: string, pointSize?: number) {
         super(graph_id);
@@ -1461,15 +1453,21 @@ export class ParticleEntity extends Entity {
         this._buffer = null;
     }
 
-    public configure(data: Array<number>) {
+    public configure(data_mesh: Array<number>, data_texture: Array<number>) {
         var gl = this.gl;
 
         this._buffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data_mesh), gl.STATIC_DRAW);
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-        this._numItems = data.length;
+        this._numItems = data_mesh.length;
+
+     
+        this._texture_id = utils.uuid("Texture");
+        this._texture = WebGLUtils.createTexture(gl, data_texture);
+        Ketch.addTexture(this.graphID, this._texture_id);
+
     }
     public update(data: Array<number>) {
         var gl = this.gl;
@@ -1478,12 +1476,12 @@ export class ParticleEntity extends Entity {
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
         this._numItems = data.length;
     }
-    
-    
-    public set pointSize(v : number) {
+
+
+    public set pointSize(v: number) {
         this._pointSize = v;
     }
-    
+
 
 
     beginDraw() {
@@ -1495,9 +1493,12 @@ export class ParticleEntity extends Entity {
             gl.uniform1f(uPointSize, this._pointSize);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffer);
-
         Ketch.enableAttrib(this.graphID, "a_position");
-        gl.drawArrays(gl.POINTS, 0, this._numItems/3);
+        
+        
+        Ketch.activeTexture(this.graphID, this._texture_id, this._texture);
+        
+        gl.drawArrays(gl.POINTS, 0, this._numItems / 3);
     }
 
     endDraw() {
@@ -1851,7 +1852,8 @@ export class SceneGraph extends Renderable {
         'uLightSpecular',
         'uMaterialSpecular',
         'uShininess',
-        'uPointSize'
+        'uPointSize',
+        "uSampler"
     ];
     private static ATTRIBUTES = ['a_position', 'a_normal'];
 
@@ -1900,8 +1902,8 @@ export class SceneGraph extends Renderable {
     public createMainChildNode(type: string, entity: Entity): NodeElement {
         return this._scene.createChildNode(type, entity);
     }
-    
-    public removeMainChildNode(node:NodeElement){
+
+    public removeMainChildNode(node: NodeElement) {
         this._scene.removeChildNode(node);
     }
 
@@ -1916,30 +1918,30 @@ export class SceneGraph extends Renderable {
 
     }
 
-    private Program(type?:string) {
-       type=type||"Phong";
-   
+    private Program(type?: string) {
+        type = type || "Phong";
+
         Ketch.createProgram(this._oid, {
             fragment: Shaders.Fragment[type],
             vertex: Shaders.Vertex[type]
         });
     }
 
-    public createMesh(config?:{mesh?, material?, texture? }): MeshEntity {
+    public createMesh(config?: { mesh?, material?, texture?}): MeshEntity {
         var meshEntity = new MeshEntity(this.oid);
-        
-        if(config.mesh){
+
+        if (config.mesh) {
             meshEntity.loadMeshByObject(config.mesh);
         }
-        
-        if(config.material){
+
+        if (config.material) {
             meshEntity.loadMaterialByObject(config.material);
         }
-      
-        
+
+
         return meshEntity;
     }
-    public createDiffuse(v:Array<number>){
+    public createDiffuse(v: Array<number>) {
         return new DiffuseEntity(this.oid, v);
     }
 
@@ -1960,9 +1962,9 @@ export class SceneGraph extends Renderable {
     public createCamera(type?: CAMERA_TYPE) {
         return new CameraEntity(this.oid, type);
     }
-    
-    public createParticle(pointSize?:number){
-        return new ParticleEntity(this.oid,pointSize);
+
+    public createParticle(pointSize?: number) {
+        return new ParticleEntity(this.oid, pointSize);
     }
 
 
@@ -1981,10 +1983,10 @@ export class SceneGraph extends Renderable {
         }, cb);
     }
 
-    public configure(config?:{typeShader?:string}) {
+    public configure(config?: { typeShader?: string }) {
         var self = this;
-        config=config||{};
-        
+        config = config || {};
+
         self.Environment()
         self.Program(config.typeShader);
 

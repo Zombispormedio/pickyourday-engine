@@ -90,10 +90,7 @@ class Ketch {
     static addTexture(key, texture_id) {
         var view = Ketch._views[key];
         view.textures = view.textures || [];
-
         view.textures.push(texture_id);
-
-
     }
     static activeTexture(key, texture_id, texture) {
         var view = Ketch._views[key];
@@ -108,12 +105,6 @@ class Ketch {
             var uSampler = Ketch.getUniform(key, "uSampler");
             gl.uniform1i(uSampler, index);
         }
-
-
-
-
-
     }
-
 
 }

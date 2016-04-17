@@ -18,7 +18,8 @@ class SceneGraph extends Renderable {
         'uLightSpecular',
         'uMaterialSpecular',
         'uShininess',
-        'uPointSize'
+        'uPointSize',
+        "uSampler"
     ];
     private static ATTRIBUTES = ['a_position', 'a_normal'];
 
@@ -67,8 +68,8 @@ class SceneGraph extends Renderable {
     public createMainChildNode(type: string, entity: Entity): NodeElement {
         return this._scene.createChildNode(type, entity);
     }
-    
-    public removeMainChildNode(node:NodeElement){
+
+    public removeMainChildNode(node: NodeElement) {
         this._scene.removeChildNode(node);
     }
 
@@ -83,30 +84,30 @@ class SceneGraph extends Renderable {
 
     }
 
-    private Program(type?:string) {
-       type=type||"Phong";
-   
+    private Program(type?: string) {
+        type = type || "Phong";
+
         Ketch.createProgram(this._oid, {
             fragment: Shaders.Fragment[type],
             vertex: Shaders.Vertex[type]
         });
     }
 
-    public createMesh(config?:{mesh?, material?, texture? }): MeshEntity {
+    public createMesh(config?: { mesh?, material?, texture?}): MeshEntity {
         var meshEntity = new MeshEntity(this.oid);
-        
-        if(config.mesh){
+
+        if (config.mesh) {
             meshEntity.loadMeshByObject(config.mesh);
         }
-        
-        if(config.material){
+
+        if (config.material) {
             meshEntity.loadMaterialByObject(config.material);
         }
-      
-        
+
+
         return meshEntity;
     }
-    public createDiffuse(v:Array<number>){
+    public createDiffuse(v: Array<number>) {
         return new DiffuseEntity(this.oid, v);
     }
 
@@ -127,9 +128,9 @@ class SceneGraph extends Renderable {
     public createCamera(type?: CAMERA_TYPE) {
         return new CameraEntity(this.oid, type);
     }
-    
-    public createParticle(pointSize?:number){
-        return new ParticleEntity(this.oid,pointSize);
+
+    public createParticle(pointSize?: number) {
+        return new ParticleEntity(this.oid, pointSize);
     }
 
 
@@ -148,10 +149,10 @@ class SceneGraph extends Renderable {
         }, cb);
     }
 
-    public configure(config?:{typeShader?:string}) {
+    public configure(config?: { typeShader?: string }) {
         var self = this;
-        config=config||{};
-        
+        config = config || {};
+
         self.Environment()
         self.Program(config.typeShader);
 

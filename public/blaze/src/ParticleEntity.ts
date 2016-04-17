@@ -3,6 +3,8 @@ class ParticleEntity extends Entity {
     private _buffer;
     private _pointSize: number;
     private _numItems: number;
+    private _texture;
+    private _texture_id: string;
 
     constructor(graph_id: string, pointSize?: number) {
         super(graph_id);
@@ -10,15 +12,21 @@ class ParticleEntity extends Entity {
         this._buffer = null;
     }
 
-    public configure(data: Array<number>) {
+    public configure(data_mesh: Array<number>, data_texture: Array<number>) {
         var gl = this.gl;
 
         this._buffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data_mesh), gl.STATIC_DRAW);
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-        this._numItems = data.length;
+        this._numItems = data_mesh.length;
+
+     
+        this._texture_id = utils.uuid("Texture");
+        this._texture = WebGLUtils.createTexture(gl, data_texture);
+        Ketch.addTexture(this.graphID, this._texture_id);
+
     }
     public update(data: Array<number>) {
         var gl = this.gl;
@@ -27,12 +35,12 @@ class ParticleEntity extends Entity {
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
         this._numItems = data.length;
     }
-    
-    
-    public set pointSize(v : number) {
+
+
+    public set pointSize(v: number) {
         this._pointSize = v;
     }
-    
+
 
 
     beginDraw() {
@@ -44,9 +52,12 @@ class ParticleEntity extends Entity {
             gl.uniform1f(uPointSize, this._pointSize);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffer);
-
         Ketch.enableAttrib(this.graphID, "a_position");
-        gl.drawArrays(gl.POINTS, 0, this._numItems/3);
+        
+        
+        Ketch.activeTexture(this.graphID, this._texture_id, this._texture);
+        
+        gl.drawArrays(gl.POINTS, 0, this._numItems / 3);
     }
 
     endDraw() {

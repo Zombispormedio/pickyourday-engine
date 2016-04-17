@@ -1,14 +1,17 @@
 angular.module('alexandra')
-    .value('DefaultMaterial',{
-    ambient:[1,1,1,1],
-    diffuse:[0.5,0.8,0.1,1],
-    shininess:230,
-    specular:[1,1,1,1]
-});
+    .value('MaterialValue',{
 
-angular.module('alexandra')
-    .value('VaribleDiffuseMaterial',{
-    ambient:[1,1,1,1],
-    shininess:230,
-    specular:[1,1,1,1]
+    default:{
+        ambient:[1,1,1,1],
+        diffuse:[0.5,0.8,0.1,1],
+        shininess:230,
+        specular:[1,1,1,1]
+    },
+    variable:{
+        ambient:[1,1,1,1],
+        shininess:230,
+        specular:[1,1,1,1]
+    }
+
+
 });

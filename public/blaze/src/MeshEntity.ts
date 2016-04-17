@@ -112,12 +112,8 @@ class MeshEntity extends Entity {
         if (obj.shininess) {
             this._material.shininess = obj.shininess;
         }
-        
-
+       
     }
-
-
-
 
 
     public setMaterialUniforms() {

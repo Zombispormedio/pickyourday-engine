@@ -1,12 +1,12 @@
 angular.module('alexandra')
-    .factory('$alexandra', function($alexandraForest, $interval, SphereValue,CylinderValue, WallValue, ConeValue, CubeValue, VaribleDiffuseMaterial, DefaultMaterial, DefaultLightsConfig, DefaultCameraConfig) {
+    .factory('$alexandra', function($alexandraForest, $interval, SphereValue,CylinderValue, WallValue, ConeValue, CubeValue, MaterialValue, CameraValue, LightValue, TextureValue) {
 
     return function(id, c){
 
         var Tree=$alexandraForest.getTree(id);
         var config=c;
 
-        var camera, light, mesh, particle, transformation_buffer=[];
+        var camera, light, mesh, particle, transformation_buffer=[], textures={};
 
         return {
             setContext:function(canvas){
@@ -15,15 +15,16 @@ angular.module('alexandra')
 
             configureCamera:function(){
                 camera=Tree.createCamera();
-                camera.position=DefaultCameraConfig.position;
-                camera.azimuth=DefaultCameraConfig.azimuth;
-                camera.elevation=DefaultCameraConfig.elevation;
+                var camera_config=CameraValue.default;
+                camera.position=camera_config.position;
+                camera.azimuth=camera_config.azimuth;
+                camera.elevation=camera_config.elevation;
                 Tree.MainCamera = camera;
                 Tree.createMainChildNode("Camera", camera);
 
             },
             configureLights:function(){
-                light=Tree.createLight(DefaultLightsConfig);
+                light=Tree.createLight(LightValue.default);
                 Tree.createMainChildNode("Light", light);
             },
 
@@ -54,14 +55,11 @@ angular.module('alexandra')
 
                 switch(config.colortype){
                     case "variable":
-                        mesh_config.material=VaribleDiffuseMaterial;
+                        mesh_config.material=MaterialValue.variable;
                         break;
                     default:
-                        mesh_config.material=DefaultMaterial; 
-
+                        mesh_config.material=MaterialValue.default; 
                 }
-
-
 
                 mesh=Tree.createMesh(mesh_config);
 
@@ -74,14 +72,12 @@ angular.module('alexandra')
                     case "particle":
                         renderConfig.typeShader="Particle";
                         break;
-                        
                 }
                 Tree.configure(renderConfig);
 
             },
 
             getCamera:function(){
-
                 return {
                     getPosition:function(){
                         return camera.position;
@@ -102,7 +98,6 @@ angular.module('alexandra')
                         camera.position[1]+=y;
                     }
                 };
-
             },
 
             buildMeshBranch:function(source){
@@ -120,7 +115,6 @@ angular.module('alexandra')
                             parent_node=trnode;
                     }
 
-
                     parent_node.createChildNode("Mesh", mesh);
 
                     if(item.position){
@@ -132,41 +126,119 @@ angular.module('alexandra')
                     }
 
                     if(item.rotation){
-
                         if(item.rotation.angle){
                             tr.rotation.angle=item.rotation.angle;
                         }
                         if(item.rotation.axis){
                             tr.rotation.axis=item.rotation.axis;
                         }
-
-
                     }
-
-
                     return trnode;
 
                 });
             },
 
             configureParticle:function(){
-                particle=Tree.createParticle(50);
+                config.particle=config.particle||{};
+                particle=Tree.createParticle(config.particle.size||5);
+            },
+
+            configureParticleTexture:function(){
+
+                var canvas=document.createElement("canvas");
+                var ctx=canvas.getContext("2d");
+
+                textures.particle={};
+                for(var key in TextureValue){
+                    var data=TextureValue[key];
+                    var len=data.length;
+                    var dimensions=Math.sqrt(len/4);
+
+                    var imgData=ctx.createImageData(dimensions,dimensions);
+
+                    for (var i=0;i<len;i+=4){
+                        imgData.data[i+0]=data[i+0];
+                        imgData.data[i+1]=data[i+1];
+                        imgData.data[i+2]=data[i+2];
+                        imgData.data[i+3]=data[i+3];
+                    }
+
+                    textures.particle[key]=imgData;
+
+                }
+
 
 
             },
 
             buildParticle:function(source){
-                particle.configure(source);
+                var format_source=source.reduce(function(prev, item){
+                    var position=item.position;
+                    for(var i=0;i<position.length;i++){
+                        prev.push(position[i]);
+                    }
+                    return prev;
+                }, []);
+                var texture;
+
+                switch(config.particle.type){
+
+                    case "fire":
+                        texture=textures.particle.Fire;
+                        break;
+                    case "flower":
+                        texture=textures.particle.Flower;
+                        break;
+                    case "fog":
+                        texture=textures.particle.Fog;
+                        break;
+                    case "light":
+                        texture=textures.particle.Light;
+                        break;
+                    case "spark":
+                        texture=textures.particle.Spark;
+                        break;
+                    case "spatial":
+                        texture=textures.particle.Spatial;
+                        break;
+                    case "star":
+                        texture=textures.particle.Star;
+                        break;
+                    case "warning":
+                        texture=textures.particle.Warning;
+                        break;
+                    case "acid":
+                        texture=textures.particle.Acid;
+                        break;
+                    case "fireball":
+                        texture=textures.particle.Fireball;
+                        break;
+                    case "firebust":
+                        texture=textures.particle.Firebust;
+                        break;
+                    case "flash":
+                        texture=textures.particle.Flash;
+                        break;
+                    case "starbust":
+                        texture=textures.particle.Starbust;
+                        break;
+
+                    default:
+                        texture=textures.particle.Default;
+                }
+
+
+                particle.configure(format_source, texture);
                 var tr=Tree.createTransform();
                 var trnode=Tree.createMainChildNode("TrParticle", tr);
                 trnode.createChildNode("Particle", particle);
-            
+                transformation_buffer.push(trnode);
 
             },
             setConfig:function(new_config){
                 config=new_config;
             },
-            resetMeshBranch: function(){
+            reset: function(){
                 transformation_buffer.forEach(function(item){
                     Tree.removeMainChildNode(item);
                 });
