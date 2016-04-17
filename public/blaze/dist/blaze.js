@@ -300,6 +300,13 @@ var Blaze;
             view.textures = view.textures || [];
             view.textures.push(texture_id);
         };
+        Ketch.removeTexture = function (key, texture_id) {
+            var view = Ketch._views[key];
+            view.textures = view.textures || [];
+            var index = view.textures.indexOf(texture_id);
+            view.textures.splice(index, 1);
+            console.log(view.textures);
+        };
         Ketch.activeTexture = function (key, texture_id, texture) {
             var view = Ketch._views[key];
             var gl = view.context;
@@ -1199,6 +1206,7 @@ var Blaze;
             _super.call(this, graph_id);
             this._pointSize = pointSize || 1;
             this._buffer = null;
+            this._texture_id = "";
         }
         ParticleEntity.prototype.configure = function (data_mesh, data_texture) {
             var gl = this.gl;
@@ -1218,6 +1226,13 @@ var Blaze;
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
             this._numItems = data.length;
         };
+        Object.defineProperty(ParticleEntity.prototype, "textureID", {
+            get: function () {
+                return this._texture_id;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(ParticleEntity.prototype, "pointSize", {
             set: function (v) {
                 this._pointSize = v;
@@ -1607,6 +1622,9 @@ var Blaze;
             enumerable: true,
             configurable: true
         });
+        SceneGraph.prototype.removeTexture = function (id) {
+            Ketch.removeTexture(this.oid, id);
+        };
         SceneGraph.prototype.startLoader = function (cb) {
             async.eachSeries(this._loaderBuffer, function (item, next) {
                 item.loadMesh(function () {

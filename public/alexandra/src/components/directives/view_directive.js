@@ -19,13 +19,17 @@ angular.module('alexandra')
         tree.buildParticle(source);
     }
 
-    var choose=function(tree, type, source, configurable, texturizable){
+    var choose=function(tree, type, source, config){
         switch(type){
             case "particle":{
-                if(configurable){
+                if(config.reseteable){
+                    tree.resetParticle();
+                }
+                
+                if(config.configurable){
                     configureParticle(tree);
                 }
-                if(texturizable){
+                if(config.texturizable){
                     tree.configureParticleTexture();
                 }
 
@@ -34,7 +38,10 @@ angular.module('alexandra')
                 break;
             }
             default:{
-                if(configurable){
+                 if(config.reseteable){
+                     tree.resetMesh();
+                }
+                if(config.configurable){
                     configureMesh(tree);
                 }
                 buildMesh(tree, source);  
@@ -68,28 +75,29 @@ angular.module('alexandra')
             tree.configureCamera();
 
 
-            choose(tree, config.type, scope.source, true, true);
+            choose(tree, config.type, scope.source, {configurable:true, texturizable:true});
 
             tree.configureRenderer();
 
             if(config.streaming){
                 $alexandraUtils.watch(scope, "source", function(){
                     tree.reset();
-                    choose(tree, config.type, scope.source);
+                    choose(tree, config.type, scope.source, {reseteable:true});
                 });
             }
 
             $alexandraUtils.watch(scope, "config.type", function(){
                 tree.setConfig(scope.config);
                 tree.reset();
-                choose(tree, config.type, scope.source, true);
+                choose(tree, config.type, scope.source, {configurable:true, reseteable:true});
                 tree.configureRenderer();
             });
 
             if(config.type==="particle"){
-
                 $alexandraUtils.watch(scope, "config.particle.type", function(){
-                     choose(tree, config.type, scope.source, true);
+                    tree.setConfig(scope.config);
+                    tree.reset();
+                    choose(tree, config.type, scope.source, {configurable:true, reseteable:true});
                 });
             }
 

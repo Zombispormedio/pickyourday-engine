@@ -186,6 +186,9 @@ angular.module('alexandra')
                     case "fire":
                         texture=textures.particle.Fire;
                         break;
+                    case "fire2":
+                        texture=textures.particle.Fire2;
+                        break;
                     case "flower":
                         texture=textures.particle.Flower;
                         break;
@@ -222,6 +225,57 @@ angular.module('alexandra')
                     case "starbust":
                         texture=textures.particle.Starbust;
                         break;
+                    case "aura":
+                        texture=textures.particle.Aura;
+                        break;
+                    case "bolt":
+                        texture=textures.particle.Bolt;
+                        break;
+                    case "energy":
+                        texture=textures.particle.Energy;
+                        break;
+                    case "energy2":
+                        texture=textures.particle.Energy2;
+                        break;
+                    case "energy3":
+                        texture=textures.particle.Energy3;
+                        break;
+                    case "misc":
+                        texture=textures.particle.Misc;
+                        break;
+
+                    case "misc2":
+                        texture=textures.particle.Misc2;
+                        break;
+                    case "pink":
+                        texture=textures.particle.Pink;
+                        break;
+
+                    case "plasma":
+                        texture=textures.particle.Plasma;
+                        break;
+                    case "plasma2":
+                        texture=textures.particle.Plasma2;
+                        break;
+                    case "purple":
+                        texture=textures.particle.Purple;
+                        break;
+                    case "ray":
+                        texture=textures.particle.Ray;
+                        break;
+                    case "smoke":
+                        texture=textures.particle.Smoke;
+                        break;
+                    case "water":
+                        texture=textures.particle.Water;
+                        break;
+                    case "water2":
+                        texture=textures.particle.Water2;
+                        break;
+                    case "drop":
+                        texture=textures.particle.Drop;
+                        break;
+
 
                     default:
                         texture=textures.particle.Default;
@@ -229,6 +283,7 @@ angular.module('alexandra')
 
 
                 particle.configure(format_source, texture);
+
                 var tr=Tree.createTransform();
                 var trnode=Tree.createMainChildNode("TrParticle", tr);
                 trnode.createChildNode("Particle", particle);
@@ -238,12 +293,23 @@ angular.module('alexandra')
             setConfig:function(new_config){
                 config=new_config;
             },
+            resetParticle:function(){
+                Tree.removeTexture(particle.textureID);
+                particle=null;
+            },
+            resetMesh:function(){
+                mesh=null;
+            },
+
             reset: function(){
                 transformation_buffer.forEach(function(item){
+
                     Tree.removeMainChildNode(item);
                 });
                 transformation_buffer=[];
             },
+
+
 
             run:function(){
                 $interval(function(){

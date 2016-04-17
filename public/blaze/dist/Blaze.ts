@@ -343,6 +343,14 @@ export class Ketch {
         view.textures = view.textures || [];
         view.textures.push(texture_id);
     }
+    
+    static removeTexture(key, texture_id) {
+        var view = Ketch._views[key];
+        view.textures = view.textures || [];
+        var index=view.textures.indexOf(texture_id)
+        view.textures.splice(index, 1);
+        console.log(view.textures)
+    }
     static activeTexture(key, texture_id, texture) {
         var view = Ketch._views[key];
         var gl = view.context;
@@ -1451,6 +1459,7 @@ export class ParticleEntity extends Entity {
         super(graph_id);
         this._pointSize = pointSize || 1;
         this._buffer = null;
+        this._texture_id="";
     }
 
     public configure(data_mesh: Array<number>, data_texture: Array<number>) {
@@ -1462,8 +1471,8 @@ export class ParticleEntity extends Entity {
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
         this._numItems = data_mesh.length;
-
-     
+       
+        
         this._texture_id = utils.uuid("Texture");
         this._texture = WebGLUtils.createTexture(gl, data_texture);
         Ketch.addTexture(this.graphID, this._texture_id);
@@ -1478,11 +1487,17 @@ export class ParticleEntity extends Entity {
     }
 
 
+    
+    public get textureID() : string {
+        return this._texture_id;
+    }
+    
+
     public set pointSize(v: number) {
         this._pointSize = v;
     }
-
-
+    
+    public resetTexture()
 
     beginDraw() {
 
@@ -1918,7 +1933,7 @@ export class SceneGraph extends Renderable {
 
     }
 
-    private Program(type?: string) {
+    public Program(type?: string) {
         type = type || "Phong";
 
         Ketch.createProgram(this._oid, {
@@ -1972,7 +1987,9 @@ export class SceneGraph extends Renderable {
         this._matrixStack.MainCamera = camera;
     }
 
-
+    public removeTexture(id){
+        Ketch.removeTexture(this.oid, id);
+    }
 
     public startLoader(cb) {
         async.eachSeries(this._loaderBuffer, (item, next) => {

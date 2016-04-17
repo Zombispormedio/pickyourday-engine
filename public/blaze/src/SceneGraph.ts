@@ -84,7 +84,7 @@ class SceneGraph extends Renderable {
 
     }
 
-    private Program(type?: string) {
+    public Program(type?: string) {
         type = type || "Phong";
 
         Ketch.createProgram(this._oid, {
@@ -138,7 +138,9 @@ class SceneGraph extends Renderable {
         this._matrixStack.MainCamera = camera;
     }
 
-
+    public removeTexture(id){
+        Ketch.removeTexture(this.oid, id);
+    }
 
     public startLoader(cb) {
         async.eachSeries(this._loaderBuffer, (item, next) => {

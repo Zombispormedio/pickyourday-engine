@@ -10,6 +10,7 @@ class ParticleEntity extends Entity {
         super(graph_id);
         this._pointSize = pointSize || 1;
         this._buffer = null;
+        this._texture_id="";
     }
 
     public configure(data_mesh: Array<number>, data_texture: Array<number>) {
@@ -21,8 +22,8 @@ class ParticleEntity extends Entity {
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
         this._numItems = data_mesh.length;
-
-     
+       
+        
         this._texture_id = utils.uuid("Texture");
         this._texture = WebGLUtils.createTexture(gl, data_texture);
         Ketch.addTexture(this.graphID, this._texture_id);
@@ -37,11 +38,17 @@ class ParticleEntity extends Entity {
     }
 
 
+    
+    public get textureID() : string {
+        return this._texture_id;
+    }
+    
+
     public set pointSize(v: number) {
         this._pointSize = v;
     }
-
-
+    
+    public resetTexture()
 
     beginDraw() {
 
