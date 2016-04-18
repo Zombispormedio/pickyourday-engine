@@ -20,6 +20,7 @@ angular.module('alexandra')
     }
 
     var choose=function(tree, type, source, config){
+        config=config||{}
         switch(type){
             case "particle":{
                 if(config.reseteable){
@@ -82,7 +83,7 @@ angular.module('alexandra')
             if(config.streaming){
                 $alexandraUtils.watch(scope, "source", function(){
                     tree.reset();
-                    choose(tree, config.type, scope.source, {reseteable:true});
+                    choose(tree, config.type, scope.source);
                 });
             }
 

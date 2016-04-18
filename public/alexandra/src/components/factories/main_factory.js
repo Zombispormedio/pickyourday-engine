@@ -51,8 +51,6 @@ angular.module('alexandra')
                         break;
                 }
 
-
-
                 switch(config.colortype){
                     case "variable":
                         mesh_config.material=MaterialValue.variable;
@@ -136,6 +134,7 @@ angular.module('alexandra')
                     return trnode;
 
                 });
+              
             },
 
             configureParticle:function(){
@@ -182,86 +181,14 @@ angular.module('alexandra')
                 var texture;
 
                 switch(config.particle.type){
-
                     case "fire":
                         texture=textures.particle.Fire;
-                        break;
-                    case "fire2":
-                        texture=textures.particle.Fire2;
-                        break;
-                    case "flower":
-                        texture=textures.particle.Flower;
                         break;
                     case "fog":
                         texture=textures.particle.Fog;
                         break;
-                    case "light":
-                        texture=textures.particle.Light;
-                        break;
-                    case "spark":
-                        texture=textures.particle.Spark;
-                        break;
-                    case "spatial":
-                        texture=textures.particle.Spatial;
-                        break;
-                    case "star":
-                        texture=textures.particle.Star;
-                        break;
-                    case "warning":
-                        texture=textures.particle.Warning;
-                        break;
-                    case "acid":
-                        texture=textures.particle.Acid;
-                        break;
-                    case "fireball":
-                        texture=textures.particle.Fireball;
-                        break;
-                    case "firebust":
-                        texture=textures.particle.Firebust;
-                        break;
-                    case "flash":
-                        texture=textures.particle.Flash;
-                        break;
-                    case "starbust":
-                        texture=textures.particle.Starbust;
-                        break;
-                    case "aura":
-                        texture=textures.particle.Aura;
-                        break;
-                    case "bolt":
-                        texture=textures.particle.Bolt;
-                        break;
                     case "energy":
                         texture=textures.particle.Energy;
-                        break;
-                    case "energy2":
-                        texture=textures.particle.Energy2;
-                        break;
-                    case "energy3":
-                        texture=textures.particle.Energy3;
-                        break;
-                    case "misc":
-                        texture=textures.particle.Misc;
-                        break;
-
-                    case "misc2":
-                        texture=textures.particle.Misc2;
-                        break;
-                    case "pink":
-                        texture=textures.particle.Pink;
-                        break;
-
-                    case "plasma":
-                        texture=textures.particle.Plasma;
-                        break;
-                    case "plasma2":
-                        texture=textures.particle.Plasma2;
-                        break;
-                    case "purple":
-                        texture=textures.particle.Purple;
-                        break;
-                    case "ray":
-                        texture=textures.particle.Ray;
                         break;
                     case "smoke":
                         texture=textures.particle.Smoke;
@@ -275,8 +202,6 @@ angular.module('alexandra')
                     case "drop":
                         texture=textures.particle.Drop;
                         break;
-
-
                     default:
                         texture=textures.particle.Default;
                 }

@@ -15,48 +15,24 @@ angular.module('alexandraExample')
 
     Data();
 
-    var particle_type=["fire",
-                       "flower",
-                       "fog",
-                       "light",
-                       "spark",
-                       "spatial",
-                       "star", 
-                       "warning",
-                       "acid",
-                       "fireball",
-                       "firebust",
-                       "flash",
-                       "starbust",
-                       "fire2",
-                       "aura",
-                       "bolt",
+    var particle_type=["fire", "fog",
                        "energy",
-                       "energy2",
-                       "energy3",
-                       "misc",
-                       "misc2",
-                       "pink",
-                       "plasma",
-                       "plasma2",
-                       "purple",
-                       "ray",
                        "smoke",
                        "water",
                        "water2",
-                      "drops", "star"]
+                       "drop"]
     $scope.config={
         type:"particle",
         fullpage:true,
         particle:{
             type:"drop",
-            size:14
+            size:50
         }
 
 
     };
 
-    /*var type_pos=0;
+    var type_pos=0;
 
     $interval(function(){
         $scope.config.particle.type=particle_type[type_pos];
@@ -65,5 +41,5 @@ angular.module('alexandraExample')
             type_pos=0;
         }
 
-    }, 500)*/
+    }, 1000)
 });
