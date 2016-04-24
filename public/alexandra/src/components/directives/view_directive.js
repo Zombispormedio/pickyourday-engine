@@ -74,6 +74,10 @@ angular.module('alexandra')
             tree.setContext(element);
 
             tree.configureCamera();
+            
+            if(config.axis){
+                tree.configureAxis();
+            }
 
 
             choose(tree, config.type, scope.source, {configurable:true, texturizable:true});

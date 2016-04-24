@@ -761,7 +761,7 @@ var Blaze;
             function Fragment() {
             }
             Fragment.Particle = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform sampler2D uSampler;\n\nbool isBlack(vec4 color){\nreturn color.r==0.0 &&color.g==0.0&&color.b==0.0;\n}\nvoid main(void) { \n    gl_FragColor = texture2D(uSampler, gl_PointCoord);\n    if(gl_FragColor.a < 0.5 || isBlack(gl_FragColor)) discard;\n}";
-            Fragment.Phong = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform float uShininess;\nuniform vec3 uLightDirection;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\nuniform vec4 uLightSpecular;\n\nuniform vec4 uMaterialAmbient;\nuniform vec4 uMaterialDiffuse;\nuniform vec4 uMaterialSpecular;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\nvoid main(){\n\n\t\t\n        vec3 L= normalize(uLightDirection);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient*uMaterialAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        if(lambertTerm>0.0)\n        {\n            Id=uLightDiffuse*uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightSpecular*uMaterialSpecular*specular;\n        }\n        \n        vec4 finalColor=Ia+Id+Is;\n        finalColor.a=1.0;\n    \n        gl_FragColor =finalColor;\n        \n}\n\n\n";
+            Fragment.Phong = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform float uShininess;\nuniform vec3 uLightDirection;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\nuniform vec4 uLightSpecular;\n\nuniform bool uWireframe;\n\nuniform vec4 uMaterialAmbient;\nuniform vec4 uMaterialDiffuse;\nuniform vec4 uMaterialSpecular;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\n\nvoid main(){\n\n\n        if(uWireframe){\n         gl_FragColor = uMaterialDiffuse;\n        }else{\n        \n    \t\n        vec3 L= normalize(uLightDirection);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient*uMaterialAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        if(lambertTerm>0.0)\n        {\n            Id=uLightDiffuse*uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightSpecular*uMaterialSpecular*specular;\n        }\n        \n        vec4 finalColor=Ia+Id+Is;\n        finalColor.a=1.0;\n    \n        gl_FragColor =finalColor;\n        }\n        \n}\n\n\n";
             return Fragment;
         }());
         Shaders.Fragment = Fragment;
@@ -1389,6 +1389,49 @@ var Blaze;
         return CameraEntity;
     }(Entity));
     Blaze.CameraEntity = CameraEntity;
+    var AxisEntity = (function (_super) {
+        __extends(AxisEntity, _super);
+        function AxisEntity(graph_id, d) {
+            _super.call(this, graph_id);
+            d = d || 100;
+            this._vertices = [0.0, 0.0, 0.0, d, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, d, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, d];
+            this._indices = [0, 1, 2, 3, 4, 5];
+        }
+        AxisEntity.prototype.init = function () {
+            var gl = this.gl;
+            this._vbo = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._vbo);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this._vertices), gl.STATIC_DRAW);
+            this._ibo = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._ibo);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this._indices), gl.STATIC_DRAW);
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+        };
+        AxisEntity.prototype.beginDraw = function () {
+            var gl = this.gl;
+            var uMaterialDiffuse = this.getUniform("uMaterialDiffuse");
+            if (uMaterialDiffuse)
+                gl.uniform4fv(uMaterialDiffuse, [0.5, 0.8, 0.1, 1]);
+            var uWireframe = this.getUniform("uWireframe");
+            if (uWireframe)
+                gl.uniform1i(uWireframe, true);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._vbo);
+            Ketch.enableAttrib(this.graphID, "a_position");
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._ibo);
+            gl.drawElements(gl.LINES, this._indices.length, gl.UNSIGNED_SHORT, 0);
+        };
+        AxisEntity.prototype.endDraw = function () {
+            var gl = this.gl;
+            var uWireframe = this.getUniform("uWireframe");
+            if (uWireframe)
+                gl.uniform1i(uWireframe, false);
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+        };
+        return AxisEntity;
+    }(Entity));
+    Blaze.AxisEntity = AxisEntity;
     var NodeElement = (function () {
         function NodeElement(parent, type, entity) {
             this._parentNode = parent;
@@ -1615,6 +1658,9 @@ var Blaze;
         SceneGraph.prototype.createParticle = function (pointSize) {
             return new ParticleEntity(this.oid, pointSize);
         };
+        SceneGraph.prototype.createAxis = function (length) {
+            return new AxisEntity(this.oid, length);
+        };
         Object.defineProperty(SceneGraph.prototype, "MainCamera", {
             set: function (camera) {
                 this._matrixStack.MainCamera = camera;
@@ -1660,7 +1706,8 @@ var Blaze;
             'uMaterialSpecular',
             'uShininess',
             'uPointSize',
-            "uSampler"
+            "uSampler",
+            "uWireframe"
         ];
         SceneGraph.ATTRIBUTES = ['a_position', 'a_normal'];
         return SceneGraph;

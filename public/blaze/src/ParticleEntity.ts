@@ -48,7 +48,6 @@ class ParticleEntity extends Entity {
         this._pointSize = v;
     }
     
-    public resetTexture()
 
     beginDraw() {
 

@@ -3,7 +3,7 @@
    "Entity.ts","MatrixStack.ts", "Resources.ts",  "Shaders.ts",
    "AnimationEntity.ts",  "MeshEntity.ts", "TransformEntity.ts", "MaterialEntity.ts",
    "LightEntity.ts", "DiffuseEntity.ts", "ParticleEntity.ts",
-   "CameraEntity.ts","OrbitCameraEntity.ts",
+   "CameraEntity.ts", "AxisEntity.ts",
    "INodeElement.ts", "NodeElement.ts",  "SceneGraph.ts"
 
 ]

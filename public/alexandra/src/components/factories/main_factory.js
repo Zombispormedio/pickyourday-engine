@@ -6,7 +6,7 @@ angular.module('alexandra')
         var Tree=$alexandraForest.getTree(id);
         var config=c;
 
-        var camera, light, mesh, particle, transformation_buffer=[], textures={};
+        var camera, light, mesh, particle, axis, transformation_buffer=[], textures={};
 
         return {
             setContext:function(canvas){
@@ -99,6 +99,7 @@ angular.module('alexandra')
             },
 
             buildMeshBranch:function(source){
+                source=source||[];
                 transformation_buffer=source.map(function(item){
                     var tr=Tree.createTransform();
                     var trnode=Tree.createMainChildNode("TrMesh", tr);
@@ -134,7 +135,10 @@ angular.module('alexandra')
                     return trnode;
 
                 });
-              
+
+                console.log(  transformation_buffer.length);
+
+
             },
 
             configureParticle:function(){
@@ -171,6 +175,7 @@ angular.module('alexandra')
             },
 
             buildParticle:function(source){
+                source=source||[];
                 var format_source=source.reduce(function(prev, item){
                     var position=item.position;
                     for(var i=0;i<position.length;i++){
@@ -234,11 +239,22 @@ angular.module('alexandra')
                 transformation_buffer=[];
             },
 
+            configureAxis:function(){
+                axis=Tree.createAxis();
+                axis.init();
+
+                var tr=Tree.createTransform();
+                var trnode=Tree.createMainChildNode("TrAxis", tr);
+                trnode.createChildNode("Axis", axis);
+
+            },
+
 
 
             run:function(){
                 $interval(function(){
                     Tree.draw();
+
                 }, 30);
             }
 

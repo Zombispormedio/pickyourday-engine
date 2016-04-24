@@ -1,11 +1,11 @@
 var app = angular.module('alexandraExample', ["alexandra"]);
 
 angular.module('alexandraExample')
-    .controller('AlexandraExampleController', function($scope, $interval, $timeout) {
+    .controller('AlexandraExampleController', function($scope, $interval, $timeout, $http) {
 
 
 
-    var JustPosition = generate(function() {
+   /* var JustPosition = generate(function() {
         return { position: RandPosition() };
     }, 80);
 
@@ -13,33 +13,27 @@ angular.module('alexandraExample')
         $scope.data = JustPosition();
     }
 
-    Data();
+    Data();*/
 
-    var particle_type=["fire", "fog",
-                       "energy",
-                       "smoke",
-                       "water",
-                       "water2",
-                       "drop"]
+    
+    $http({method: 'GET', url: 'https://pickyourday.herokuapp.com/api/company/statsPicks', headers: {
+        'Authorization': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6Im1lcmNlQHNhbHVkLmNvbSIsInJvbGUiOjIsImNyZWF0ZWQiOjE0NjEyNTM3NTMwODcsImlhdCI6MTQ2MTI1Mzc1M30.ILiPkgDRIFGRwbWAEPKS2gvu9IjRle8NLZ6rcTBOg40'}
+          }).then(function(res){
+        $scope.data=res.data.data[27];
+        console.log($scope.data)
+    }, function(res){
+        console.log(res);
+    });
+
+
+
     $scope.config={
-        type:"particle",
         fullpage:true,
-        particle:{
-            type:"drop",
-            size:50
-        }
-
-
+     
+        colortype: "variable",
+        axis:true,
+        streaming:true
     };
 
-    var type_pos=0;
 
-    $interval(function(){
-        $scope.config.particle.type=particle_type[type_pos];
-        type_pos++;
-        if(type_pos>particle_type.length){
-            type_pos=0;
-        }
-
-    }, 1000)
 });

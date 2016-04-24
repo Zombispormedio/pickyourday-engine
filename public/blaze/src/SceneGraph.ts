@@ -19,7 +19,8 @@ class SceneGraph extends Renderable {
         'uMaterialSpecular',
         'uShininess',
         'uPointSize',
-        "uSampler"
+        "uSampler",
+        "uWireframe"
     ];
     private static ATTRIBUTES = ['a_position', 'a_normal'];
 
@@ -133,12 +134,16 @@ class SceneGraph extends Renderable {
         return new ParticleEntity(this.oid, pointSize);
     }
 
+    public createAxis(length?: number) {
+        return new AxisEntity(this.oid, length);
+    }
+
 
     public set MainCamera(camera: CameraEntity) {
         this._matrixStack.MainCamera = camera;
     }
 
-    public removeTexture(id){
+    public removeTexture(id) {
         Ketch.removeTexture(this.oid, id);
     }
 
