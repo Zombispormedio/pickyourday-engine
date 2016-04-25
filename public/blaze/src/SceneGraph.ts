@@ -20,9 +20,10 @@ class SceneGraph extends Renderable {
         'uShininess',
         'uPointSize',
         "uSampler",
-        "uWireframe"
+        "uWireframe",
+        "uPerVertexColor"
     ];
-    private static ATTRIBUTES = ['a_position', 'a_normal'];
+    private static ATTRIBUTES = ['a_position', 'a_normal', "a_color"];
 
     constructor() {
         var oid = utils.uuid();
@@ -45,14 +46,16 @@ class SceneGraph extends Renderable {
         return this._isDrawing;
     }
 
-    public Environment() {
+    public Environment(b?:Array<number>) {
         var gl = this.gl;
+        b=b||[];
+        
         gl.enable(gl.DEPTH_TEST);
         gl.depthFunc(gl.LEQUAL);
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-        gl.clearColor(0, 0, 0, 1);
+        gl.clearColor(b[0]||0, b[1]||0, b[2]||0, 1);
         gl.clearDepth(1.0);
     }
 
@@ -137,6 +140,10 @@ class SceneGraph extends Renderable {
     public createAxis(length?: number) {
         return new AxisEntity(this.oid, length);
     }
+    
+     public createGrid(dim?: number, lines?: number ) {
+        return new GridEntity(this.oid, dim, lines);
+    }
 
 
     public set MainCamera(camera: CameraEntity) {
@@ -156,11 +163,11 @@ class SceneGraph extends Renderable {
         }, cb);
     }
 
-    public configure(config?: { typeShader?: string }) {
+    public configure(config?: { typeShader?: string, background?:Array<number> }) {
         var self = this;
         config = config || {};
 
-        self.Environment()
+        self.Environment(config.background)
         self.Program(config.typeShader);
 
         Ketch.setAttributeLocations(self._oid, SceneGraph.ATTRIBUTES);

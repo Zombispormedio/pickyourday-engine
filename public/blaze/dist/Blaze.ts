@@ -122,10 +122,10 @@ export module WebGLUtils {
     }
 
     export interface AttribPointer {
-        size: number,
-        normalized: boolean,
-        stride: number,
-        offset: number
+        size?: number,
+        normalized?: boolean,
+        stride?: number,
+        offset?: number
     }
 
 
@@ -821,15 +821,20 @@ export class Fragment{
 static Particle:string=`#ifdef GL_ES
 precision mediump float;
 #endif
-
+uniform bool uWireframe;
+uniform vec4 uMaterialDiffuse;
 uniform sampler2D uSampler;
 
 bool isBlack(vec4 color){
 return color.r==0.0 &&color.g==0.0&&color.b==0.0;
 }
 void main(void) { 
+     if(uWireframe){
+         gl_FragColor = uMaterialDiffuse;
+        }else{
     gl_FragColor = texture2D(uSampler, gl_PointCoord);
     if(gl_FragColor.a < 0.5 || isBlack(gl_FragColor)) discard;
+    }
 }`;
 static Phong:string=`#ifdef GL_ES
 precision mediump float;
@@ -849,12 +854,13 @@ uniform vec4 uMaterialSpecular;
 
 varying vec3 vNormal;
 varying vec3 vEyeVec;
+varying vec4 vColor;
 
 void main(){
 
 
         if(uWireframe){
-         gl_FragColor = uMaterialDiffuse;
+         gl_FragColor = vColor;
         }else{
         
     	
@@ -900,22 +906,47 @@ void main(void) {
     gl_Position = uPMatrix * uMVMatrix * vec4(a_position.xyz, 1.0);
     gl_PointSize = uPointSize;
 }`;
-static Phong:string=`attribute vec3 a_position;
+static Phong:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+attribute vec3 a_position;
 attribute vec3 a_normal;
+attribute vec4 a_color;
 
 uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;
 uniform mat4 uNMatrix;
 
+uniform bool uWireframe;
+uniform bool uPerVertexColor;
+uniform vec4 uMaterialDiffuse;
 
 varying vec3 vNormal;
 varying vec3 vEyeVec;
+varying vec4 vColor;
 
 void main(){
 
     vec4 vertex = uMVMatrix * vec4(a_position, 1.0);
+	
+	
+	 if(uWireframe){
+	 
+	 	if(uPerVertexColor){
+	 		 vColor=a_color;
+	 	}else{
+	 		vColor=uMaterialDiffuse;
+	 	}
+	 
+	
+	 }else{
+	
 	vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));
-	vEyeVec=-vec3(vertex.xyz);   
+	vEyeVec=-vec3(vertex.xyz);  
+	
+	}
+	 
 	gl_Position =uPMatrix * vertex;
 
 }
@@ -1708,14 +1739,18 @@ export class CameraEntity extends Entity {
 export class AxisEntity extends Entity {
     private _vertices: Array<number>;
     private _indices: Array<number>;
+    private _colors: Array<number>;
     private _vbo;
     private _ibo;
+    private _cbo;
+
 
     constructor(graph_id: string, d: number) {
         super(graph_id);
         d = d || 100;
-        this._vertices = [0.0, 0.0, 0.0, d, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, d, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, d];
+        this._vertices = [0.0, 0.0, 0.0, d, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, d, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, d];
         this._indices = [0, 1, 2, 3, 4, 5];
+        this._colors = [1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1];
     }
 
     init() {
@@ -1729,6 +1764,12 @@ export class AxisEntity extends Entity {
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._ibo);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this._indices), gl.STATIC_DRAW);
 
+
+        this._cbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._cbo);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this._colors), gl.STATIC_DRAW);
+
+
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
     }
@@ -1736,17 +1777,22 @@ export class AxisEntity extends Entity {
     beginDraw(): void {
         var gl = this.gl;
 
-        var uMaterialDiffuse = this.getUniform("uMaterialDiffuse");
-        if (uMaterialDiffuse)
-            gl.uniform4fv(uMaterialDiffuse, [0.5, 0.8, 0.1, 1]);
-
         var uWireframe = this.getUniform("uWireframe");
         if (uWireframe)
             gl.uniform1i(uWireframe, true);
 
+        var uPerVertexColor = this.getUniform("uPerVertexColor");
+        if (uPerVertexColor)
+            gl.uniform1i(uPerVertexColor, true);
+
         gl.bindBuffer(gl.ARRAY_BUFFER, this._vbo);
 
         Ketch.enableAttrib(this.graphID, "a_position");
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._cbo);
+
+        Ketch.enableAttrib(this.graphID, "a_color", { size: 4 });
+
 
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._ibo);
 
@@ -1756,9 +1802,130 @@ export class AxisEntity extends Entity {
     }
     endDraw(): void {
         var gl = this.gl;
+
         var uWireframe = this.getUniform("uWireframe");
         if (uWireframe)
             gl.uniform1i(uWireframe, false);
+
+
+        var uPerVertexColor = this.getUniform("uPerVertexColor");
+        if (uPerVertexColor)
+            gl.uniform1i(uPerVertexColor, false);
+
+        Ketch.disableAttrib(this.graphID, "a_position");
+        Ketch.disableAttrib(this.graphID, "a_color");
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+    }
+
+}
+export class GridEntity extends Entity {
+    private _vertices: Array<number>;
+    private _indices: Array<number>;
+    private _dimesions: { dim: number, lines: number };
+
+    private _vbo;
+    private _ibo;
+
+
+
+    constructor(graph_id: string, d: number, e: number) {
+        super(graph_id);
+
+        this._dimesions = {
+            dim: d || 50, lines: e || 50
+        }
+
+    }
+
+
+    init() {
+        var gl = this.gl;
+
+        this.build();
+
+        this._vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this._vertices), gl.STATIC_DRAW);
+
+
+        this._ibo = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._ibo);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this._indices), gl.STATIC_DRAW);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+    }
+
+
+    build() {
+        var inc = 2 * this._dimesions.dim /this._dimesions.lines;
+        var v = [];
+        var i = [];
+
+        for (var l = 0; l <= this._dimesions.lines; l++) {
+            v[6 * l] = -this._dimesions.dim;
+            v[6 * l + 1] = 0;
+            v[6 * l + 2] = -this._dimesions.dim + (l * inc);
+
+            v[6 * l + 3] = this._dimesions.dim;
+            v[6 * l + 4] = 0;
+            v[6 * l + 5] = -this._dimesions.dim + (l * inc);
+
+            v[6 * (this._dimesions.lines + 1) + 6 * l] = -this._dimesions.dim + (l * inc);
+            v[6 * (this._dimesions.lines + 1) + 6 * l + 1] = 0;
+            v[6 * (this._dimesions.lines + 1) + 6 * l + 2] = -this._dimesions.dim;
+
+            v[6 * (this._dimesions.lines + 1) + 6 * l + 3] = -this._dimesions.dim + (l * inc);
+            v[6 * (this._dimesions.lines + 1) + 6 * l + 4] = 0;
+            v[6 * (this._dimesions.lines + 1) + 6 * l + 5] = this._dimesions.dim;
+
+            i[2 * l] = 2 * l;
+            i[2 * l + 1] = 2 * l + 1;
+            i[2 * (this._dimesions.lines + 1) + 2 * l] = 2 * (this._dimesions.lines + 1) + 2 * l;
+            i[2 * (this._dimesions.lines + 1) + 2 * l + 1] = 2 * (this._dimesions.lines + 1) + 2 * l + 1;
+        }
+        this._vertices = v;
+        this._indices = i;
+    }
+
+
+
+
+    beginDraw(): void {
+        var gl = this.gl;
+
+        var uWireframe = this.getUniform("uWireframe");
+        if (uWireframe)
+            gl.uniform1i(uWireframe, true);
+
+          var uMaterialDiffuse = this.getUniform("uMaterialDiffuse");
+        if (uMaterialDiffuse)
+            gl.uniform4fv(uMaterialDiffuse, [0.7,0.7,0.7, 1]);
+          
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._vbo);
+
+        Ketch.enableAttrib(this.graphID, "a_position");
+
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._ibo);
+
+        gl.drawElements(gl.LINES, this._indices.length, gl.UNSIGNED_SHORT, 0);
+
+
+    }
+    endDraw(): void {
+        var gl = this.gl;
+
+        var uWireframe = this.getUniform("uWireframe");
+        if (uWireframe)
+            gl.uniform1i(uWireframe, false);
+
+
+        Ketch.disableAttrib(this.graphID, "a_position");
+
 
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
@@ -1936,9 +2103,10 @@ export class SceneGraph extends Renderable {
         'uShininess',
         'uPointSize',
         "uSampler",
-        "uWireframe"
+        "uWireframe",
+        "uPerVertexColor"
     ];
-    private static ATTRIBUTES = ['a_position', 'a_normal'];
+    private static ATTRIBUTES = ['a_position', 'a_normal', "a_color"];
 
     constructor() {
         var oid = utils.uuid();
@@ -1961,14 +2129,16 @@ export class SceneGraph extends Renderable {
         return this._isDrawing;
     }
 
-    public Environment() {
+    public Environment(b?:Array<number>) {
         var gl = this.gl;
+        b=b||[];
+        
         gl.enable(gl.DEPTH_TEST);
         gl.depthFunc(gl.LEQUAL);
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-        gl.clearColor(0, 0, 0, 1);
+        gl.clearColor(b[0]||0, b[1]||0, b[2]||0, 1);
         gl.clearDepth(1.0);
     }
 
@@ -2053,6 +2223,10 @@ export class SceneGraph extends Renderable {
     public createAxis(length?: number) {
         return new AxisEntity(this.oid, length);
     }
+    
+     public createGrid(dim?: number, lines?: number ) {
+        return new GridEntity(this.oid, dim, lines);
+    }
 
 
     public set MainCamera(camera: CameraEntity) {
@@ -2072,11 +2246,11 @@ export class SceneGraph extends Renderable {
         }, cb);
     }
 
-    public configure(config?: { typeShader?: string }) {
+    public configure(config?: { typeShader?: string, background?:Array<number> }) {
         var self = this;
         config = config || {};
 
-        self.Environment()
+        self.Environment(config.background)
         self.Program(config.typeShader);
 
         Ketch.setAttributeLocations(self._oid, SceneGraph.ATTRIBUTES);

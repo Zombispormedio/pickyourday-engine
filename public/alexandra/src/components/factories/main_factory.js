@@ -65,7 +65,9 @@ angular.module('alexandra')
 
 
             configureRenderer:function(){ 
-                var renderConfig={};
+                var renderConfig={
+                    background:config.background
+                };
                 switch(config.type){
                     case "particle":
                         renderConfig.typeShader="Particle";
@@ -136,7 +138,7 @@ angular.module('alexandra')
 
                 });
 
-                console.log(  transformation_buffer.length);
+             
 
 
             },
@@ -240,12 +242,22 @@ angular.module('alexandra')
             },
 
             configureAxis:function(){
-                axis=Tree.createAxis();
+                axis=Tree.createAxis(config.axisLength);
                 axis.init();
 
                 var tr=Tree.createTransform();
                 var trnode=Tree.createMainChildNode("TrAxis", tr);
                 trnode.createChildNode("Axis", axis);
+
+            },
+            configureGrid:function(){
+                config.gridConfig=config.gridConfig||{};
+                grid=Tree.createGrid(config.gridConfig.dim, config.gridConfig.lines);
+                grid.init();
+
+                var tr=Tree.createTransform();
+                var trnode=Tree.createMainChildNode("TrGrid", tr);
+                trnode.createChildNode("Grid", grid);
 
             },
 

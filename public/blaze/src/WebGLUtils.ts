@@ -121,10 +121,10 @@ module WebGLUtils {
     }
 
     export interface AttribPointer {
-        size: number,
-        normalized: boolean,
-        stride: number,
-        offset: number
+        size?: number,
+        normalized?: boolean,
+        stride?: number,
+        offset?: number
     }
 
 

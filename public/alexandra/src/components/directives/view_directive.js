@@ -78,6 +78,10 @@ angular.module('alexandra')
             if(config.axis){
                 tree.configureAxis();
             }
+            
+             if(config.grid){
+                tree.configureGrid();
+            }
 
 
             choose(tree, config.type, scope.source, {configurable:true, texturizable:true});

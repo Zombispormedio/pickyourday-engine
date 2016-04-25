@@ -16,12 +16,13 @@ uniform vec4 uMaterialSpecular;
 
 varying vec3 vNormal;
 varying vec3 vEyeVec;
+varying vec4 vColor;
 
 void main(){
 
 
         if(uWireframe){
-         gl_FragColor = uMaterialDiffuse;
+         gl_FragColor = vColor;
         }else{
         
     	

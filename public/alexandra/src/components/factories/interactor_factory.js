@@ -1,5 +1,5 @@
 angular.module('alexandra')
-    .factory('$alexandraInteractor', function($window){
+    .factory('$alexandraInteractor', function($window,   $rootScope){
 
     return function(e, c){
 
