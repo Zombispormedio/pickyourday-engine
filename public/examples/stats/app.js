@@ -39,9 +39,9 @@ angular.module('alexandraExample')
 
 
     $scope.config={
-        colortype: "variable",
+     
         axis:true,
-        axisLength:300,
+        axisLength:500,
         streaming:true,
         background:[0.3,0.3,0.3],
         grid:true,
