@@ -111,10 +111,7 @@ angular.module('alexandra')
         element.bind("mouseup", OnMouseUp);
         element.bind("mousemove", OnMouseMove);
         element.bind("wheel", OnWheel);
-        
-        element.bind("touchstart", OnMouseDown);
-         element.bind("touchend", OnMouseUp);
-        element.bind("touchmove", OnMouseMove);
+    
 
         var $=angular.element($window);
         $.bind("keydown", OnKeyDown);
