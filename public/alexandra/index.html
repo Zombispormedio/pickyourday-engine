@@ -4,9 +4,16 @@
         <meta charset="UTF-8">
         <title>Alexandra</title>
         <link rel="shortcut icon" type="image/png" href="https://8549c43475562a0521ba166a16fdb7de6ce65077.googledrive.com/host/0B-TPTaV5ouD7TUtDXzVxQmhYa1E/logo.png"/>
+
+        <link rel="stylesheet" href="../packages/angular-material/angular-material.min.css">
         <link rel="stylesheet" href="assets/stylesheets/style.css">
 
+
         <script defer type="text/javascript" src="../packages/angular/angular.min.js"></script>
+
+        <script defer type="text/javascript" src="../packages/angular-material/angular-material.min.js"></script>
+        <script defer src="../packages/angular-animate/angular-animate.min.js"></script>
+        <script defer src="../packages/angular-aria/angular-aria.min.js"></script>
 
         <script defer type="text/javascript" src="../packages/gl-matrix/gl-matrix-min.js"></script>
         <script defer type="text/javascript" src="../packages/lodash/dist/lodash.min.js"></script>
@@ -25,7 +32,19 @@
     </head>
     <body ng-controller="AlexandraExampleController">
 
-        <canvas alexandra-view data-id="view_1" alexandra-config="config" alexandra-source="data" width="800" height="600"></canvas>
-       
+        <div layout="row">
+            <canvas alexandra-view data-id="view_1" alexandra-config="config" alexandra-source="source" width="800" height="600" ></canvas>
+
+            <md-progress-circular md-mode="indeterminate" md-diameter="200"   ng-show="loading"></md-progress-circular>
+
+            <div class="slider" flex="35" layout="column">
+               <span flex></span>
+                <md-slider-container>
+                <md-slider flex class="md-primary" md-discrete step="1" min="1" max="{{calendar.length}}" aria-label="rating" ng-show="!loading" ng-model="values.index" ng-change="select()">
+      </md-slider>
+                </md-slider-container>
+            </div>
+        </div>
+
     </body>
 </html>

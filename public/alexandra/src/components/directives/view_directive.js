@@ -1,5 +1,5 @@
 angular.module('alexandra')
-    .directive('alexandraView', function($alexandraUtils, $alexandraForest, $alexandra, $alexandraInteractor) {
+    .directive('alexandraView', function($alexandraUtils, $alexandraForest, $alexandraMain, $alexandraInteractor, $alexandra) {
 
 
     var configureMesh=function(tree){
@@ -69,7 +69,9 @@ angular.module('alexandra')
 
             $alexandraForest.createTree(TreeId);
 
-            var tree=$alexandra(TreeId, config);
+            var tree=$alexandraMain(TreeId, config);
+            
+            $alexandra.setView(TreeId, tree);
 
             tree.setContext(element);
 

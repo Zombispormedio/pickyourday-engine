@@ -1866,19 +1866,19 @@ export class GridEntity extends Entity {
 
         for (var l = 0; l <= this._dimesions.lines; l++) {
             v[6 * l] = -this._dimesions.dim;
-            v[6 * l + 1] = 0;
+            v[6 * l + 1] = -0.5;
             v[6 * l + 2] = -this._dimesions.dim + (l * inc);
 
             v[6 * l + 3] = this._dimesions.dim;
-            v[6 * l + 4] = 0;
+            v[6 * l + 4] = -0.5;
             v[6 * l + 5] = -this._dimesions.dim + (l * inc);
 
             v[6 * (this._dimesions.lines + 1) + 6 * l] = -this._dimesions.dim + (l * inc);
-            v[6 * (this._dimesions.lines + 1) + 6 * l + 1] = 0;
+            v[6 * (this._dimesions.lines + 1) + 6 * l + 1] = -0.5;
             v[6 * (this._dimesions.lines + 1) + 6 * l + 2] = -this._dimesions.dim;
 
             v[6 * (this._dimesions.lines + 1) + 6 * l + 3] = -this._dimesions.dim + (l * inc);
-            v[6 * (this._dimesions.lines + 1) + 6 * l + 4] = 0;
+            v[6 * (this._dimesions.lines + 1) + 6 * l + 4] = -0.5;
             v[6 * (this._dimesions.lines + 1) + 6 * l + 5] = this._dimesions.dim;
 
             i[2 * l] = 2 * l;
@@ -1887,6 +1887,7 @@ export class GridEntity extends Entity {
             i[2 * (this._dimesions.lines + 1) + 2 * l + 1] = 2 * (this._dimesions.lines + 1) + 2 * l + 1;
         }
         this._vertices = v;
+    
         this._indices = i;
     }
 

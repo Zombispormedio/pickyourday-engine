@@ -1,5 +1,5 @@
 angular.module('alexandra')
-    .factory('$alexandra', function($alexandraForest, $interval, SphereValue,CylinderValue, WallValue, ConeValue, CubeValue, MaterialValue, CameraValue, LightValue, TextureValue) {
+    .factory('$alexandraMain', function($alexandraForest, $interval, SphereValue,CylinderValue, WallValue, ConeValue, CubeValue, MaterialValue, CameraValue, LightValue, TextureValue) {
 
     return function(id, c){
 
