@@ -11,7 +11,8 @@ function RandColor(v) {
     var r = chance.floating(rangeColor);
     var g = chance.floating(rangeColor);
     var b = chance.floating(rangeColor);
-    return [r, g, b, 1];
+	 var a = chance.floating(rangeColor);
+    return [r, g, b, a];
 }
 
 function RandSize(v) {

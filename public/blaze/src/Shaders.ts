@@ -67,7 +67,7 @@ void main(){
         }
         
         vec4 finalColor=Ia+Id+Is;
-        finalColor.a=1.0;
+       /* finalColor.a=1.0;*/
     
         gl_FragColor =finalColor;
         }
