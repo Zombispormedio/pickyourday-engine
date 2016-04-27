@@ -117,7 +117,9 @@ try {
 }
 module.run(['$templateCache', function($templateCache) {
   $templateCache.put('/views/player/main.html',
-    '<div>Player</div>');
+    '<div>Player</div>\n' +
+    '\n' +
+    '{{coords.x}}, {{coords.y}} ');
 }]);
 })();
 
@@ -129,6 +131,8 @@ try {
 }
 module.run(['$templateCache', function($templateCache) {
   $templateCache.put('/views/slider/main.html',
-    '<div>Slider</div>');
+    '<div>Slider</div>\n' +
+    '\n' +
+    '');
 }]);
 })();

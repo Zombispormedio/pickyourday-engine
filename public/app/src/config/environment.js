@@ -8,7 +8,7 @@ angular.module('Application')
         onEnter: function ($rootScope) {
             if (getJSONLocal("user")) {
 
-                $rootScope.go("app.normal");
+                $rootScope.go("app.player");
             }
         },
         templateUrl: '/views/login/main.html',
