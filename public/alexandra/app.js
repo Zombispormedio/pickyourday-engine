@@ -7,9 +7,7 @@ angular.module('alexandraExample')
      var ColorSizePosition = generate(function() {
         return {
             position: RandPosition(),
-            color: RandColor(),
-            size: RandSize({ min: 4, max: 8, fixed: 1 }),
-            rotation:RandRotation()
+            color: RandColor()
         };
     });
     function Data() {
@@ -22,7 +20,7 @@ angular.module('alexandraExample')
 
     $scope.config={
         colortype: "variable",
-        type:"cube",
+        
         axis:true,
         axisLength:500,
         streaming:true,
