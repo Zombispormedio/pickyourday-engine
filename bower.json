@@ -27,7 +27,8 @@
     "angular-resource": "^1.5.5",
     "angular-ui-router": "^0.2.18",
     "tween.js": "tweenjs#^16.3.4",
-    "mdi": "^1.5.54"
+    "mdi": "^1.5.54",
+    "immutable": "^3.8.1"
   },
   "resolutions": {
     "angular": "1.5.5"

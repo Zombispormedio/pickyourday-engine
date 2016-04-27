@@ -7,7 +7,7 @@ angular.module('Application')
     $scope.data=[];
     var calendar=[];
     $scope.values={
-        index:13};
+        index:1};
 
     $scope.config={
         colortype:"variable",
@@ -25,43 +25,49 @@ angular.module('Application')
 
 
     CompanyService.Pick().stats(function(res){
-        calendar=res.data;
-        $scope.data=_.clone(calendar[0]);
+        calendar=Immutable.List(res.data);
+        $scope.data=_.clone(calendar.get(0));
         $scope.loading=false; 
     });
 
 
     function animateCalendar(step,c, n, cb){
 
-        var inter_array=c.reduce(function(prev,item, index){
-            var c_pos=item.position;
-            var n_pos=n[index].position;
+        var inm_inter_array=c.reduce(function(prev,item, index){
+            var c_pos=_.clone(item.position);
+            var n_pos=_.clone(n[index].position);
+
 
             if(!_.isEqual(c_pos, n_pos)){
-
-                var obj={
+                
+                
+                
+                prev=prev.push({
                     index:index,
                     current: {x: c_pos[0], y: c_pos[1],z: c_pos[2]},
                     next: {x: n_pos[0], y: n_pos[1],z: n_pos[2]}
-                }
-
-                prev.push(obj);
+                });
 
             }
 
+
             return prev;
 
-        }, []);
-        $scope.index=step;
-        console.log(step);
-        console.log(inter_array);
+        }, {
+            current:{},
+            next:{}
+        });
+        $scope.values.index=step+1;
+
+       
+
 
 
         if(inter_array.length>0){
 
-            async.each(inter_array, function(item, callback){
+    
 
-                var tween = new TWEEN.Tween(item.current)
+                var tween = new TWEEN.Tween(current)
                 .to(item.next, PLAYER_TIME)
                 .onUpdate(function() {
                     var index=item.index;
@@ -78,16 +84,17 @@ angular.module('Application')
 
 
                 })
-                .onComplete(callback)
+                .onComplete(function(){
+                    
+                    cb();
+                })
                 .start()
-                }, function(){
-
-                cb();
-            });
+                
 
         }else{
             $timeout(cb, PLAYER_TIME);
         }
+
 
 
 
@@ -99,19 +106,20 @@ angular.module('Application')
 
 
         function iter(i){
+            console.log(i);
 
-            if(i<calendar.length-1){
-                var current=calendar[i];
-                var next=calendar[i+1];
+            if(i<calendar.count()-1){
+                var current=_.clone(calendar.get(i));
+                var next=_.clone(calendar.get(i+1));
                 animateCalendar(i, current, next, function(){
-                    //iter(i+1);
+                    iter(i+1);
                 });
 
             }
 
         }
 
-        iter(13);
+        iter(0);
 
 
     }
