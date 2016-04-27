@@ -8,7 +8,7 @@ angular.module('alexandra')
         return function(){
             elem.width=window.innerWidth;
             elem.height=window.innerHeight;
-        }
+        };
 
     };
 
@@ -43,9 +43,19 @@ angular.module('alexandra')
             });
 
 
+        },
+        watchCollection:function(scope, key, cb){
+
+            scope.$watchCollection(key, function(){
+                if(watch){
+                    cb();
+                }
+            });
+
+
         }
 
 
 
-    }
+    };
 });

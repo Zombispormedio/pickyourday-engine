@@ -7,6 +7,10 @@ md-card{
     color: white;
     width: 35%;
 }
+md-toolbar{
+    height:35px;
+        min-height: 35px!important;
+}
 
 md-icon{
     color: white !important;

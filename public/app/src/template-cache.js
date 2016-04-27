@@ -120,16 +120,33 @@ try {
 module.run(['$templateCache', function($templateCache) {
   $templateCache.put('/views/player/main.html',
     '<md-progress-linear md-mode="indeterminate" ng-if="loading"></md-progress-linear>\n' +
-    '<div class="player-content">\n' +
-    '    <md-button ng-click="play()" ng-if="!loading">\n' +
-    '        <md-icon md-font-icon="mdi-play" class="mdi"></md-icon>\n' +
-    '        Player\n' +
-    '    </md-button>\n' +
-    '    <div ng-repeat="vm in data">\n' +
-    '       {{vm.position}}\n' +
-    '        \n' +
+    '<div class="player-content" layout="row">\n' +
+    '    <canvas alexandra-view data-id="view_1" alexandra-config="config" alexandra-source="data" width="800" height="600"></canvas>\n' +
+    '    <div flex="35" layout="column" layout-align="center center">\n' +
+    '        <div flex>\n' +
+    '            <md-button ng-click="play()" ng-if="!loading">\n' +
+    '                <md-icon md-font-icon="mdi-play" class="mdi"></md-icon>\n' +
+    '                Player\n' +
+    '            </md-button>\n' +
+    '        </div>\n' +
+    '\n' +
+    '        <div flex>\n' +
+    '            <div ng-repeat="vm in data">\n' +
+    '                {{vm.position}}\n' +
+    '\n' +
+    '            </div>\n' +
+    '        </div>\n' +
+    '\n' +
+    '\n' +
+    '\n' +
+    '\n' +
     '    </div>\n' +
+    '\n' +
     '</div>\n' +
+    '<md-slider-container>\n' +
+    '    <md-slider class="md-primary" md-discrete step="1" min="1" max="30" aria-label="rating" ng-show="!loading" ng-model="values.index">\n' +
+    '    </md-slider>\n' +
+    '</md-slider-container>\n' +
     '\n' +
     '');
 }]);
