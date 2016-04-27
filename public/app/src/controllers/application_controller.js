@@ -1,5 +1,5 @@
 angular.module('Application')
-    .controller('AppCtrl', function($scope, OauthService){
+    .controller('AppCtrl', function($rootScope, $scope, OauthService){
     
     
     $scope.openMenu = function($mdOpenMenu, ev) {
