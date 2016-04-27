@@ -5,7 +5,7 @@
         <div flex layout="row" layout-align="center center">
             <md-button ng-click="play()" ng-if="!loading">
                 <md-icon md-font-icon="mdi-play" class="mdi"></md-icon>
-                Player
+                Play
             </md-button>
         </div>
 
@@ -19,7 +19,7 @@
         <div>
             <md-slider-container>
                <span class="md-body-1">{{values.index}}</span>
-                <md-slider class="md-primary" md-discrete step="1" min="1" max="30" aria-label="rating" ng-show="!loading" ng-model="values.index">
+                <md-slider class="md-primary" md-discrete step="1" min="1" max="30" aria-label="rating" ng-show="!loading" ng-model="values.index" ng-disabled="true">
                 </md-slider>
             </md-slider-container>
         </div>

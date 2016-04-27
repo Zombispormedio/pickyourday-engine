@@ -126,7 +126,7 @@ module.run(['$templateCache', function($templateCache) {
     '        <div flex layout="row" layout-align="center center">\n' +
     '            <md-button ng-click="play()" ng-if="!loading">\n' +
     '                <md-icon md-font-icon="mdi-play" class="mdi"></md-icon>\n' +
-    '                Player\n' +
+    '                Play\n' +
     '            </md-button>\n' +
     '        </div>\n' +
     '\n' +
@@ -140,7 +140,7 @@ module.run(['$templateCache', function($templateCache) {
     '        <div>\n' +
     '            <md-slider-container>\n' +
     '               <span class="md-body-1">{{values.index}}</span>\n' +
-    '                <md-slider class="md-primary" md-discrete step="1" min="1" max="30" aria-label="rating" ng-show="!loading" ng-model="values.index">\n' +
+    '                <md-slider class="md-primary" md-discrete step="1" min="1" max="30" aria-label="rating" ng-show="!loading" ng-model="values.index" ng-disabled="true">\n' +
     '                </md-slider>\n' +
     '            </md-slider-container>\n' +
     '        </div>\n' +
