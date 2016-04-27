@@ -24,3 +24,7 @@ md-menu-content{
 md-menu-content md-icon{
     color: black !important;
 }
+
+.player-content md-icon{
+    color:black !important;
+}

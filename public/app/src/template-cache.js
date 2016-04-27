@@ -105,7 +105,9 @@ try {
 }
 module.run(['$templateCache', function($templateCache) {
   $templateCache.put('/views/normal/main.html',
-    '<div>Normal</div>');
+    '<div>Normal</div>\n' +
+    '\n' +
+    '');
 }]);
 })();
 
@@ -117,9 +119,19 @@ try {
 }
 module.run(['$templateCache', function($templateCache) {
   $templateCache.put('/views/player/main.html',
-    '<div>Player</div>\n' +
+    '<md-progress-linear md-mode="indeterminate" ng-if="loading"></md-progress-linear>\n' +
+    '<div class="player-content">\n' +
+    '    <md-button ng-click="play()" ng-if="!loading">\n' +
+    '        <md-icon md-font-icon="mdi-play" class="mdi"></md-icon>\n' +
+    '        Player\n' +
+    '    </md-button>\n' +
+    '    <div ng-repeat="vm in data">\n' +
+    '       {{vm.position}}\n' +
+    '        \n' +
+    '    </div>\n' +
+    '</div>\n' +
     '\n' +
-    '{{coords.x}}, {{coords.y}} ');
+    '');
 }]);
 })();
 
@@ -132,7 +144,6 @@ try {
 module.run(['$templateCache', function($templateCache) {
   $templateCache.put('/views/slider/main.html',
     '<div>Slider</div>\n' +
-    '\n' +
-    '');
+    '{{coords.x}}, {{coords.y}}, {{coords.z}}');
 }]);
 })();

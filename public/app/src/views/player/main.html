@@ -1,3 +1,12 @@
-<div>Player</div>
+<md-progress-linear md-mode="indeterminate" ng-if="loading"></md-progress-linear>
+<div class="player-content">
+    <md-button ng-click="play()" ng-if="!loading">
+        <md-icon md-font-icon="mdi-play" class="mdi"></md-icon>
+        Player
+    </md-button>
+    <div ng-repeat="vm in data">
+       {{vm.position}}
+        
+    </div>
+</div>
 
-{{coords.x}}, {{coords.y}} 
