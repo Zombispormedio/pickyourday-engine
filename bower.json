@@ -23,6 +23,12 @@
     "async": "^1.5.2",
     "angular-material": "^1.0.6",
     "jquery": "^2.2.2",
-    "chance": "^1.0.0"
+    "chance": "^1.0.0",
+    "angular-resource": "^1.5.5",
+    "angular-ui-router": "^0.2.18",
+    "tween.js": "tweenjs#^16.3.4"
+  },
+  "resolutions": {
+    "angular": "1.5.5"
   }
 }

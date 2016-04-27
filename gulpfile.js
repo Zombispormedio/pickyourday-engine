@@ -6,7 +6,8 @@ var gulp = require("gulp"),
     json2js = require('gulp-ng-json2js'),
     rename = require("gulp-rename"),
     del = require('del'),
-    objParser = require("./gulp-obj-parser.js");
+    objParser = require("./gulp-obj-parser.js"),
+    ngHtml2Js = require("gulp-ng-html2js");
 
 
 
@@ -82,3 +83,31 @@ gulp.task("blaze", function() {
 });
 
 
+gulp.task("clean", function(cb) {
+    del(['public/app/dist/bundle.min.js','public/app/src/template-cache.js' ], cb);
+});
+
+
+
+gulp.task("template-cache", function(){
+    return gulp.src("public/app/src/views/**/*.html")
+    .pipe(ngHtml2Js({moduleName:"Application", prefix:"/views/"}))
+    .pipe(concat("template-cache.js"))
+    .pipe(gulp.dest("./public/app/src"));
+});
+
+gulp.task("build-js",["template-cache"], function() {
+    return gulp.src("public/app/src/**/*.js")
+        .pipe(sourcemaps.init())
+        .pipe(concat("bundle.min.js"))
+        .pipe(ngAnnotate())
+        .pipe(uglify())
+        .pipe(sourcemaps.write())
+        .pipe(gulp.dest("./public/app/dist"));
+});
+
+gulp.task("build", ["clean", "build-js" ]);
+
+gulp.task("default", function(){
+   return gulp.watch(["public/app/src/**/*.js", "public/app/src/views/**/*.html"], ["build"]); 
+});
