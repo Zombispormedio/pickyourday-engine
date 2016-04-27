@@ -175,6 +175,7 @@ class MeshEntity extends Entity {
     endDraw() {
         var gl = this.gl;
         Ketch.disableAttrib(this.graphID, "a_position");
+           Ketch.disableAttrib(this.graphID, "a_normal");
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
     }

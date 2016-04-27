@@ -22,6 +22,7 @@ angular.module('alexandraExample')
 
     $scope.config={
         colortype: "variable",
+        type:"cube",
         axis:true,
         axisLength:500,
         streaming:true,

@@ -4,15 +4,18 @@ static Particle:string=`#ifdef GL_ES
 precision mediump float;
 #endif
 uniform bool uWireframe;
-uniform vec4 uMaterialDiffuse;
+
 uniform sampler2D uSampler;
+
+varying vec4 vColor;
+
 
 bool isBlack(vec4 color){
 return color.r==0.0 &&color.g==0.0&&color.b==0.0;
 }
 void main(void) { 
      if(uWireframe){
-         gl_FragColor = uMaterialDiffuse;
+         gl_FragColor = vColor;
         }else{
     gl_FragColor = texture2D(uSampler, gl_PointCoord);
     if(gl_FragColor.a < 0.5 || isBlack(gl_FragColor)) discard;
@@ -67,7 +70,7 @@ void main(){
         }
         
         vec4 finalColor=Ia+Id+Is;
-       /* finalColor.a=1.0;*/
+        finalColor.a=1.0;
     
         gl_FragColor =finalColor;
         }
@@ -78,13 +81,36 @@ void main(){
 `;
 }
 export class Vertex{
-static Particle:string=`attribute vec3 a_position;
+static Particle:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+attribute vec3 a_position;
+attribute vec4 a_color;
 
 uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;
 uniform float uPointSize;
 
+uniform bool uWireframe;
+uniform bool uPerVertexColor;
+uniform vec4 uMaterialDiffuse;
+
+
+varying vec4 vColor;
+
 void main(void) {
+
+ if(uWireframe){
+	 
+	 	if(uPerVertexColor){
+	 		 vColor=a_color;
+	 	}else{
+	 		vColor=uMaterialDiffuse;
+	 	}
+	 
+	
+	 }
+    
     gl_Position = uPMatrix * uMVMatrix * vec4(a_position.xyz, 1.0);
     gl_PointSize = uPointSize;
 }`;
