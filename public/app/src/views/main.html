@@ -1,0 +1,44 @@
+
+<md-toolbar class="md-accent md-whiteframe-1dp">
+    <div class="md-toolbar-tools">
+
+
+        <md-menu flex="5">
+            <md-button aria-label="Type Stats" class="md-icon-button" ng-click="openMenu($mdOpenMenu, $event)">
+                <md-icon md-menu-origin md-font-icon="mdi-chart-areaspline" class="mdi"></md-icon>
+            </md-button>
+            <md-menu-content width="4">
+                <md-menu-item>
+                    <md-button ui-sref="app.normal">
+                        <md-icon md-font-icon="mdi-chart-bubble" class="mdi"></md-icon>
+                        Normal
+                    </md-button>
+                </md-menu-item>
+                <md-menu-item>
+                    <md-button  ui-sref="app.slider">
+                        <md-icon md-font-icon="mdi-clock-start" class="mdi"></md-icon>
+                        Slider
+                    </md-button>
+                </md-menu-item>
+                <md-menu-divider></md-menu-divider>
+                <md-menu-item>
+                    <md-button  ui-sref="app.player">
+                        <md-icon md-font-icon="mdi-play-box-outline" class="mdi"></md-icon>
+                        Player
+                    </md-button>
+                </md-menu-item>
+            </md-menu-content>
+        </md-menu>
+
+        <h2>
+            <span>Pickyourday 3D</span>
+        </h2>
+        <span flex></span>
+        <md-button aria-label="logout" class="md-icon-button" style="margin-right: 0px;" ng-click="logout()">
+            <md-icon md-font-icon="mdi-power" class="mdi"></md-icon>
+        </md-button>
+    </div>
+</md-toolbar>
+
+
+<div ui-view="content"></div>

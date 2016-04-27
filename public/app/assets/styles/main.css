@@ -1,0 +1,26 @@
+body{
+    /*background-color: #009688;*/
+}
+
+md-card{
+   background-color: #009688;
+    color: white;
+    width: 35%;
+}
+
+md-icon{
+    color: white !important;
+    font-size: 2em !important;
+}
+
+md-menu{
+    
+    margin: 0!important;
+}
+md-menu-content{
+    background-color: white !important;
+}
+
+md-menu-content md-icon{
+    color: black !important;
+}

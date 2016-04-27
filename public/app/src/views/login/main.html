@@ -1,0 +1,33 @@
+<div layout="column" layout-align="center center">
+
+
+
+    <md-card>
+        <md-card-title>
+            <md-card-title-text>
+                <span class="md-headline">Pickyourday 3D</span>
+
+            </md-card-title-text>
+
+        </md-card-title>
+        <md-card-content layout="column">
+
+
+            <md-input-container class="md-primary md-raised md-hue-2">
+                <label>Email</label>
+                <input ng-model="user.email" type="email">
+            </md-input-container>
+
+            <md-input-container class="md-primary md-raised md-hue-2">
+                <label>Password</label>
+                <input ng-model="user.password" type="password">
+            </md-input-container>
+        </md-card-content>
+        <md-card-actions layout="row" layout-align="center center">
+            <md-button class="md-primary  md-raised md-hue-2" ng-click="login()">Login</md-button>
+
+        </md-card-actions>
+    </md-card>
+
+
+</div>
