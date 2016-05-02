@@ -29,6 +29,7 @@ angular.module('alexandra')
         }
 
         var select=function(ev){
+            var canvas=tree.getCanvas();
             var s_x, s_y, top=0, left=0, obj=tree.getCanvas();
 
             while(obj && obj.tagName!=="BODY"){
@@ -41,13 +42,12 @@ angular.module('alexandra')
             top-=window.pageYOffset;
 
             s_x=ev.clientX-left;
-            s_y=tree.getCanvas().height-(ev.clientY-top);
+            s_y=tree.getCanvas().height-(ev.clientY-top)+35;
 
-           
             var data=tree.select({x:s_x, y:s_y});
-            
+
             tree.onSelected(data);
-    
+
 
         }
 

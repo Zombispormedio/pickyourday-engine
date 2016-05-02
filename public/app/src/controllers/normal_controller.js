@@ -30,7 +30,7 @@ angular.module('Application')
     var fetch=function(){
         CompanyService.Pick().stats(function(res){
             calendar=Immutable.List(res.data);
-            $scope.data=_.clone(calendar.get(0));
+            $scope.data=_.clone(calendar.get(23));
             $scope.loading=false; 
         });
     }
