@@ -28,7 +28,7 @@ class SelectEntity extends Entity {
         }).bind(this);
         var found: boolean = true;
         while (found) {
-            color = [Math.random(), Math.random(), Math.random(), 1.0];
+            color = [Number(Math.random().toFixed(2)), Number(Math.random().toFixed(2)), Number(Math.random().toFixed(2)), 1.0];
 
             found = contains(color);
         }

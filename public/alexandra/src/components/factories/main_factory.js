@@ -282,7 +282,7 @@ angular.module('alexandra')
                 },
 
                 select:function(pos){
-                    Tree.select(pos);
+                    return Tree.select(pos);
                 },
 
 

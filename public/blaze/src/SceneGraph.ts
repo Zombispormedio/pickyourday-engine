@@ -179,7 +179,7 @@ class SceneGraph extends Renderable {
 
     public select(pos:{x:number, y:number}) {
         if (this._selector) {
-            this._selector.find(pos);
+           return this._selector.find(pos);
         }
     }
 

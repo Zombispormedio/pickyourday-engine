@@ -15,7 +15,7 @@ class Selector extends Renderable {
 
     configure() {
         var gl = this.gl;
-
+        console.log(this._dimensions);
         this._texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this._texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this._dimensions.width, this._dimensions.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
@@ -45,26 +45,16 @@ class Selector extends Renderable {
 
     find(pos: { x: number, y: number }) {
         var gl = this.gl;
-        var drawface = [];
-
-        for (var i = 0; i < gl.drawingBufferWidth; i++) {
-            for (var j = 0; j < gl.drawingBufferHeight; j++) {
-                var readout = new Uint8Array(1 * 1 * 4);
-                gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
-                gl.readPixels(i, j, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
-                if (readout[0] !== 0 && readout[1] !== 0 && readout[2] !== 0 && readout[3] !== 0) {
-                    drawface.push({
-                        x: i, y: j, color: readout
-                    });
-                }
-
-            }
-        }
-
+        var readout = new Uint8Array(1 * 1 * 4);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+        gl.readPixels(pos.x, pos.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-        console.log(drawface);
-
+        
+        var fixed=readout.map(function(item){
+           return Number((item/255).toFixed(2));
+        });
+      
+        return readout;
 
     }
 
