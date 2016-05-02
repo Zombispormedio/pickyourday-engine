@@ -328,6 +328,15 @@ var Blaze;
         Ketch.disableOffScreen = function (view_key) {
             Ketch._views[view_key].offscreen = true;
         };
+        Ketch.fillSelectorBuffer = function (view_key, obj) {
+            var view = Ketch._views[view_key];
+            view.selectObjects = view.selectObjects || [];
+            view.selectObjects.push(obj);
+        };
+        Ketch.clearSelectorBuffer = function (view_key, obj) {
+            var view = Ketch._views[view_key];
+            view.selectObjects = [];
+        };
         Ketch._views = {};
         return Ketch;
     }());

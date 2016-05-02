@@ -127,4 +127,15 @@ class Ketch {
         Ketch._views[view_key].offscreen = true;
     }
 
+    static fillSelectorBuffer(view_key, obj) {
+        var view = Ketch._views[view_key];
+        view.selectObjects = view.selectObjects || [];
+        view.selectObjects.push(obj);
+    }
+    
+    static clearSelectorBuffer(view_key, obj) {
+          var view = Ketch._views[view_key];
+        view.selectObjects =[];
+    }
+
 }
