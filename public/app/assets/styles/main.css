@@ -32,3 +32,11 @@ md-menu-content md-icon{
 .player-content md-icon{
     color:black !important;
 }
+
+.button-power{
+    margin-top: -0.5%!important;
+}
+
+.button-stats{
+        margin-top: -5.3%!important;
+}

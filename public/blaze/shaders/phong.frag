@@ -10,6 +10,9 @@ uniform vec4 uLightSpecular;
 
 uniform bool uWireframe;
 
+uniform bool uOffscreen;
+uniform vec4 uSelectColor;
+
 uniform vec4 uMaterialAmbient;
 uniform vec4 uMaterialDiffuse;
 uniform vec4 uMaterialSpecular;
@@ -20,12 +23,16 @@ varying vec4 vColor;
 
 void main(){
 
+        if(uOffscreen){
+            gl_FragColor=uSelectColor;
+            return;
+        }
 
         if(uWireframe){
-         gl_FragColor = vColor;
-        }else{
-        
-    	
+            gl_FragColor = vColor;
+            return;
+        }
+      
         vec3 L= normalize(uLightDirection);
         vec3 N= normalize(vNormal);
         float lambertTerm=dot(N, -L);
@@ -50,7 +57,7 @@ void main(){
         finalColor.a=1.0;
     
         gl_FragColor =finalColor;
-        }
+        
         
 }
 

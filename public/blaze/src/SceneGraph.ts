@@ -21,7 +21,9 @@ class SceneGraph extends Renderable {
         'uPointSize',
         "uSampler",
         "uWireframe",
-        "uPerVertexColor"
+        "uPerVertexColor",
+        "uSelectColor",
+        "uOffScreen"
     ];
     private static ATTRIBUTES = ['a_position', 'a_normal', "a_color"];
 

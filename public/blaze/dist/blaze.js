@@ -319,6 +319,15 @@ var Blaze;
                 gl.uniform1i(uSampler, index);
             }
         };
+        Ketch.isOffScreen = function (view_key) {
+            return Ketch._views[view_key].offscreen;
+        };
+        Ketch.enableOffScreen = function (view_key) {
+            Ketch._views[view_key].offscreen = true;
+        };
+        Ketch.disableOffScreen = function (view_key) {
+            Ketch._views[view_key].offscreen = true;
+        };
         Ketch._views = {};
         return Ketch;
     }());
@@ -1514,6 +1523,23 @@ var Blaze;
         return GridEntity;
     }(Entity));
     Blaze.GridEntity = GridEntity;
+    var SelectEntity = (function (_super) {
+        __extends(SelectEntity, _super);
+        function SelectEntity(graph_id) {
+            _super.call(this, graph_id);
+        }
+        return SelectEntity;
+    }(Entity));
+    Blaze.SelectEntity = SelectEntity;
+    var Selector = (function (_super) {
+        __extends(Selector, _super);
+        function Selector(graph_id) {
+            _super.call(this, graph_id);
+        }
+        return Selector;
+    }(Renderable));
+    Blaze.Selector = Selector;
+    ;
     var NodeElement = (function () {
         function NodeElement(parent, type, entity) {
             this._parentNode = parent;
@@ -1794,7 +1820,9 @@ var Blaze;
             'uPointSize',
             "uSampler",
             "uWireframe",
-            "uPerVertexColor"
+            "uPerVertexColor",
+            "uSelectColor",
+            "uOffScreen"
         ];
         SceneGraph.ATTRIBUTES = ['a_position', 'a_normal', "a_color"];
         return SceneGraph;

@@ -286,7 +286,7 @@ export class Ketch {
         var prg = view.program;
 
 
-        view.attribs = attribs_names.reduce(function(prev, attr) {
+        view.attribs = attribs_names.reduce(function (prev, attr) {
             prev[attr] = gl.getAttribLocation(prg, attr);
             return prev;
         }, {});
@@ -307,7 +307,7 @@ export class Ketch {
         var prg = view.program;
 
 
-        view.uniforms = uniform_names.reduce(function(prev, attr) {
+        view.uniforms = uniform_names.reduce(function (prev, attr) {
             prev[attr] = gl.getUniformLocation(prg, attr);
             return prev;
         }, {});
@@ -343,11 +343,11 @@ export class Ketch {
         view.textures = view.textures || [];
         view.textures.push(texture_id);
     }
-    
+
     static removeTexture(key, texture_id) {
         var view = Ketch._views[key];
         view.textures = view.textures || [];
-        var index=view.textures.indexOf(texture_id)
+        var index = view.textures.indexOf(texture_id)
         view.textures.splice(index, 1);
         console.log(view.textures)
     }
@@ -364,6 +364,18 @@ export class Ketch {
             var uSampler = Ketch.getUniform(key, "uSampler");
             gl.uniform1i(uSampler, index);
         }
+    }
+
+    static isOffScreen(view_key): Boolean {
+        return Ketch._views[view_key].offscreen;
+    }
+
+    static enableOffScreen(view_key) {
+        Ketch._views[view_key].offscreen = true;
+    }
+
+    static disableOffScreen(view_key) {
+        Ketch._views[view_key].offscreen = true;
     }
 
 }
@@ -1960,6 +1972,19 @@ export class GridEntity extends Entity {
     }
 
 }
+export class SelectEntity extends Entity {
+    
+    constructor(graph_id:string){
+        super(graph_id);
+    }
+    
+}
+export class Selector extends Renderable {
+    
+     constructor(graph_id:string){
+        super(graph_id);
+    }
+};
 export interface INodeElement {
     _entity: Entity;
     _childNodes: INodeElement[];
@@ -2132,7 +2157,9 @@ export class SceneGraph extends Renderable {
         'uPointSize',
         "uSampler",
         "uWireframe",
-        "uPerVertexColor"
+        "uPerVertexColor",
+        "uSelectColor",
+        "uOffScreen"
     ];
     private static ATTRIBUTES = ['a_position', 'a_normal', "a_color"];
 

@@ -12,7 +12,7 @@ module.run(['$templateCache', function($templateCache) {
     '\n' +
     '\n' +
     '        <md-menu flex="5">\n' +
-    '            <md-button aria-label="Type Stats" class="md-icon-button" ng-click="openMenu($mdOpenMenu, $event)">\n' +
+    '            <md-button aria-label="Type Stats" class="md-icon-button button-stats" ng-click="openMenu($mdOpenMenu, $event)">\n' +
     '                <md-icon md-menu-origin md-font-icon="mdi-chart-areaspline" class="mdi"></md-icon>\n' +
     '            </md-button>\n' +
     '            <md-menu-content width="4">\n' +
@@ -42,7 +42,7 @@ module.run(['$templateCache', function($templateCache) {
     '            <span>Pickyourday 3D</span>\n' +
     '        </h2>\n' +
     '        <span flex></span>\n' +
-    '        <md-button aria-label="logout" class="md-icon-button" style="margin-right: 0px;" ng-click="logout()">\n' +
+    '        <md-button aria-label="logout" class="md-icon-button button-power" style="margin-right: 0px;" ng-click="logout()">\n' +
     '            <md-icon md-font-icon="mdi-power" class="mdi"></md-icon>\n' +
     '        </md-button>\n' +
     '    </div>\n' +
@@ -105,9 +105,10 @@ try {
 }
 module.run(['$templateCache', function($templateCache) {
   $templateCache.put('/views/normal/main.html',
-    '<div>Normal</div>\n' +
-    '\n' +
-    '');
+    '<md-progress-linear md-mode="indeterminate" ng-if="loading"></md-progress-linear>\n' +
+    '<div class="player-content" layout="row">\n' +
+    '<canvas alexandra-view data-id="view_1" alexandra-config="config" alexandra-source="data" width="800" height="600"></canvas>\n' +
+    '</div>');
 }]);
 })();
 

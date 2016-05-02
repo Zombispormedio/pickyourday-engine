@@ -1,3 +1,32 @@
 angular.module('Application')
-    .controller('NormalCtrl', function(){
+    .controller('NormalCtrl', function($scope, CompanyService){
+
+    $scope.loading=true;
+    $scope.data=[];
+    var calendar=[];
+
+    $scope.config={
+        colortype:"variable",
+        axis:true,
+        axisLength:500,
+        streaming:true,
+        background:[0.3,0.3,0.3],
+        grid:true,
+        gridConfig:{
+            lines:60,
+            dim:500
+        }
+
+    };
+
+
+    var fetch=function(){
+        CompanyService.Pick().stats(function(res){
+            calendar=Immutable.List(res.data);
+            $scope.data=_.clone(calendar.get(0));
+            $scope.loading=false; 
+        });
+    }
+    
+    fetch();
 });
