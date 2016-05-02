@@ -6,11 +6,16 @@ angular.module('alexandra')
             var Tree = $alexandraForest.getTree(id);
             var config = c;
 
-            var camera, light, mesh, particle, axis, node_buffer = [], textures = {};
+            var camera, light, mesh, particle, axis, node_buffer = [], textures = {}, canvas;
 
             return {
-                setContext: function (canvas) {
-                    Tree.setContext(canvas);
+                setContext: function (c) {
+                    canvas=c;
+                    Tree.setContext(c);
+                },
+                
+                getCanvas:function(){
+                    return canvas;
                 },
 
                 configureCamera: function () {
@@ -115,6 +120,12 @@ angular.module('alexandra')
                             default:
                                 parent_node = trnode;
                         }
+                        
+                        if(config.selector){
+                            var select=Tree.createSelect(item.data);
+                            Tree.fillSelector(select);
+                            parent_node = parent_node.createChildNode("Select", select);
+                        }
 
                         parent_node.createChildNode("Mesh", mesh);
 
@@ -137,6 +148,7 @@ angular.module('alexandra')
                         return trnode;
 
                     });
+                    
 
 
 
@@ -234,6 +246,10 @@ angular.module('alexandra')
                 },
 
                 reset: function () {
+                    if(config.selector){
+                       Tree.clearSelector(); 
+                    }
+                     
                     node_buffer.forEach(function (item) {
 
                         Tree.removeMainChildNode(item);
@@ -260,12 +276,19 @@ angular.module('alexandra')
                     trnode.createChildNode("Grid", grid);
 
                 },
+                
+                configureSelector:function(){
+                    Tree.createSelector({width:canvas.width, height:canvas.height})
+                },
 
+                select:function(pos){
+                    Tree.select(pos);
+                },
 
 
                 run: function () {
                     $interval(function () {
-                        Tree.draw();
+                        Tree.render();
 
                     }, 30);
                 }

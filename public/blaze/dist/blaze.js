@@ -333,9 +333,16 @@ var Blaze;
             view.selectObjects = view.selectObjects || [];
             view.selectObjects.push(obj);
         };
-        Ketch.clearSelectorBuffer = function (view_key, obj) {
+        Ketch.clearSelectorBuffer = function (view_key) {
             var view = Ketch._views[view_key];
             view.selectObjects = [];
+        };
+        Ketch.containsColorSelectorBuffer = function (view_key, color) {
+            var view = Ketch._views[view_key];
+            view.selectObjects = view.selectObjects || [];
+            return _.findIndex(view.selectObjects, function (o) {
+                return _.isEqual(o.color, color);
+            }) > -1;
         };
         Ketch._views = {};
         return Ketch;
@@ -779,7 +786,7 @@ var Blaze;
             function Fragment() {
             }
             Fragment.Particle = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform bool uWireframe;\n\nuniform sampler2D uSampler;\n\nvarying vec4 vColor;\n\n\nbool isBlack(vec4 color){\nreturn color.r==0.0 &&color.g==0.0&&color.b==0.0;\n}\nvoid main(void) { \n     if(uWireframe){\n         gl_FragColor = vColor;\n        }else{\n    gl_FragColor = texture2D(uSampler, gl_PointCoord);\n    if(gl_FragColor.a < 0.5 || isBlack(gl_FragColor)) discard;\n    }\n}";
-            Fragment.Phong = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform float uShininess;\nuniform vec3 uLightDirection;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\nuniform vec4 uLightSpecular;\n\nuniform bool uWireframe;\n\nuniform vec4 uMaterialAmbient;\nuniform vec4 uMaterialDiffuse;\nuniform vec4 uMaterialSpecular;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\nvarying vec4 vColor;\n\nvoid main(){\n\n\n        if(uWireframe){\n         gl_FragColor = vColor;\n        }else{\n        \n    \t\n        vec3 L= normalize(uLightDirection);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient*uMaterialAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        if(lambertTerm>0.0)\n        {\n            Id=uLightDiffuse*uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightSpecular*uMaterialSpecular*specular;\n        }\n        \n        vec4 finalColor=Ia+Id+Is;\n        finalColor.a=1.0;\n    \n        gl_FragColor =finalColor;\n        }\n        \n}\n\n\n";
+            Fragment.Phong = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform float uShininess;\nuniform vec3 uLightDirection;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\nuniform vec4 uLightSpecular;\n\nuniform bool uWireframe;\n\nuniform bool uOffscreen;\nuniform vec4 uSelectColor;\n\nuniform vec4 uMaterialAmbient;\nuniform vec4 uMaterialDiffuse;\nuniform vec4 uMaterialSpecular;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\nvarying vec4 vColor;\n\nvoid main(){\n\n        if(uWireframe){\n            gl_FragColor = vColor;\n            return;\n        }\n      \n\n        if(uOffscreen){\n            gl_FragColor=uSelectColor;\n            return;\n        }\n\n       \n        vec3 L= normalize(uLightDirection);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient*uMaterialAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        if(lambertTerm>0.0)\n        {\n            Id=uLightDiffuse*uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightSpecular*uMaterialSpecular*specular;\n        }\n        \n        vec4 finalColor=Ia+Id+Is;\n        finalColor.a=1.0;\n    \n        gl_FragColor =finalColor;\n        \n        \n}\n\n\n";
             return Fragment;
         }());
         Shaders.Fragment = Fragment;
@@ -1391,7 +1398,7 @@ var Blaze;
             }
             this.calculateOrientation();
             if (this._type === CAMERA_TYPE.TRACKING) {
-                mat4.multiplyVec4(m, [0, 0, 0, 1], this._position);
+                mat4.multiplyVec4(this._cmatrix, [0, 0, 0, 1], this._position);
             }
         };
         Object.defineProperty(CameraEntity.prototype, "modelView", {
@@ -1534,17 +1541,111 @@ var Blaze;
     Blaze.GridEntity = GridEntity;
     var SelectEntity = (function (_super) {
         __extends(SelectEntity, _super);
-        function SelectEntity(graph_id) {
+        function SelectEntity(graph_id, data) {
             _super.call(this, graph_id);
+            this._color = this.generateUniqueColor();
+            this._data = data;
         }
+        Object.defineProperty(SelectEntity.prototype, "data", {
+            get: function () {
+                return this._data;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(SelectEntity.prototype, "color", {
+            get: function () {
+                return this._color;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        SelectEntity.prototype.generateUniqueColor = function () {
+            var color;
+            var contains = (function (color) {
+                return Ketch.containsColorSelectorBuffer(this.graphID, color);
+            }).bind(this);
+            var found = true;
+            while (found) {
+                color = [Math.random(), Math.random(), Math.random(), 1.0];
+                found = contains(color);
+            }
+            return color;
+        };
+        SelectEntity.prototype.beginDraw = function () {
+            if (Ketch.isOffScreen(this.graphID)) {
+                var gl = this.gl;
+                var uSelectColor = this.getUniform("uSelectColor");
+                if (uSelectColor)
+                    gl.uniform4fv(uSelectColor, this._color);
+            }
+        };
+        SelectEntity.prototype.endDraw = function () {
+        };
         return SelectEntity;
     }(Entity));
     Blaze.SelectEntity = SelectEntity;
     var Selector = (function (_super) {
         __extends(Selector, _super);
-        function Selector(graph_id) {
+        function Selector(graph_id, dimensions) {
             _super.call(this, graph_id);
+            this._dimensions = dimensions;
+            this._framebuffer = null;
+            this._renderbuffer = null;
+            this._texture = null;
+            this.configure();
         }
+        Selector.prototype.configure = function () {
+            var gl = this.gl;
+            this._texture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, this._texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this._dimensions.width, this._dimensions.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            this._renderbuffer = gl.createRenderbuffer();
+            gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
+            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this._dimensions.width, this._dimensions.height);
+            this._framebuffer = gl.createFramebuffer();
+            gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this._texture, 0);
+            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._renderbuffer);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+            gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        };
+        Selector.prototype.fill = function (obj) {
+            Ketch.fillSelectorBuffer(this.graphID, obj);
+        };
+        Selector.prototype.clear = function () {
+            Ketch.clearSelectorBuffer(this.graphID);
+        };
+        Selector.prototype.find = function (pos) {
+            var gl = this.gl;
+            var drawface = [];
+            for (var i = 0; i < gl.drawingBufferWidth; i++) {
+                for (var j = 0; j < gl.drawingBufferHeight; j++) {
+                    var readout = new Uint8Array(1 * 1 * 4);
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+                    gl.readPixels(i, j, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
+                    if (readout[0] !== 0 && readout[1] !== 0 && readout[2] !== 0 && readout[3] !== 0) {
+                        drawface.push({
+                            x: i, y: j, color: readout
+                        });
+                    }
+                }
+            }
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            console.log(drawface);
+        };
+        Selector.prototype.render = function (draw) {
+            var gl = this.gl;
+            gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+            var uOffscreen = this.getUniform("uOffscreen");
+            gl.uniform1i(uOffscreen, true);
+            Ketch.enableOffScreen(this.graphID);
+            draw();
+            gl.uniform1i(uOffscreen, false);
+            Ketch.disableOffScreen(this.graphID);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        };
         return Selector;
     }(Renderable));
     Blaze.Selector = Selector;
@@ -1687,19 +1788,12 @@ var Blaze;
             this._scene = new NodeElement(void 0, "Scene");
             this._matrixStack = new MatrixStack(this._oid);
             this._loaderBuffer = [];
-            this._isDrawing = false;
             Ketch.createView(this._oid);
+            this._selector = null;
         }
         Object.defineProperty(SceneGraph.prototype, "scene", {
             get: function () {
                 return this._scene;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(SceneGraph.prototype, "isDrawing", {
-            get: function () {
-                return this._isDrawing;
             },
             enumerable: true,
             configurable: true
@@ -1715,13 +1809,17 @@ var Blaze;
             gl.clearColor(b[0] || 0, b[1] || 0, b[2] || 0, 1);
             gl.clearDepth(1.0);
         };
-        SceneGraph.prototype.draw = function () {
+        SceneGraph.prototype.render = function () {
             var gl = this.gl;
-            this._isDrawing = true;
             gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-            this._scene.draw(this._matrixStack);
-            this._isDrawing = false;
+            var draw = (function () {
+                this._scene.draw(this._matrixStack);
+            }).bind(this);
+            if (this._selector) {
+                this._selector.render(draw);
+            }
+            draw();
         };
         SceneGraph.prototype.createMainChildNode = function (type, entity) {
             return this._scene.createChildNode(type, entity);
@@ -1782,6 +1880,27 @@ var Blaze;
         SceneGraph.prototype.createGrid = function (dim, lines) {
             return new GridEntity(this.oid, dim, lines);
         };
+        SceneGraph.prototype.createSelect = function (data) {
+            return new SelectEntity(this.oid, data);
+        };
+        SceneGraph.prototype.createSelector = function (dimensions) {
+            this._selector = new Selector(this.oid, dimensions);
+        };
+        SceneGraph.prototype.fillSelector = function (obj) {
+            if (this._selector) {
+                this._selector.fill(obj);
+            }
+        };
+        SceneGraph.prototype.clearSelector = function (obj) {
+            if (this._selector) {
+                this._selector.clear();
+            }
+        };
+        SceneGraph.prototype.select = function (pos) {
+            if (this._selector) {
+                this._selector.find(pos);
+            }
+        };
         Object.defineProperty(SceneGraph.prototype, "MainCamera", {
             set: function (camera) {
                 this._matrixStack.MainCamera = camera;
@@ -1831,7 +1950,7 @@ var Blaze;
             "uWireframe",
             "uPerVertexColor",
             "uSelectColor",
-            "uOffScreen"
+            "uOffscreen"
         ];
         SceneGraph.ATTRIBUTES = ['a_position', 'a_normal', "a_color"];
         return SceneGraph;

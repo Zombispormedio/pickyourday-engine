@@ -23,16 +23,18 @@ varying vec4 vColor;
 
 void main(){
 
-        if(uOffscreen){
-            gl_FragColor=uSelectColor;
-            return;
-        }
-
         if(uWireframe){
             gl_FragColor = vColor;
             return;
         }
       
+
+        if(uOffscreen){
+            gl_FragColor=uSelectColor;
+            return;
+        }
+
+       
         vec3 L= normalize(uLightDirection);
         vec3 N= normalize(vNormal);
         float lambertTerm=dot(N, -L);

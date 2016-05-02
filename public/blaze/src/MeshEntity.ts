@@ -112,7 +112,7 @@ class MeshEntity extends Entity {
         if (obj.shininess) {
             this._material.shininess = obj.shininess;
         }
-       
+
     }
 
 
@@ -156,7 +156,7 @@ class MeshEntity extends Entity {
         var gl = this.gl;
 
         this.setMaterialUniforms();
-    
+
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 
         Ketch.enableAttrib(this.graphID, "a_position");
@@ -175,7 +175,7 @@ class MeshEntity extends Entity {
     endDraw() {
         var gl = this.gl;
         Ketch.disableAttrib(this.graphID, "a_position");
-           Ketch.disableAttrib(this.graphID, "a_normal");
+        Ketch.disableAttrib(this.graphID, "a_normal");
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
     }

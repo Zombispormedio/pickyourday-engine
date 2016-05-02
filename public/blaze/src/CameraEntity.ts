@@ -148,7 +148,7 @@ class CameraEntity extends Entity {
         this.calculateOrientation();
 
         if (this._type === CAMERA_TYPE.TRACKING) {
-            mat4.multiplyVec4(m, [0, 0, 0, 1], this._position);
+            mat4.multiplyVec4(this._cmatrix, [0, 0, 0, 1], this._position);
         }
     }
 

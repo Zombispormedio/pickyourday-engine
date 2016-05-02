@@ -132,10 +132,18 @@ class Ketch {
         view.selectObjects = view.selectObjects || [];
         view.selectObjects.push(obj);
     }
-    
-    static clearSelectorBuffer(view_key, obj) {
-          var view = Ketch._views[view_key];
-        view.selectObjects =[];
+
+    static clearSelectorBuffer(view_key) {
+        var view = Ketch._views[view_key];
+        view.selectObjects = [];
+    }
+
+    static containsColorSelectorBuffer(view_key, color) :boolean {
+        var view = Ketch._views[view_key];
+        view.selectObjects = view.selectObjects || [];
+       return  _.findIndex(view.selectObjects , function(o){
+            return _.isEqual(o.color, color);
+        })>-1;
     }
 
 }

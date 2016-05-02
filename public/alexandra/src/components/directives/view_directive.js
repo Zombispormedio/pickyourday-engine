@@ -26,7 +26,7 @@ angular.module('alexandra')
                 if(config.reseteable){
                     tree.resetParticle();
                 }
-                
+
                 if(config.configurable){
                     configureParticle(tree);
                 }
@@ -39,8 +39,8 @@ angular.module('alexandra')
                 break;
             }
             default:{
-                 if(config.reseteable){
-                     tree.resetMesh();
+                if(config.reseteable){
+                    tree.resetMesh();
                 }
                 if(config.configurable){
                     configureMesh(tree);
@@ -70,19 +70,23 @@ angular.module('alexandra')
             $alexandraForest.createTree(TreeId);
 
             var tree=$alexandraMain(TreeId, config);
-            
+
             $alexandra.setView(TreeId, tree);
 
             tree.setContext(element);
 
             tree.configureCamera();
-            
+
             if(config.axis){
                 tree.configureAxis();
             }
-            
-             if(config.grid){
+
+            if(config.grid){
                 tree.configureGrid();
+            }
+            
+            if(config.selector){
+                tree.configureSelector();
             }
 
 
@@ -114,14 +118,11 @@ angular.module('alexandra')
 
 
 
-            $alexandraInteractor(tElement, tree.getCamera());
+            $alexandraInteractor(tElement, tree.getCamera(), tree);
 
-            if(config.autorun===false){
-                console.warn("No AutoRun")
-            }else{
-                tree.run();
+            if(config.autorun!==false){
+               tree.run();
             }
-
 
 
 

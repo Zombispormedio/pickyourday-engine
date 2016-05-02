@@ -383,10 +383,18 @@ export class Ketch {
         view.selectObjects = view.selectObjects || [];
         view.selectObjects.push(obj);
     }
-    
-    static clearSelectorBuffer(view_key, obj) {
-          var view = Ketch._views[view_key];
-        view.selectObjects =[];
+
+    static clearSelectorBuffer(view_key) {
+        var view = Ketch._views[view_key];
+        view.selectObjects = [];
+    }
+
+    static containsColorSelectorBuffer(view_key, color) :boolean {
+        var view = Ketch._views[view_key];
+        view.selectObjects = view.selectObjects || [];
+       return  _.findIndex(view.selectObjects , function(o){
+            return _.isEqual(o.color, color);
+        })>-1;
     }
 
 }
@@ -874,6 +882,9 @@ uniform vec4 uLightSpecular;
 
 uniform bool uWireframe;
 
+uniform bool uOffscreen;
+uniform vec4 uSelectColor;
+
 uniform vec4 uMaterialAmbient;
 uniform vec4 uMaterialDiffuse;
 uniform vec4 uMaterialSpecular;
@@ -884,12 +895,18 @@ varying vec4 vColor;
 
 void main(){
 
-
         if(uWireframe){
-         gl_FragColor = vColor;
-        }else{
-        
-    	
+            gl_FragColor = vColor;
+            return;
+        }
+      
+
+        if(uOffscreen){
+            gl_FragColor=uSelectColor;
+            return;
+        }
+
+       
         vec3 L= normalize(uLightDirection);
         vec3 N= normalize(vNormal);
         float lambertTerm=dot(N, -L);
@@ -914,7 +931,7 @@ void main(){
         finalColor.a=1.0;
     
         gl_FragColor =finalColor;
-        }
+        
         
 }
 
@@ -1173,7 +1190,7 @@ export class MeshEntity extends Entity {
         if (obj.shininess) {
             this._material.shininess = obj.shininess;
         }
-       
+
     }
 
 
@@ -1217,7 +1234,7 @@ export class MeshEntity extends Entity {
         var gl = this.gl;
 
         this.setMaterialUniforms();
-    
+
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 
         Ketch.enableAttrib(this.graphID, "a_position");
@@ -1236,7 +1253,7 @@ export class MeshEntity extends Entity {
     endDraw() {
         var gl = this.gl;
         Ketch.disableAttrib(this.graphID, "a_position");
-           Ketch.disableAttrib(this.graphID, "a_normal");
+        Ketch.disableAttrib(this.graphID, "a_normal");
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
     }
@@ -1762,7 +1779,7 @@ export class CameraEntity extends Entity {
         this.calculateOrientation();
 
         if (this._type === CAMERA_TYPE.TRACKING) {
-            mat4.multiplyVec4(m, [0, 0, 0, 1], this._position);
+            mat4.multiplyVec4(this._cmatrix, [0, 0, 0, 1], this._position);
         }
     }
 
@@ -1984,17 +2001,155 @@ export class GridEntity extends Entity {
 
 }
 export class SelectEntity extends Entity {
-    
-    constructor(graph_id:string){
+    private _color: Array<number>;
+    private _data: any;
+
+    constructor(graph_id: string, data: any) {
         super(graph_id);
+        this._color = this.generateUniqueColor();
+
+        this._data = data;
     }
-    
+
+
+    public get data(): any {
+        return this._data;
+    }
+
+
+    public get color(): Array<number> {
+        return this._color;
+    }
+
+
+    private generateUniqueColor(): Array<number> {
+        var color: Array<number>;
+
+        var contains = (function (color): boolean {
+            return Ketch.containsColorSelectorBuffer(this.graphID, color);
+        }).bind(this);
+        var found: boolean = true;
+        while (found) {
+            color = [Math.random(), Math.random(), Math.random(), 1.0];
+
+            found = contains(color);
+        }
+
+        return color;
+    }
+
+    beginDraw() {
+     
+        if (Ketch.isOffScreen(this.graphID)) {
+            var gl = this.gl;
+           
+
+            var uSelectColor = this.getUniform("uSelectColor");
+            if (uSelectColor)
+                gl.uniform4fv(uSelectColor, this._color);
+
+        }
+
+    }
+
+    endDraw() {
+
+    }
+
+
 }
 export class Selector extends Renderable {
-    
-     constructor(graph_id:string){
+    private _dimensions: { width: number, height: number };
+    private _texture;
+    private _framebuffer;
+    private _renderbuffer;
+
+    constructor(graph_id: string, dimensions: { width: number, height: number }) {
         super(graph_id);
+        this._dimensions = dimensions;
+        this._framebuffer = null;
+        this._renderbuffer = null;
+        this._texture = null;
+        this.configure();
     }
+
+    configure() {
+        var gl = this.gl;
+
+        this._texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this._texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this._dimensions.width, this._dimensions.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+        this._renderbuffer = gl.createRenderbuffer();
+        gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
+        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this._dimensions.width, this._dimensions.height);
+
+        this._framebuffer = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this._texture, 0);
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._renderbuffer);
+
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    }
+
+    fill(obj: SelectEntity) {
+        Ketch.fillSelectorBuffer(this.graphID, obj);
+    }
+
+    clear() {
+        Ketch.clearSelectorBuffer(this.graphID);
+    }
+
+    find(pos: { x: number, y: number }) {
+        var gl = this.gl;
+        var drawface = [];
+
+        for (var i = 0; i < gl.drawingBufferWidth; i++) {
+            for (var j = 0; j < gl.drawingBufferHeight; j++) {
+                var readout = new Uint8Array(1 * 1 * 4);
+                gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+                gl.readPixels(i, j, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
+                if (readout[0] !== 0 && readout[1] !== 0 && readout[2] !== 0 && readout[3] !== 0) {
+                    drawface.push({
+                        x: i, y: j, color: readout
+                    });
+                }
+
+            }
+        }
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+        console.log(drawface);
+
+
+    }
+
+    render(draw) {
+        var gl = this.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+
+        var uOffscreen = this.getUniform("uOffscreen");
+        gl.uniform1i(uOffscreen, true);
+
+        Ketch.enableOffScreen(this.graphID);
+
+        draw();
+
+        gl.uniform1i(uOffscreen, false);
+
+        Ketch.disableOffScreen(this.graphID);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    }
+
+
+
+
 };
 export interface INodeElement {
     _entity: Entity;
@@ -2147,8 +2302,8 @@ export class NodeElement implements INodeElement {
 }
 export class SceneGraph extends Renderable {
     private _scene: NodeElement;
-    private _isDrawing: boolean;
     private _matrixStack: MatrixStack;
+    private _selector: Selector;
     private _oid: string;
 
     private _loaderBuffer: Array<MeshEntity>;
@@ -2170,7 +2325,7 @@ export class SceneGraph extends Renderable {
         "uWireframe",
         "uPerVertexColor",
         "uSelectColor",
-        "uOffScreen"
+        "uOffscreen"
     ];
     private static ATTRIBUTES = ['a_position', 'a_normal', "a_color"];
 
@@ -2181,8 +2336,8 @@ export class SceneGraph extends Renderable {
         this._scene = new NodeElement(void 0, "Scene");
         this._matrixStack = new MatrixStack(this._oid);
         this._loaderBuffer = [];
-        this._isDrawing = false;
         Ketch.createView(this._oid);
+        this._selector = null;
     }
 
 
@@ -2191,31 +2346,38 @@ export class SceneGraph extends Renderable {
     }
 
 
-    public get isDrawing(): boolean {
-        return this._isDrawing;
-    }
 
-    public Environment(b?:Array<number>) {
+
+    public Environment(b?: Array<number>) {
         var gl = this.gl;
-        b=b||[];
-        
+        b = b || [];
+
         gl.enable(gl.DEPTH_TEST);
         gl.depthFunc(gl.LEQUAL);
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-        gl.clearColor(b[0]||0, b[1]||0, b[2]||0, 1);
+        gl.clearColor(b[0] || 0, b[1] || 0, b[2] || 0, 1);
         gl.clearDepth(1.0);
     }
 
-    public draw(): void {
+    public render(): void {
         var gl = this.gl;
-        this._isDrawing = true;
+
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        this._scene.draw(this._matrixStack);
-        this._isDrawing = false;
+        var draw = (function () {
+            this._scene.draw(this._matrixStack);
+        }).bind(this);
+
+        if (this._selector) {
+            this._selector.render(draw);
+        }
+
+        draw();
+
+
     }
 
     public createMainChildNode(type: string, entity: Entity): NodeElement {
@@ -2246,6 +2408,9 @@ export class SceneGraph extends Renderable {
         });
     }
 
+
+
+
     public createMesh(config?: { mesh?, material?, texture?}): MeshEntity {
         var meshEntity = new MeshEntity(this.oid);
 
@@ -2257,10 +2422,9 @@ export class SceneGraph extends Renderable {
             meshEntity.loadMaterialByObject(config.material);
         }
 
-
         return meshEntity;
     }
-    public createDiffuse(v: Array<number>) {
+    public createDiffuse(v: Array<number>): DiffuseEntity {
         return new DiffuseEntity(this.oid, v);
     }
 
@@ -2270,29 +2434,57 @@ export class SceneGraph extends Renderable {
         return mesh;
     }
 
-    public createTransform(position?: Array<number>, size?: Array<number>, rotation?: ClassUtils.Rotation) {
+    public createTransform(position?: Array<number>, size?: Array<number>, rotation?: ClassUtils.Rotation): TransformEntity {
         return new TransformEntity(this.oid, position, size, rotation);
     }
 
-    public createLight(config: { ambient?: Array<number>, diffuse?: Array<number>, specular?: Array<number>, position?: Array<number>, direction?: Array<number>, cutoff?: number }) {
+    public createLight(config: { ambient?: Array<number>, diffuse?: Array<number>, specular?: Array<number>, position?: Array<number>, direction?: Array<number>, cutoff?: number }): LightEntity {
         return new LightEntity(this.oid, config.ambient, config.diffuse, config.position, config.specular, config.direction, config.cutoff);
     }
 
-    public createCamera(type?: CAMERA_TYPE) {
+    public createCamera(type?: CAMERA_TYPE): CameraEntity {
         return new CameraEntity(this.oid, type);
     }
 
-    public createParticle(pointSize?: number) {
+    public createParticle(pointSize?: number): ParticleEntity {
         return new ParticleEntity(this.oid, pointSize);
     }
 
-    public createAxis(length?: number) {
+    public createAxis(length?: number): AxisEntity {
         return new AxisEntity(this.oid, length);
     }
-    
-     public createGrid(dim?: number, lines?: number ) {
+
+    public createGrid(dim?: number, lines?: number): GridEntity {
         return new GridEntity(this.oid, dim, lines);
     }
+
+    public createSelect(data: any): SelectEntity {
+        return new SelectEntity(this.oid, data);
+    }
+
+
+    public createSelector(dimensions: { height: number, width: number }) {
+        this._selector = new Selector(this.oid, dimensions);
+    }
+
+    public fillSelector(obj: SelectEntity) {
+        if (this._selector) {
+            this._selector.fill(obj);
+        }
+    }
+
+    public clearSelector(obj: SelectEntity) {
+        if (this._selector) {
+            this._selector.clear();
+        }
+    }
+
+    public select(pos:{x:number, y:number}) {
+        if (this._selector) {
+            this._selector.find(pos);
+        }
+    }
+
 
 
     public set MainCamera(camera: CameraEntity) {
@@ -2312,7 +2504,7 @@ export class SceneGraph extends Renderable {
         }, cb);
     }
 
-    public configure(config?: { typeShader?: string, background?:Array<number> }) {
+    public configure(config?: { typeShader?: string, background?: Array<number> }) {
         var self = this;
         config = config || {};
 

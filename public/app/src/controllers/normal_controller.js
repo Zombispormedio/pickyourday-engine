@@ -15,7 +15,8 @@ angular.module('Application')
         gridConfig:{
             lines:60,
             dim:500
-        }
+        },
+		selector:true
 
     };
 

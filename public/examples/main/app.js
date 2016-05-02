@@ -70,7 +70,7 @@ app.controller('AppController', function($scope) {
             $scope.$apply(function() {
 
 
-                $scope.Tree.draw.bind($scope.Tree)();
+                $scope.Tree.render.bind($scope.Tree)();
             });
 
 

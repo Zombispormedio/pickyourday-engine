@@ -1,9 +1,9 @@
 angular.module('alexandra')
     .factory('$alexandraInteractor', function($window,   $rootScope){
 
-    return function(e, c){
+    return function(e, c, t){
 
-        var element=e, camera=c, 
+        var element=e, camera=c, tree=t, 
             dragging=false,
             x=0, y=0, lastX=0, lastY=0, 
             button=0, ctrl=false, key=0,
@@ -23,6 +23,29 @@ angular.module('alexandra')
             var c_position=camera.getPosition();
 
             dstep=Math.max(c_position[0], c_position[1], c_position[2])/100;
+
+            select(ev);
+
+        }
+
+        var select=function(ev){
+            var s_x, s_y, top=0, left=0, obj=tree.getCanvas();
+
+            while(obj && obj.tagName!=="BODY"){
+                top+obj.offsetTop;
+                left+=obj.offsetLeft;
+                obj=obj.offsetParent;
+            }
+
+            left+=window.pageXOffset;
+            top-=window.pageYOffset;
+
+            s_x=ev.clientX-left;
+            s_y=tree.getCanvas().height-(ev.clientY-top);
+            console.log(s_x, s_y)
+            tree.select({x:s_x, y:s_y});
+
+
         }
 
 
@@ -111,7 +134,7 @@ angular.module('alexandra')
         element.bind("mouseup", OnMouseUp);
         element.bind("mousemove", OnMouseMove);
         element.bind("wheel", OnWheel);
-    
+
 
         var $=angular.element($window);
         $.bind("keydown", OnKeyDown);
