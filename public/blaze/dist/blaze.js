@@ -337,12 +337,12 @@ var Blaze;
             var view = Ketch._views[view_key];
             view.selectObjects = [];
         };
-        Ketch.containsColorSelectorBuffer = function (view_key, color) {
+        Ketch.getSelectByColor = function (view_key, color) {
             var view = Ketch._views[view_key];
             view.selectObjects = view.selectObjects || [];
-            return _.findIndex(view.selectObjects, function (o) {
+            return _.find(view.selectObjects, function (o) {
                 return _.isEqual(o.color, color);
-            }) > -1;
+            });
         };
         Ketch._views = {};
         return Ketch;
@@ -1563,7 +1563,7 @@ var Blaze;
         SelectEntity.prototype.generateUniqueColor = function () {
             var color;
             var contains = (function (color) {
-                return Ketch.containsColorSelectorBuffer(this.graphID, color);
+                return Ketch.getSelectByColor(this.graphID, color) != void 0;
             }).bind(this);
             var found = true;
             while (found) {
@@ -1597,7 +1597,6 @@ var Blaze;
         }
         Selector.prototype.configure = function () {
             var gl = this.gl;
-            console.log(this._dimensions);
             this._texture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, this._texture);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this._dimensions.width, this._dimensions.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
@@ -1624,7 +1623,10 @@ var Blaze;
             gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
             gl.readPixels(pos.x, pos.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-            return readout;
+            var fixed = [].slice.call(readout).map(function (item) {
+                return parseFloat((item / 255).toFixed(2));
+            });
+            return Ketch.getSelectByColor(this.graphID, fixed);
         };
         Selector.prototype.render = function (draw) {
             var gl = this.gl;
@@ -1633,9 +1635,8 @@ var Blaze;
             gl.uniform1i(uOffscreen, true);
             Ketch.enableOffScreen(this.graphID);
             draw();
-            /*gl.uniform1i(uOffscreen, false);
-    
-            Ketch.disableOffScreen(this.graphID);*/
+            gl.uniform1i(uOffscreen, false);
+            Ketch.disableOffScreen(this.graphID);
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         };
         return Selector;

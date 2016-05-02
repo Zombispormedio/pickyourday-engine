@@ -16,7 +16,10 @@ angular.module('Application')
             lines:60,
             dim:500
         },
-		selector:true
+		selector:true, 
+        onSelected:function(data){
+            console.log(data);
+        }
 
     };
 

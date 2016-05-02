@@ -127,7 +127,7 @@ class Ketch {
         Ketch._views[view_key].offscreen = true;
     }
 
-    static fillSelectorBuffer(view_key, obj) {
+    static fillSelectorBuffer(view_key, obj:SelectEntity) {
         var view = Ketch._views[view_key];
         view.selectObjects = view.selectObjects || [];
         view.selectObjects.push(obj);
@@ -138,12 +138,12 @@ class Ketch {
         view.selectObjects = [];
     }
 
-    static containsColorSelectorBuffer(view_key, color) :boolean {
+    static getSelectByColor(view_key, color) :SelectEntity {
         var view = Ketch._views[view_key];
         view.selectObjects = view.selectObjects || [];
-       return  _.findIndex(view.selectObjects , function(o){
+       return  _.find(view.selectObjects , function(o){
             return _.isEqual(o.color, color);
-        })>-1;
+        });
     }
 
 }

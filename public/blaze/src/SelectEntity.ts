@@ -24,7 +24,7 @@ class SelectEntity extends Entity {
         var color: Array<number>;
 
         var contains = (function (color): boolean {
-            return Ketch.containsColorSelectorBuffer(this.graphID, color);
+            return Ketch.getSelectByColor(this.graphID, color)!=void 0;
         }).bind(this);
         var found: boolean = true;
         while (found) {

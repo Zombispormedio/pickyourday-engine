@@ -43,11 +43,11 @@ angular.module('alexandra')
             s_x=ev.clientX-left;
             s_y=tree.getCanvas().height-(ev.clientY-top);
 
-            console.log(s_x, s_y)
-            console.log(tree.select({x:174, y:99}));
-            console.log(tree.select({x:s_x, y:s_y}));
-
-
+           
+            var data=tree.select({x:s_x, y:s_y});
+            
+            tree.onSelected(data);
+    
 
         }
 

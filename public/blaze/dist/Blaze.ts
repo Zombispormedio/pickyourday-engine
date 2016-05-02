@@ -378,7 +378,7 @@ export class Ketch {
         Ketch._views[view_key].offscreen = true;
     }
 
-    static fillSelectorBuffer(view_key, obj) {
+    static fillSelectorBuffer(view_key, obj:SelectEntity) {
         var view = Ketch._views[view_key];
         view.selectObjects = view.selectObjects || [];
         view.selectObjects.push(obj);
@@ -389,12 +389,12 @@ export class Ketch {
         view.selectObjects = [];
     }
 
-    static containsColorSelectorBuffer(view_key, color) :boolean {
+    static getSelectByColor(view_key, color) :SelectEntity {
         var view = Ketch._views[view_key];
         view.selectObjects = view.selectObjects || [];
-       return  _.findIndex(view.selectObjects , function(o){
+       return  _.find(view.selectObjects , function(o){
             return _.isEqual(o.color, color);
-        })>-1;
+        });
     }
 
 }
@@ -2026,7 +2026,7 @@ export class SelectEntity extends Entity {
         var color: Array<number>;
 
         var contains = (function (color): boolean {
-            return Ketch.containsColorSelectorBuffer(this.graphID, color);
+            return Ketch.getSelectByColor(this.graphID, color)!=void 0;
         }).bind(this);
         var found: boolean = true;
         while (found) {
@@ -2075,7 +2075,7 @@ export class Selector extends Renderable {
 
     configure() {
         var gl = this.gl;
-        console.log(this._dimensions);
+        
         this._texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this._texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this._dimensions.width, this._dimensions.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
@@ -2109,8 +2109,15 @@ export class Selector extends Renderable {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
         gl.readPixels(pos.x, pos.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+       
+        var fixed=[].slice.call(readout).map(function(item){
+           return parseFloat((item/255).toFixed(2));
+        });
+        
       
-        return readout;
+        
+      
+        return Ketch.getSelectByColor(this.graphID, fixed);
 
     }
 
@@ -2125,9 +2132,9 @@ export class Selector extends Renderable {
 
         draw();
 
-        /*gl.uniform1i(uOffscreen, false);
+        gl.uniform1i(uOffscreen, false);
 
-        Ketch.disableOffScreen(this.graphID);*/
+        Ketch.disableOffScreen(this.graphID);
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 

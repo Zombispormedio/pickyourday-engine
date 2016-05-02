@@ -284,6 +284,11 @@ angular.module('alexandra')
                 select:function(pos){
                     return Tree.select(pos);
                 },
+                
+                onSelected:function(data){
+					if(config.onSelected)
+                    config.onSelected(data);
+                },
 
 
                 run: function () {
