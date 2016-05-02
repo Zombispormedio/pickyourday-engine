@@ -108,6 +108,11 @@ module.run(['$templateCache', function($templateCache) {
     '<md-progress-linear md-mode="indeterminate" ng-if="loading"></md-progress-linear>\n' +
     '<div class="player-content" layout="row">\n' +
     '<canvas alexandra-view data-id="view_1" alexandra-config="config" alexandra-source="data" width="800" height="600"></canvas>\n' +
+    '  <div flex="35" layout="column" layout-align="center center">\n' +
+    '	<p>X: {{selectedInfo[0]||\'N/A\'}}</p>\n' +
+    '	<p>Y: {{selectedInfo[1] || \'0\'}}</p>\n' +
+    '	<p>Z: {{selectedInfo[2]||\'N/A\'}}</p>\n' +
+    '  </div>\n' +
     '</div>');
 }]);
 })();

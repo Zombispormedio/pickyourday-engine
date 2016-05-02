@@ -3,6 +3,8 @@ angular.module('Application')
 
     $scope.loading=true;
     $scope.data=[];
+	$scope.selectedInfo={};
+	
     var calendar=[];
 
     $scope.config={
@@ -18,7 +20,8 @@ angular.module('Application')
         },
 		selector:true, 
         onSelected:function(data){
-            console.log(data);
+			if(data)
+            $scope.selectedInfo=data;
         }
 
     };

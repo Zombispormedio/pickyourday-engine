@@ -1626,7 +1626,8 @@ var Blaze;
             var fixed = [].slice.call(readout).map(function (item) {
                 return parseFloat((item / 255).toFixed(2));
             });
-            return Ketch.getSelectByColor(this.graphID, fixed);
+            var obj = Ketch.getSelectByColor(this.graphID, fixed);
+            return obj ? obj.data : void 0;
         };
         Selector.prototype.render = function (draw) {
             var gl = this.gl;

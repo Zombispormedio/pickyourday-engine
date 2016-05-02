@@ -2075,7 +2075,7 @@ export class Selector extends Renderable {
 
     configure() {
         var gl = this.gl;
-        
+
         this._texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this._texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this._dimensions.width, this._dimensions.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
@@ -2109,15 +2109,15 @@ export class Selector extends Renderable {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
         gl.readPixels(pos.x, pos.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-       
-        var fixed=[].slice.call(readout).map(function(item){
-           return parseFloat((item/255).toFixed(2));
+
+        var fixed = [].slice.call(readout).map(function (item) {
+            return parseFloat((item / 255).toFixed(2));
         });
-        
-      
-        
-      
-        return Ketch.getSelectByColor(this.graphID, fixed);
+
+
+
+        var obj = Ketch.getSelectByColor(this.graphID, fixed);
+        return obj ? obj.data : void 0;
 
     }
 
