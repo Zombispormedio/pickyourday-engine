@@ -3,24 +3,18 @@ var app = angular.module('alexandraExample', [ "alexandra"]);
 angular.module('alexandraExample')
     .controller('AlexandraExampleController', function($rootScope, $scope, $interval, $timeout, $http, $alexandra) {
 
-    
-     var ColorSizePosition = generate(function() {
-        return {
-            position: RandPosition(),
-            color: RandColor()
-        };
-    });
-    function Data() {
-        $scope.data = ColorSizePosition();
-    }
-    Data();
 
- 
 
+  
+
+    $scope.data={
+        mesh:getPlane( 100, 100, 30, 30), 
+        position:[50,0,50]
+    };
 
     $scope.config={
-        colortype: "variable",
-        
+        type:"custom",
+
         axis:true,
         axisLength:500,
         streaming:true,
@@ -31,9 +25,9 @@ angular.module('alexandraExample')
             dim:500
         },
         fullpage:true
-        
-     
-        
+
+
+
     };
 
 

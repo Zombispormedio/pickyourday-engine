@@ -40,3 +40,25 @@ function generate(fn, count) {
         return Array.apply(0, Array(count)).map(fn);
     };
 }
+
+function getPlane(width, height, w_s, h_s){
+    var plane = new THREE.PlaneGeometry( width, height, w_s, h_s);
+
+    var data={}
+    data.v=plane.vertices.reduce(function(prev, item){
+        prev.push(item.x);
+
+        prev.push(chance.integer({min:0, max:100}));
+        prev.push(item.y);
+        return prev;
+    },[]);
+
+    data.iv=plane.faces.reduce(function(prev, item){
+        prev.push(item.a);
+        prev.push(item.c);
+        prev.push(item.b);
+
+        return prev;
+    },[]);
+    return data;
+}
