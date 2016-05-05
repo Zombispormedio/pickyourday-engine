@@ -63,26 +63,33 @@ function getPlane(width, height, w_s, h_s){
     return data;
 }
 
-function getDodecahedron(rad, detail){
-    var dode= new THREE.DodecahedronGeometry(rad, detail);
-
+function transformGeometry(geom){
     var data={}
-    data.v=dode.vertices.reduce(function(prev, item){
+    data.v=geom.vertices.reduce(function(prev, item){
         prev.push(item.x);
 
-        prev.push(item.z);
+
         prev.push(item.y);
+        prev.push(item.z);
         return prev;
     },[]);
 
-    data.iv=dode.faces.reduce(function(prev, item){
+    data.iv=geom.faces.reduce(function(prev, item){
         prev.push(item.a);
-        prev.push(item.c);
+
         prev.push(item.b);
+        prev.push(item.c);
 
         return prev;
     },[]);
     return data;
+}
+
+function getDodecahedron(rad, detail){
+    var dode= new THREE.DodecahedronGeometry(rad, detail);
+
+
+    return transformGeometry(dode);
 }
 
 
@@ -90,23 +97,8 @@ function getDodecahedron(rad, detail){
 function Icosahedron(rad, detail){
     var dode= new THREE.IcosahedronGeometry(rad, detail);
 
-    var data={}
-    data.v=dode.vertices.reduce(function(prev, item){
-        prev.push(item.x);
 
-        prev.push(item.z);
-        prev.push(item.y);
-        return prev;
-    },[]);
-
-    data.iv=dode.faces.reduce(function(prev, item){
-        prev.push(item.a);
-        prev.push(item.c);
-        prev.push(item.b);
-
-        return prev;
-    },[]);
-    return data;
+    return transformGeometry(dode);
 }
 
 
@@ -121,71 +113,43 @@ function Lathe(line){
     }
     var geometry = new THREE.LatheGeometry( points );
 
-    var data={}
-    data.v=geometry.vertices.reduce(function(prev, item){
-        prev.push(item.x);
 
-        prev.push(item.z);
-        prev.push(item.y);
-        return prev;
-    },[]);
-
-    data.iv=geometry.faces.reduce(function(prev, item){
-        prev.push(item.a);
-        prev.push(item.c);
-        prev.push(item.b);
-
-        return prev;
-    },[]);
-    return data;
+    return transformGeometry(geometry);
 }
 
 
 
 
 function Tetrahedron(radius, detail){
-      var geometry= new THREE.TetrahedronGeometry(radius, detail)
+    var geometry= new THREE.TetrahedronGeometry(radius, detail)
 
-    var data={}
-    data.v=geometry.vertices.reduce(function(prev, item){
-        prev.push(item.x);
 
-        prev.push(item.z);
-        prev.push(item.y);
-        return prev;
-    },[]);
-
-    data.iv=geometry.faces.reduce(function(prev, item){
-        prev.push(item.a);
-        prev.push(item.c);
-        prev.push(item.b);
-
-        return prev;
-    },[]);
-    return data;
+    return transformGeometry(geometry);
 }
 
 
 
 
-function Text(text, parameters){
-      var geometry= new THREE.TextGeometry(text, parameters)
+function Text(text, parameters, cb){
 
-    var data={}
-    data.v=geometry.vertices.reduce(function(prev, item){
-        prev.push(item.x);
+    var loader = new THREE.FontLoader();
+    loader.load( 'assets/fonts/optimer.js', function ( font ) {
+        parameters.font=font;
 
-        prev.push(item.z);
-        prev.push(item.y);
-        return prev;
-    },[]);
+        var obj= new THREE.TextGeometry(text, parameters)
 
-    data.iv=geometry.faces.reduce(function(prev, item){
-        prev.push(item.a);
-        prev.push(item.c);
-        prev.push(item.b);
+        cb(transformGeometry(obj));
+    } );
 
-        return prev;
-    },[]);
-    return data;
+
+
+
+}
+
+
+function Torus(r, t, t_s, r_s){
+     var geometry= new THREE.TorusKnotGeometry(r, t, t_s, r_s)
+
+
+    return transformGeometry(geometry);
 }
