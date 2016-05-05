@@ -69,27 +69,40 @@ angular.module('alexandra')
             },
 
 
-            configureAndBuildCustomMesh:function(source){
+            configureAndBuildCustomMesh:function(item){
+                if(!item)return;
                 config = config || {}
                 var mesh_config = {};
-                mesh_config.mesh=source.mesh;
+                mesh_config.mesh=item.mesh;
 
 
                 mesh_config.material = MaterialValue.default;
                 var mesh=Tree.createMesh(mesh_config);
 
                 var tr = Tree.createTransform();
-                
-                if(source.position){
-                    tr.position=source.position;
+
+                if(item.position){
+                    tr.position=item.position;
                 }
 
+                if (item.size) {
+                    tr.size = item.size;
+                }
 
+                if (item.rotation) {
+                    if (item.rotation.angle) {
+                        tr.rotation.angle = item.rotation.angle;
+                    }
+                    if (item.rotation.axis) {
+                        tr.rotation.axis = item.rotation.axis;
+                    }
+                }
+               
 
                 var trnode = Tree.createMainChildNode("TrMesh", tr);
                 trnode.createChildNode("Mesh", mesh);
                 node_buffer.push(trnode);
-                console.log(Tree)
+             
             },
 
 

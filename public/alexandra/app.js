@@ -3,14 +3,25 @@ var app = angular.module('alexandraExample', [ "alexandra"]);
 angular.module('alexandraExample')
     .controller('AlexandraExampleController', function($rootScope, $scope, $interval, $timeout, $http, $alexandra) {
 
-
+  
+ 
 
   
 
-    $scope.data={
-        mesh:getPlane( 100, 100, 30, 30), 
-        position:[50,0,50]
-    };
+   /* $scope.data={
+        mesh: Text("Pick Your Day", {
+            size:10,
+            height:1,
+            curveSegments:10,
+            
+        }),//getPlane( 100, 100, 50, 50), 
+        position:[50,190,50],
+        rotation:{
+            angle:90,
+            axis:[1,0,0]
+        }
+        
+    };*/
 
     $scope.config={
         type:"custom",

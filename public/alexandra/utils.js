@@ -62,3 +62,130 @@ function getPlane(width, height, w_s, h_s){
     },[]);
     return data;
 }
+
+function getDodecahedron(rad, detail){
+    var dode= new THREE.DodecahedronGeometry(rad, detail);
+
+    var data={}
+    data.v=dode.vertices.reduce(function(prev, item){
+        prev.push(item.x);
+
+        prev.push(item.z);
+        prev.push(item.y);
+        return prev;
+    },[]);
+
+    data.iv=dode.faces.reduce(function(prev, item){
+        prev.push(item.a);
+        prev.push(item.c);
+        prev.push(item.b);
+
+        return prev;
+    },[]);
+    return data;
+}
+
+
+
+function Icosahedron(rad, detail){
+    var dode= new THREE.IcosahedronGeometry(rad, detail);
+
+    var data={}
+    data.v=dode.vertices.reduce(function(prev, item){
+        prev.push(item.x);
+
+        prev.push(item.z);
+        prev.push(item.y);
+        return prev;
+    },[]);
+
+    data.iv=dode.faces.reduce(function(prev, item){
+        prev.push(item.a);
+        prev.push(item.c);
+        prev.push(item.b);
+
+        return prev;
+    },[]);
+    return data;
+}
+
+
+
+
+
+function Lathe(line){
+    var points = [];
+    line=line||50
+    for ( var i = 0; i < line; i ++ ) {
+        points.push( new THREE.Vector2( Math.sin( i * 0.2 ) * 10 + 5, ( i - 5 ) * 2 ) );
+    }
+    var geometry = new THREE.LatheGeometry( points );
+
+    var data={}
+    data.v=geometry.vertices.reduce(function(prev, item){
+        prev.push(item.x);
+
+        prev.push(item.z);
+        prev.push(item.y);
+        return prev;
+    },[]);
+
+    data.iv=geometry.faces.reduce(function(prev, item){
+        prev.push(item.a);
+        prev.push(item.c);
+        prev.push(item.b);
+
+        return prev;
+    },[]);
+    return data;
+}
+
+
+
+
+function Tetrahedron(radius, detail){
+      var geometry= new THREE.TetrahedronGeometry(radius, detail)
+
+    var data={}
+    data.v=geometry.vertices.reduce(function(prev, item){
+        prev.push(item.x);
+
+        prev.push(item.z);
+        prev.push(item.y);
+        return prev;
+    },[]);
+
+    data.iv=geometry.faces.reduce(function(prev, item){
+        prev.push(item.a);
+        prev.push(item.c);
+        prev.push(item.b);
+
+        return prev;
+    },[]);
+    return data;
+}
+
+
+
+
+function Text(text, parameters){
+      var geometry= new THREE.TextGeometry(text, parameters)
+
+    var data={}
+    data.v=geometry.vertices.reduce(function(prev, item){
+        prev.push(item.x);
+
+        prev.push(item.z);
+        prev.push(item.y);
+        return prev;
+    },[]);
+
+    data.iv=geometry.faces.reduce(function(prev, item){
+        prev.push(item.a);
+        prev.push(item.c);
+        prev.push(item.b);
+
+        return prev;
+    },[]);
+    return data;
+}
