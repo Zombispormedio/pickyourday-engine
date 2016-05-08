@@ -9,8 +9,6 @@ module.run(['$templateCache', function($templateCache) {
     '\n' +
     '<md-toolbar class="md-accent md-whiteframe-1dp">\n' +
     '    <div class="md-toolbar-tools">\n' +
-    '\n' +
-    '\n' +
     '        <md-menu flex="5">\n' +
     '            <md-button aria-label="Type Stats" class="md-icon-button button-stats" ng-click="openMenu($mdOpenMenu, $event)">\n' +
     '                <md-icon md-menu-origin md-font-icon="mdi-chart-areaspline" class="mdi"></md-icon>\n' +
@@ -35,9 +33,15 @@ module.run(['$templateCache', function($templateCache) {
     '                        Player\n' +
     '                    </md-button>\n' +
     '                </md-menu-item>\n' +
+    '                <md-menu-item>\n' +
+    '                    <md-button  ui-sref="app.heightmap">\n' +
+    '                        <md-icon md-font-icon="mdi-airplane-landing" class="mdi"></md-icon>\n' +
+    '                        Height Map\n' +
+    '                    </md-button>\n' +
+    '                </md-menu-item>\n' +
     '            </md-menu-content>\n' +
     '        </md-menu>\n' +
-    '\n' +
+    '        \n' +
     '        <h2>\n' +
     '            <span>Pickyourday 3D</span>\n' +
     '        </h2>\n' +
@@ -50,6 +54,21 @@ module.run(['$templateCache', function($templateCache) {
     '\n' +
     '\n' +
     '<div ui-view="content"></div>');
+}]);
+})();
+
+(function(module) {
+try {
+  module = angular.module('Application');
+} catch (e) {
+  module = angular.module('Application', []);
+}
+module.run(['$templateCache', function($templateCache) {
+  $templateCache.put('/views/height-map/main.html',
+    '<md-progress-linear md-mode="indeterminate" ng-if="loading"></md-progress-linear>\n' +
+    '<div class="player-content" layout="row">\n' +
+    '    <canvas alexandra-view data-id="view_1" alexandra-config="config" alexandra-source="data" width="800" height="600"></canvas>\n' +
+    '</div>');
 }]);
 })();
 

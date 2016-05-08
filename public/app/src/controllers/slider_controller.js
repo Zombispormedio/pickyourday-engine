@@ -10,7 +10,6 @@ angular.module('Application')
 
         $scope.config = {
             type: "custom",
-
             axis: true,
             axisLength: 500,
             streaming: true,
@@ -20,7 +19,6 @@ angular.module('Application')
                 lines: 60,
                 dim: 500
             }
-
         };
 
 

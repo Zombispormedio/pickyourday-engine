@@ -43,9 +43,9 @@ function generate(fn, count) {
 
 function getPlane(width, height, w_s, h_s){
     var plane = new THREE.PlaneGeometry( width, height, w_s, h_s);
-    console.log(plane);
+
     var data={}
-    var y=0;
+
     data.v=plane.vertices.reduce(function(prev, item, index){
         prev.push(item.x);
 

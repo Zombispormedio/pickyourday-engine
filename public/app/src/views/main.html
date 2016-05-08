@@ -1,8 +1,6 @@
 
 <md-toolbar class="md-accent md-whiteframe-1dp">
     <div class="md-toolbar-tools">
-
-
         <md-menu flex="5">
             <md-button aria-label="Type Stats" class="md-icon-button button-stats" ng-click="openMenu($mdOpenMenu, $event)">
                 <md-icon md-menu-origin md-font-icon="mdi-chart-areaspline" class="mdi"></md-icon>
@@ -27,9 +25,15 @@
                         Player
                     </md-button>
                 </md-menu-item>
+                <md-menu-item>
+                    <md-button  ui-sref="app.heightmap">
+                        <md-icon md-font-icon="mdi-airplane-landing" class="mdi"></md-icon>
+                        Height Map
+                    </md-button>
+                </md-menu-item>
             </md-menu-content>
         </md-menu>
-
+        
         <h2>
             <span>Pickyourday 3D</span>
         </h2>

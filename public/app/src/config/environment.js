@@ -74,6 +74,21 @@ angular.module('Application')
             }
         }  
     })
+    .state("app.heightmap", {
+        url: 'height-map',
+        onEnter: function ($rootScope) {
+            if (!getJSONLocal("user")) {
+
+                $rootScope.go("login");
+            }
+        },
+        views: {
+            content: {
+                templateUrl: '/views/height-map/main.html',
+                controller: 'HeightMapCtrl'
+            }
+        }  
+    })
 
     $urlRouterProvider.otherwise("/login");
 
