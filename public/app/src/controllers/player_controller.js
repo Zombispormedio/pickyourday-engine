@@ -26,7 +26,7 @@ angular.module('Application')
 
 
     CompanyService.Pick().stats(function(res){
-        calendar=Immutable.List(res.data);
+        calendar=Immutable.List(res.data.stats);
         $scope.data=_.clone(calendar.get(0));
         $scope.loading=false; 
     });

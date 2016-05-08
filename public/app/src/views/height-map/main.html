@@ -1,4 +1,13 @@
 <md-progress-linear md-mode="indeterminate" ng-if="loading"></md-progress-linear>
 <div class="player-content" layout="row">
     <canvas alexandra-view data-id="view_1" alexandra-config="config" alexandra-source="data" width="800" height="600"></canvas>
+    <div flex="35" layout="column" layout-align="center strech">
+        <div>
+            <md-slider-container>
+               
+                <md-slider class="md-primary" md-discrete step="1" min="1" max="30" aria-label="rating" ng-show="!loading" ng-model="index" ng-change="select()">
+                </md-slider>
+            </md-slider-container>
+        </div>
+    </div>
 </div>

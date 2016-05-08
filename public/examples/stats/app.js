@@ -32,8 +32,6 @@ angular.module('alexandraExample')
     
     $scope.select=function(){
           var index=$scope.values.index-1;
-        console.log(index);
-        
         $scope.source=$scope.calendar[index];
     }
 

@@ -1,7 +1,7 @@
 angular.module('Application')
     .controller('HeightMapCtrl', function($scope, CompanyService, $alexandraUtils){
 
-    //$scope.loading=true;
+    $scope.loading=true;
 
     $scope.config = {
         type: "custom",
@@ -16,26 +16,55 @@ angular.module('Application')
         }
     };
 
+    var plane={};
 
-    $scope.data={
-        mesh:$alexandraUtils.Plane({
-            height:100,
-            width:100,
-            w_s:5,
-            h_s:8
-        }, function(prev, item, index){
-            var x=item.x, y=0, z=item.y;
+    $scope.index=1;
 
-            if((x<50 && x>-50)&&(z<50 && z>-50)){
-                y=chance.integer({min:0, max:30});
-            }
-            
-            prev.push(x);
-            prev.push(y);
-            prev.push(z);
-            return prev;
-        }),
-        position:[50,0,50]
+    CompanyService.Pick().stats(function(res){
+        $scope.loading=false;
+        plane=res.data.plane;
+
+        applyPlane();
+
+    });
+    
+    $scope.select=function(){
+        console.log($scope.index);
+        applyPlane();
     }
 
-});
+    var applyPlane=function(){
+        var calendar=plane.vertices;
+        var index=$scope.index-1;
+        var current_day=calendar[index];
+
+        $scope.data={
+            mesh:$alexandraUtils.Plane({
+                height:plane.height,
+                width:plane.width,
+                w_s:plane.vWidth,
+                h_s:plane.vHeight
+            }, function(prev, item, index){
+                var x=item.x, y=item.z, z=item.y;
+
+                var c_p=_.find(current_day, function(i){
+                    return i.key==index; 
+                });
+                
+                if(c_p){
+                    y=c_p.y;
+                }
+
+                prev.push(x);
+                prev.push(y);
+                prev.push(z);
+                return prev;
+            }),
+            position:[50,0,50]
+        }
+    }
+
+
+
+
+    });

@@ -54,6 +54,7 @@ angular.module('alexandra')
             var plane = new THREE.PlaneGeometry(options.width, options.height, options.w_s, options.h_s);
 
             var data = {}
+			
 
             data.v = plane.vertices.reduce(function (prev, item, index) {
                 if (transform_vertex) {

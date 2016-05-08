@@ -68,6 +68,15 @@ module.run(['$templateCache', function($templateCache) {
     '<md-progress-linear md-mode="indeterminate" ng-if="loading"></md-progress-linear>\n' +
     '<div class="player-content" layout="row">\n' +
     '    <canvas alexandra-view data-id="view_1" alexandra-config="config" alexandra-source="data" width="800" height="600"></canvas>\n' +
+    '    <div flex="35" layout="column" layout-align="center strech">\n' +
+    '        <div>\n' +
+    '            <md-slider-container>\n' +
+    '               \n' +
+    '                <md-slider class="md-primary" md-discrete step="1" min="1" max="30" aria-label="rating" ng-show="!loading" ng-model="index" ng-change="select()">\n' +
+    '                </md-slider>\n' +
+    '            </md-slider-container>\n' +
+    '        </div>\n' +
+    '    </div>\n' +
     '</div>');
 }]);
 })();
@@ -169,10 +178,6 @@ module.run(['$templateCache', function($templateCache) {
     '                </md-slider>\n' +
     '            </md-slider-container>\n' +
     '        </div>\n' +
-    '\n' +
-    '\n' +
-    '\n' +
-    '\n' +
     '    </div>\n' +
     '\n' +
     '</div>\n' +

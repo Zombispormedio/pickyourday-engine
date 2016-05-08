@@ -29,7 +29,7 @@ angular.module('Application')
 
     var fetch=function(){
         CompanyService.Pick().stats(function(res){
-            calendar=Immutable.List(res.data);
+            calendar=Immutable.List(res.data.stats);
             $scope.data=_.clone(calendar.get(23));
             $scope.loading=false; 
         });
