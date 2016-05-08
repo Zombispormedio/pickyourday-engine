@@ -4,7 +4,7 @@ angular.module('alexandra')
     return function (id, c) {
 
         var Tree = $alexandraForest.getTree(id);
-        var config = c;
+        var config = c || {};
 
         var camera, light, mesh, particle, axis, node_buffer = [], textures = {}, canvas;
 
@@ -186,10 +186,6 @@ angular.module('alexandra')
 
                 });
 
-
-
-
-
             },
 
             configureParticle: function () {
@@ -288,7 +284,6 @@ angular.module('alexandra')
                 }
 
                 node_buffer.forEach(function (item) {
-
                     Tree.removeMainChildNode(item);
                 });
                 node_buffer = [];

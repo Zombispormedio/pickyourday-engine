@@ -43,12 +43,13 @@ function generate(fn, count) {
 
 function getPlane(width, height, w_s, h_s){
     var plane = new THREE.PlaneGeometry( width, height, w_s, h_s);
-
+    console.log(plane);
     var data={}
-    data.v=plane.vertices.reduce(function(prev, item){
+    var y=0;
+    data.v=plane.vertices.reduce(function(prev, item, index){
         prev.push(item.x);
 
-        prev.push(chance.integer({min:0, max:100}));
+        prev.push(index);
         prev.push(item.y);
         return prev;
     },[]);
@@ -67,8 +68,6 @@ function transformGeometry(geom){
     var data={}
     data.v=geom.vertices.reduce(function(prev, item){
         prev.push(item.x);
-
-
         prev.push(item.y);
         prev.push(item.z);
         return prev;
@@ -76,10 +75,8 @@ function transformGeometry(geom){
 
     data.iv=geom.faces.reduce(function(prev, item){
         prev.push(item.a);
-
         prev.push(item.b);
         prev.push(item.c);
-
         return prev;
     },[]);
     return data;

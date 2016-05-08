@@ -24,8 +24,8 @@ angular.module('alexandraExample')
 
     
     $scope.data={
-        mesh:Torus(40, 15, 100, 16),
-        position:[80,100,80]
+        mesh:getPlane(100,100, 5, 8),
+        position:[0,0,0]
     }
 
 

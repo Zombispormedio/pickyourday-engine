@@ -156,7 +156,9 @@ class MeshEntity extends Entity {
         var gl = this.gl;
 
         this.setMaterialUniforms();
-        
+     
+            
+            
         gl.bindBuffer(gl.ARRAY_BUFFER, this._buffers.vbo);
 
         Ketch.enableAttrib(this.graphID, "a_position");

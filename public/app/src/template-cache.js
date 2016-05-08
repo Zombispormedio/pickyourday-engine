@@ -171,7 +171,9 @@ try {
 }
 module.run(['$templateCache', function($templateCache) {
   $templateCache.put('/views/slider/main.html',
-    '<div>Slider</div>\n' +
-    '{{coords.x}}, {{coords.y}}, {{coords.z}}');
+    '<md-progress-linear md-mode="indeterminate" ng-if="loading"></md-progress-linear>\n' +
+    '<div class="player-content" layout="row">\n' +
+    '    <canvas alexandra-view data-id="view_1" alexandra-config="config" alexandra-source="data" width="800" height="600"></canvas>\n' +
+    '</div>');
 }]);
 })();
