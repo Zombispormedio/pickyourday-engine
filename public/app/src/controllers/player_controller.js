@@ -5,8 +5,11 @@ angular.module('Application')
     var EMPTY_TIME=500;
 
     $scope.loading=true;
+    $scope.playing=false;
     $scope.data=[];
     var calendar=[];
+    var tween=null;
+
     $scope.values={
         index:1};
 
@@ -26,9 +29,11 @@ angular.module('Application')
     };
 
 
+
+
     CompanyService.Pick().stats(function(res){
         calendar=Immutable.List(res.data.stats);
-        $scope.data=_.clone(calendar.get(0));
+        $scope.data=_.cloneDeep(calendar.get(0));
         $scope.loading=false; 
     });
 
@@ -38,7 +43,6 @@ angular.module('Application')
         var inter_data=c.reduce(function(prev,item, index){
             var c_pos=item.position;
             var n_pos=n[index].position;
-
 
             if(!_.isEqual(c_pos, n_pos)){
                 prev.length++;
@@ -51,8 +55,6 @@ angular.module('Application')
                 prev.next["z_"+index]=n_pos[2];
 
             }
-
-
             return prev;
 
         }, {
@@ -61,22 +63,23 @@ angular.module('Application')
             length:0
         });
         $scope.values.index=step+1;
-        console.log(inter_data);
-
-
 
         if(inter_data.length>0){
 
-
-
-            var tween = new TWEEN.Tween(inter_data.current)
-            .to(inter_data.next, PLAYER_TIME)
-            .onUpdate(function() {
+            tween = new TWEEN.Tween(inter_data.current)
+                .to(inter_data.next, PLAYER_TIME)
+                .onUpdate(function() {
 
                 var self=this;
 
                 if(!$scope.$$phase){
                     $scope.$apply(function(){ 
+
+                        if($scope.playing==false){
+                            tween.stop();
+                            return;
+                        }
+
 
 
                         var inter_array=Object.keys(self).reduce(function(prev, item){
@@ -84,7 +87,7 @@ angular.module('Application')
                             var keys=item.split("_");
                             var param=keys[0];
                             var index=keys[1];
-                            console.log(keys);
+
 
                             prev[index]=prev[index]||{}
 
@@ -93,11 +96,7 @@ angular.module('Application')
 
                         },{});
 
-                        console.log(inter_array);
-
-
-                        var clone_data=_.clone($scope.data);
-
+                        var clone_data=_.cloneDeep($scope.data);
 
                         Object.keys(inter_array).forEach(function(item){
                             var value=inter_array[item];
@@ -106,9 +105,7 @@ angular.module('Application')
 
                         });
 
-
                         $scope.data=clone_data;
-
 
 
                     });
@@ -117,17 +114,22 @@ angular.module('Application')
 
 
             })
-            .onComplete(function(){
-
+                .onComplete(function(){
                 cb();
-            }).
-            interpolation( TWEEN.Interpolation.Bezier ).easing( TWEEN.Easing.Linear.None ).delay( 250 )
-            .start()
+            })
+                .onStop(function(){
+                console.log("hello")
+                cb();
+            })
+                .interpolation( TWEEN.Interpolation.Bezier ).easing( TWEEN.Easing.Linear.None ).delay( 250 )
+                .start()
 
 
-            }else{
-                $timeout(cb, EMPTY_TIME);
-            }
+        }else{
+            $timeout(cb, EMPTY_TIME);
+        }
+
+
 
 
 
@@ -137,28 +139,42 @@ angular.module('Application')
 
 
     $scope.play=function(){
-
-
+        $scope.playing=true;
         function iter(i){
-            console.log(i);
 
-            if(i<calendar.count()-1){
-                var current=_.clone(calendar.get(i));
-                var next=_.clone(calendar.get(i+1));
+            if(i<calendar.count()-1 && $scope.playing){
+                var current=_.cloneDeep(calendar.get(i));
+                var next=_.cloneDeep(calendar.get(i+1));
                 animateCalendar(i, current, next, function(){
                     iter(i+1);
                 });
 
             }else{
-                $scope.values.index=calendar.count();
+
+
+                
+                $scope.playing=false;
+                $scope.values.index=1;
+                $scope.data=[];
+             
+                $scope.data=_.cloneDeep(calendar.get(0));    
+                
+
             }
 
         }
 
         iter(0);
+    }
 
+
+    $scope.stop=function(){
+
+        $scope.playing=false;
 
     }
+
+
 
     requestAnimationFrame(InterpolationTime);
 

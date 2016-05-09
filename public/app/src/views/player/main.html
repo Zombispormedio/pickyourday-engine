@@ -3,17 +3,15 @@
     <canvas alexandra-view data-id="view_1" alexandra-config="config" alexandra-source="data" width="800" height="600"></canvas>
     <div flex="35" layout="column" layout-align="center strech">
         <div flex layout="row" layout-align="center center">
-            <md-button ng-click="play()" ng-if="!loading">
+            <md-button ng-click="play()" ng-if="!loading&&!playing">
                 <md-icon md-font-icon="mdi-play" class="mdi"></md-icon>
                 Play
             </md-button>
-        </div>
-
-        <div flex>
-            <div ng-repeat="vm in data">
-                {{vm.position}}
-
-            </div>
+            
+            <md-button ng-click="stop()" ng-if="playing">
+                <md-icon md-font-icon="mdi-stop" class="mdi"></md-icon>
+                Stop
+            </md-button>
         </div>
 
         <div>

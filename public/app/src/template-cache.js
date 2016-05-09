@@ -158,17 +158,15 @@ module.run(['$templateCache', function($templateCache) {
     '    <canvas alexandra-view data-id="view_1" alexandra-config="config" alexandra-source="data" width="800" height="600"></canvas>\n' +
     '    <div flex="35" layout="column" layout-align="center strech">\n' +
     '        <div flex layout="row" layout-align="center center">\n' +
-    '            <md-button ng-click="play()" ng-if="!loading">\n' +
+    '            <md-button ng-click="play()" ng-if="!loading&&!playing">\n' +
     '                <md-icon md-font-icon="mdi-play" class="mdi"></md-icon>\n' +
     '                Play\n' +
     '            </md-button>\n' +
-    '        </div>\n' +
-    '\n' +
-    '        <div flex>\n' +
-    '            <div ng-repeat="vm in data">\n' +
-    '                {{vm.position}}\n' +
-    '\n' +
-    '            </div>\n' +
+    '            \n' +
+    '            <md-button ng-click="stop()" ng-if="playing">\n' +
+    '                <md-icon md-font-icon="mdi-stop" class="mdi"></md-icon>\n' +
+    '                Stop\n' +
+    '            </md-button>\n' +
     '        </div>\n' +
     '\n' +
     '        <div>\n' +
