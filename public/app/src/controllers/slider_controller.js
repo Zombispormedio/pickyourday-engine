@@ -10,6 +10,8 @@ angular.module('Application')
 
         $scope.config = {
             type: "custom",
+            engine:"toon",
+            colortype:"variable",
             axis: true,
             axisLength: 500,
             streaming: true,
@@ -21,6 +23,7 @@ angular.module('Application')
             }
         };
 
+        var color=RandColor();
 
         var ApplyText = function (text) {
             var model = $alexandraUtils.Text(text, {
@@ -37,7 +40,8 @@ angular.module('Application')
                 rotation:{
                     angle:45,
                     axis:[0,1,0]
-                }
+                },
+                color:color
 
             }
 

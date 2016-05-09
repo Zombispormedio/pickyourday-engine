@@ -33,7 +33,6 @@ angular.module('Application')
     });
     
     $scope.select=function(){
-        console.log($scope.index);
         applyPlane();
     }
 	var color=RandColor();
