@@ -10,7 +10,7 @@ angular.module('Application')
 
         $scope.config = {
             type: "custom",
-            engine:"toon",
+            engine:"phong_positional",
             colortype:"variable",
             axis: true,
             axisLength: 500,

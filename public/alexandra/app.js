@@ -16,7 +16,7 @@ angular.module('alexandraExample')
 
     $scope.config={
     
-        engine:"toon",
+        engine:"phong_positional",
         colortype:"variable",
         type:"custom",
         axis:true,

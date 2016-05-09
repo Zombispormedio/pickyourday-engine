@@ -130,7 +130,7 @@ angular.module('alexandra')
 
                 parent_node.createChildNode("Mesh", mesh);
                 node_buffer.push(trnode);
-                console.log(node_buffer)
+              
 
             },
 
@@ -156,6 +156,8 @@ angular.module('alexandra')
 
                     case "phong":
                         renderConfig.typeShader = "Phong";
+                    case "phong_positional":
+                         renderConfig.typeShader = "Phong_positional";
 
 
                 }

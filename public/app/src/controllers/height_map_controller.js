@@ -5,6 +5,7 @@ angular.module('Application')
 
     $scope.config = {
         type: "custom",
+		engine:"phong_positional",
         axis: true,
         axisLength: 500,
         streaming: true,
