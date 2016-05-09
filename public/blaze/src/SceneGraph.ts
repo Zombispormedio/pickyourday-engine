@@ -10,7 +10,9 @@ class SceneGraph extends Renderable {
         'uPMatrix',
         'uMVMatrix',
         'uNMatrix',
+        "uLightPosition",
         'uLightDirection',
+        "uCutOff",
         'uLightAmbient',
         'uMaterialAmbient',
         'uLightDiffuse',
@@ -101,8 +103,8 @@ class SceneGraph extends Renderable {
         type = type || "Phong";
 
         Ketch.createProgram(this._oid, {
-            fragment: Shaders.Fragment[type],
-            vertex: Shaders.Vertex[type]
+            fragment: Shaders.Fragment[type] ||  Shaders.Fragment["Phong"],
+            vertex: Shaders.Vertex[type]  || Shaders.Vertex["Phong"]
         });
     }
 

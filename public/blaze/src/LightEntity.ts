@@ -107,11 +107,11 @@ class LightEntity extends Entity {
                 gl.uniform3fv(uDirection, this._direction);
         }
 
-       /* if (this._cutoff) {
+        if (this._cutoff) {
             var uCutOff = this.getUniform("uCutOff");
             if (uCutOff)
                 gl.uniform1f(uCutOff, this._cutoff);
-        }*/
+        }
     }
 
     endDraw() {

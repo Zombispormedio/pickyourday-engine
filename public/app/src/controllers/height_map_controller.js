@@ -13,6 +13,9 @@ angular.module('Application')
         gridConfig: {
             lines: 60,
             dim: 500
+        },
+        light:{
+            direction:[-1.0, -1.0, -1]
         }
     };
 

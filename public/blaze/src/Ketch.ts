@@ -98,7 +98,6 @@ class Ketch {
         view.textures = view.textures || [];
         var index = view.textures.indexOf(texture_id)
         view.textures.splice(index, 1);
-        console.log(view.textures)
     }
     static activeTexture(key, texture_id, texture) {
         var view = Ketch._views[key];

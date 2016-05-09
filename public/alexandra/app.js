@@ -4,34 +4,18 @@ angular.module('alexandraExample')
     .controller('AlexandraExampleController', function($rootScope, $scope, $interval, $timeout, $http, $alexandra) {
 
 
-
-
-
-    /*Text("Pick Your Day", {
-        size:10,
-        height:0.5,
-        curveSegments:30,
-        bevelEnabled :true,
-        bevelThickness:1.5,
-        bevelSize:0.5
-    }, function(data){
-        $scope.data={
-            mesh:data,
-            position:[50,50,50],
-           
-        }
-    })*/
-
+   
     
     $scope.data={
-        mesh:getPlane(100,100, 5, 8),
-        position:[0,0,0]
+        mesh:Torus(20, 6, 100, 16),
+        position:[100,50,100]
     }
 
 
     $scope.config={
-        type:"custom",
-
+         type:"custom",
+        engine:"toon",
+        //type:"cube",
         axis:true,
         axisLength:500,
         streaming:true,

@@ -29,7 +29,17 @@ angular.module('alexandra')
 
             },
             configureLights: function () {
-                light = Tree.createLight(LightValue.default);
+                var custom=config.light||{};
+                var _default=LightValue.default;
+                var values=Object.keys(_default).reduce(function(prev, key){
+
+                    prev[key]=custom[key]|| _default[key];
+
+                    return prev;
+
+                }, {});
+
+                light = Tree.createLight(values);
                 Tree.createMainChildNode("Light", light);
             },
 
@@ -97,12 +107,12 @@ angular.module('alexandra')
                         tr.rotation.axis = item.rotation.axis;
                     }
                 }
-               
+
 
                 var trnode = Tree.createMainChildNode("TrMesh", tr);
                 trnode.createChildNode("Mesh", mesh);
                 node_buffer.push(trnode);
-             
+
             },
 
 
@@ -114,6 +124,21 @@ angular.module('alexandra')
                     case "particle":
                         renderConfig.typeShader = "Particle";
                         break;
+                }
+
+                switch(config.engine){
+                    case "particle":
+                        renderConfig.typeShader = "Particle";
+                        break;
+
+                    case "toon":
+                        renderConfig.typeShader = "Toon";
+                        break;
+
+                    case "phong":
+                        renderConfig.typeShader = "Phong";
+
+
                 }
                 Tree.configure(renderConfig);
 
