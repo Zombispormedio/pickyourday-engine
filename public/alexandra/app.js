@@ -8,14 +8,29 @@ angular.module('alexandraExample')
     
     $scope.data={
         mesh:Torus(20, 6, 100, 16),
-        position:[100,50,100]
+        position:[100,50,100],
+        color: RandColor()
     }
+    
+     /*  var ColorSizePosition = generate(function() {
+        return {
+            position: RandPosition(),
+            color: RandColor(),
+            
+            rotation:RandRotation()
+        };
+    });
+    function Data_2() {
+        $scope.data = ColorSizePosition();
+    }
+    Data_2();*/
 
 
     $scope.config={
-         type:"custom",
+    
         engine:"toon",
-        //type:"cube",
+        colortype:"variable",
+        type:"custom",
         axis:true,
         axisLength:500,
         streaming:true,

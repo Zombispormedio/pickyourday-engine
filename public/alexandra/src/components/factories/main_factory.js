@@ -85,8 +85,13 @@ angular.module('alexandra')
                 var mesh_config = {};
                 mesh_config.mesh=item.mesh;
 
-
-                mesh_config.material = MaterialValue.default;
+                switch (config.colortype) {
+                    case "variable":
+                        mesh_config.material = MaterialValue.variable;
+                        break;
+                    default:
+                        mesh_config.material = MaterialValue.default;
+                }
                 var mesh=Tree.createMesh(mesh_config);
 
                 var tr = Tree.createTransform();
@@ -110,8 +115,22 @@ angular.module('alexandra')
 
 
                 var trnode = Tree.createMainChildNode("TrMesh", tr);
-                trnode.createChildNode("Mesh", mesh);
+
+                var parent_node;
+
+                switch (config.colortype) {
+                    case "variable":
+                        var diffuse = Tree.createDiffuse(item.color);
+                        parent_node = trnode.createChildNode("Diffuse", diffuse);
+                        break;
+                    default:
+                        parent_node = trnode;
+                }
+
+
+                parent_node.createChildNode("Mesh", mesh);
                 node_buffer.push(trnode);
+                console.log(node_buffer)
 
             },
 
@@ -210,6 +229,8 @@ angular.module('alexandra')
                     return trnode;
 
                 });
+
+             
 
             },
 
