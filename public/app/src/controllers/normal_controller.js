@@ -9,6 +9,7 @@ angular.module('Application')
 
     $scope.config={
         colortype:"variable",
+        engine:"toon",
         axis:true,
         axisLength:500,
         streaming:true,

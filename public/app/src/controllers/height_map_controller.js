@@ -16,7 +16,8 @@ angular.module('Application')
         },
         light:{
             direction:[-1.0, -1.0, -1]
-        }
+        },
+        colortype:"variable",
     };
 
     var plane={};
@@ -35,6 +36,7 @@ angular.module('Application')
         console.log($scope.index);
         applyPlane();
     }
+	var color=RandColor();
 
     var applyPlane=function(){
         var calendar=plane.vertices;
@@ -63,7 +65,8 @@ angular.module('Application')
                 prev.push(z);
                 return prev;
             }),
-            position:[50,0,50]
+            position:[50,0,50],
+			color:color
         }
     }
 

@@ -12,18 +12,6 @@ angular.module('alexandraExample')
         color: RandColor()
     }
     
-     /*  var ColorSizePosition = generate(function() {
-        return {
-            position: RandPosition(),
-            color: RandColor(),
-            
-            rotation:RandRotation()
-        };
-    });
-    function Data_2() {
-        $scope.data = ColorSizePosition();
-    }
-    Data_2();*/
 
 
     $scope.config={
