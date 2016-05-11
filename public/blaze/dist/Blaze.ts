@@ -1650,7 +1650,7 @@ export class LightEntity extends Entity {
         super(graph_id);
         this._ambient = ambient ? vec4.create(ambient) : null;
         this._diffuse = diffuse ? vec4.create(diffuse) : null;
-        this._position = position ? vec4.create(position) : null;
+        this._position = position ? vec3.create(position) : null;
         this._specular = specular ? vec4.create(specular) : null;
         this._direction = direction ? vec3.create(direction) : null;
         this._cutoff = cutoff;
@@ -1736,6 +1736,7 @@ export class LightEntity extends Entity {
         }
 
         if (this._position) {
+            console.log(this._position)
             var uLightPosition = this.getUniform("uLightPosition");
             if (uLightPosition)
                 gl.uniform3fv(uLightPosition, this._position);
