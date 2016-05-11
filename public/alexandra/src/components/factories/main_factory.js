@@ -1,5 +1,5 @@
 angular.module('alexandra')
-    .factory('$alexandraMain', function ($alexandraForest, $interval, $alexandraStore, SphereValue, CylinderValue, WallValue, ConeValue, CubeValue, MaterialValue, TextureValue) {
+    .factory('$alexandraMain', function ($alexandraForest, $interval, $alexandraStore) {
 
     return function (id, c) {
 
@@ -44,35 +44,18 @@ angular.module('alexandra')
             },
 
             configureMesh: function () {
-                config = config || {}
 
                 var mesh_config = {};
-                switch (config.type) {
-                    case "cylinder":
-                        mesh_config.mesh = CylinderValue;
-                        break;
-                    case "wall":
-                        mesh_config.mesh = WallValue;
-                        break;
-                    case "cone":
-                        mesh_config.mesh = ConeValue;
-                        break;
-                    case "cube":
-                        mesh_config.mesh = CubeValue;
-                        break;
-                    case "sphere":
-                    default:
-                        mesh_config.mesh = SphereValue;
-                        break;
-                }
 
-                switch (config.colortype) {
-                    case "variable":
-                        mesh_config.material = MaterialValue.variable;
-                        break;
-                    default:
-                        mesh_config.material = MaterialValue.default;
-                }
+                var models=$alexandraStore.models;
+
+                var _mesh=models[config.type];
+                mesh_config.mesh = _mesh?_mesh:models.sphere;
+
+                var materials=$alexandraStore.materials;
+                var _mat=materials[config.colortype];
+
+                mesh_config.material =_mat?_mat:materials.default;
 
                 mesh = Tree.createMesh(mesh_config);
 
@@ -88,13 +71,10 @@ angular.module('alexandra')
                     var mesh_config = {};
                     mesh_config.mesh=item.mesh;
 
-                    switch (config.colortype) {
-                        case "variable":
-                            mesh_config.material = MaterialValue.variable;
-                            break;
-                        default:
-                            mesh_config.material = MaterialValue.default;
-                    }
+                    var materials=$alexandraStore.materials;
+                    var _mat=materials[config.colortype];
+
+                    mesh_config.material =_mat?_mat:materials.default;
                     var mesh=Tree.createMesh(mesh_config);
 
                     var tr = Tree.createTransform();
@@ -135,7 +115,7 @@ angular.module('alexandra')
                     node_buffer.push(trnode);
 
                 }
-                
+
                 if(_.isArray(items)){
                     items.forEach(build);
                 }else{
