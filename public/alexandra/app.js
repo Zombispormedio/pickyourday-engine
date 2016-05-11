@@ -6,17 +6,21 @@ angular.module('alexandraExample')
 
    
     
-    $scope.data={
+    $scope.data=[{
         mesh:Torus(20, 6, 100, 16),
         position:[100,50,100],
         color: RandColor()
-    }
+    },{
+        mesh:Torus(20, 6, 100, 16),
+        position:[20,50,100],
+        color: RandColor()
+    }]
     
 
 
     $scope.config={
     
-        engine:"phong_positional",
+    
         colortype:"variable",
         type:"custom",
         axis:true,

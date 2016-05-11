@@ -1736,7 +1736,6 @@ export class LightEntity extends Entity {
         }
 
         if (this._position) {
-            console.log(this._position)
             var uLightPosition = this.getUniform("uLightPosition");
             if (uLightPosition)
                 gl.uniform3fv(uLightPosition, this._position);

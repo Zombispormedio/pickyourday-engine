@@ -1,5 +1,5 @@
 angular.module('alexandra')
-    .factory('$alexandraMain', function ($alexandraForest, $interval, SphereValue, CylinderValue, WallValue, ConeValue, CubeValue, MaterialValue, CameraValue, LightValue, TextureValue) {
+    .factory('$alexandraMain', function ($alexandraForest, $interval, $alexandraStore, SphereValue, CylinderValue, WallValue, ConeValue, CubeValue, MaterialValue, TextureValue) {
 
     return function (id, c) {
 
@@ -20,7 +20,7 @@ angular.module('alexandra')
 
             configureCamera: function () {
                 camera = Tree.createCamera();
-                var camera_config = CameraValue.default;
+                var camera_config = $alexandraStore.cameras.default;
                 camera.position = camera_config.position;
                 camera.azimuth = camera_config.azimuth;
                 camera.elevation = camera_config.elevation;
@@ -30,7 +30,7 @@ angular.module('alexandra')
             },
             configureLights: function () {
                 var custom=config.light||{};
-                var _default=LightValue.default;
+                var _default=$alexandraStore.lights.default;
                 var values=Object.keys(_default).reduce(function(prev, key){
 
                     prev[key]=custom[key]|| _default[key];
@@ -79,59 +79,68 @@ angular.module('alexandra')
             },
 
 
-            configureAndBuildCustomMesh:function(item){
-                if(!item)return;
-                config = config || {}
-                var mesh_config = {};
-                mesh_config.mesh=item.mesh;
+            configureAndBuildCustomMesh:function(items){
+                if(!items)return;
 
-                switch (config.colortype) {
-                    case "variable":
-                        mesh_config.material = MaterialValue.variable;
-                        break;
-                    default:
-                        mesh_config.material = MaterialValue.default;
-                }
-                var mesh=Tree.createMesh(mesh_config);
 
-                var tr = Tree.createTransform();
+                function build(item){
 
-                if(item.position){
-                    tr.position=item.position;
-                }
+                    var mesh_config = {};
+                    mesh_config.mesh=item.mesh;
 
-                if (item.size) {
-                    tr.size = item.size;
-                }
-
-                if (item.rotation) {
-                    if (item.rotation.angle) {
-                        tr.rotation.angle = item.rotation.angle;
+                    switch (config.colortype) {
+                        case "variable":
+                            mesh_config.material = MaterialValue.variable;
+                            break;
+                        default:
+                            mesh_config.material = MaterialValue.default;
                     }
-                    if (item.rotation.axis) {
-                        tr.rotation.axis = item.rotation.axis;
+                    var mesh=Tree.createMesh(mesh_config);
+
+                    var tr = Tree.createTransform();
+
+                    if(item.position){
+                        tr.position=item.position;
                     }
+
+                    if (item.size) {
+                        tr.size = item.size;
+                    }
+
+                    if (item.rotation) {
+                        if (item.rotation.angle) {
+                            tr.rotation.angle = item.rotation.angle;
+                        }
+                        if (item.rotation.axis) {
+                            tr.rotation.axis = item.rotation.axis;
+                        }
+                    }
+
+
+                    var trnode = Tree.createMainChildNode("TrMesh", tr);
+
+                    var parent_node;
+
+                    switch (config.colortype) {
+                        case "variable":
+                            var diffuse = Tree.createDiffuse(item.color);
+                            parent_node = trnode.createChildNode("Diffuse", diffuse);
+                            break;
+                        default:
+                            parent_node = trnode;
+                    }
+
+
+                    parent_node.createChildNode("Mesh", mesh);
+                    node_buffer.push(trnode);
+
                 }
-
-
-                var trnode = Tree.createMainChildNode("TrMesh", tr);
-
-                var parent_node;
-
-                switch (config.colortype) {
-                    case "variable":
-                        var diffuse = Tree.createDiffuse(item.color);
-                        parent_node = trnode.createChildNode("Diffuse", diffuse);
-                        break;
-                    default:
-                        parent_node = trnode;
+                
+                if(_.isArray(items)){
+                    items.forEach(build);
+                }else{
+                    build(items);
                 }
-
-
-                parent_node.createChildNode("Mesh", mesh);
-                node_buffer.push(trnode);
-              
-
             },
 
 
@@ -157,7 +166,7 @@ angular.module('alexandra')
                     case "phong":
                         renderConfig.typeShader = "Phong";
                     case "phong_positional":
-                         renderConfig.typeShader = "Phong_positional";
+                        renderConfig.typeShader = "Phong_positional";
 
 
                 }
@@ -232,7 +241,7 @@ angular.module('alexandra')
 
                 });
 
-             
+
 
             },
 

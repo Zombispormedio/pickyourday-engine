@@ -2,8 +2,11 @@ angular.module('alexandra')
     .factory('$alexandraUtils', function ($timeout, RobotoValue) {
 
         var watch = false;
+         var font = new THREE.Font(RobotoValue);
 
         $timeout(function () { watch = true; });
+    
+    
         var FullPage = function (elem) {
             return function () {
                 elem.width = window.innerWidth;
@@ -40,8 +43,6 @@ angular.module('alexandra')
         }
 
         function Text(text, parameters) {
-            var font = new THREE.Font(RobotoValue);
-
             parameters.font = font;
 
             var obj = new THREE.TextGeometry(text, parameters);

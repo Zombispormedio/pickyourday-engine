@@ -1182,7 +1182,6 @@ var Blaze;
                     gl.uniform4fv(uLightSpecular, this._specular);
             }
             if (this._position) {
-                console.log(this._position);
                 var uLightPosition = this.getUniform("uLightPosition");
                 if (uLightPosition)
                     gl.uniform3fv(uLightPosition, this._position);
