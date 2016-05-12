@@ -1,5 +1,6 @@
 angular.module('Application')
-    .controller('HeightMapCtrl', function($scope, CompanyService, $alexandraUtils){
+    .controller('HeightMapCtrl', function($scope, CompanyService, $alexandraModel){
+
 
     $scope.loading=true;
 
@@ -44,7 +45,7 @@ angular.module('Application')
         var current_day=calendar[index];
 
         $scope.data={
-            mesh:$alexandraUtils.Plane({
+            mesh:$alexandraModel.Plane({
                 height:plane.height,
                 width:plane.width,
                 w_s:plane.vWidth,

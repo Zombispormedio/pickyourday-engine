@@ -1,11 +1,9 @@
 var app = angular.module('alexandraExample', [ "alexandra"]);
 
 angular.module('alexandraExample')
-    .controller('AlexandraExampleController', function($rootScope, $scope, $interval, $timeout, $http, $alexandra) {
+    .controller('AlexandraExampleController', function($rootScope, $scope, $interval, $timeout, $alexandraModel) {
 
-
-   
-    
+       
     $scope.data=[{
         mesh:Torus(20, 6, 100, 16),
         position:[100,50,100],

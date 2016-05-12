@@ -1,5 +1,5 @@
 angular.module('Application')
-    .controller('SliderCtrl', function ($scope, CompanyService, $alexandraUtils) {
+    .controller('SliderCtrl', function ($scope, CompanyService, $alexandraModel) {
 
         var profile;
 
@@ -26,7 +26,7 @@ angular.module('Application')
         var color=RandColor();
 
         var ApplyText = function (text) {
-            var model = $alexandraUtils.Text(text, {
+            var model = $alexandraModel.Text(text, {
                 size: 10,
                 height: 0.5,
                 curveSegments: 30,

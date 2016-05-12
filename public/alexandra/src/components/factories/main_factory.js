@@ -43,6 +43,28 @@ angular.module('alexandra')
                 Tree.createMainChildNode("Light", light);
             },
 
+            configureTransform:function(item){
+                var tr = Tree.createTransform();
+
+                if(item.position){
+                    tr.position=item.position;
+                }
+
+                if (item.size) {
+                    tr.size = item.size;
+                }
+
+                if (item.rotation) {
+                    if (item.rotation.angle) {
+                        tr.rotation.angle = item.rotation.angle;
+                    }
+                    if (item.rotation.axis) {
+                        tr.rotation.axis = item.rotation.axis;
+                    }
+                }
+                return tr;
+            },
+
             configureMesh: function () {
 
                 var mesh_config = {};
@@ -63,6 +85,8 @@ angular.module('alexandra')
 
 
             configureAndBuildCustomMesh:function(items){
+                var self=this;
+                
                 if(!items)return;
 
 
@@ -77,25 +101,7 @@ angular.module('alexandra')
                     mesh_config.material =_mat?_mat:materials.default;
                     var mesh=Tree.createMesh(mesh_config);
 
-                    var tr = Tree.createTransform();
-
-                    if(item.position){
-                        tr.position=item.position;
-                    }
-
-                    if (item.size) {
-                        tr.size = item.size;
-                    }
-
-                    if (item.rotation) {
-                        if (item.rotation.angle) {
-                            tr.rotation.angle = item.rotation.angle;
-                        }
-                        if (item.rotation.axis) {
-                            tr.rotation.axis = item.rotation.axis;
-                        }
-                    }
-
+                    var tr =  self.configureTransform(item);
 
                     var trnode = Tree.createMainChildNode("TrMesh", tr);
 
@@ -178,9 +184,10 @@ angular.module('alexandra')
             },
 
             buildMeshBranch: function (source) {
+                var self=this;
                 source = source || [];
                 node_buffer = source.map(function (item) {
-                    var tr = Tree.createTransform();
+                    var tr =  self.configureTransform(item);
                     var trnode = Tree.createMainChildNode("TrMesh", tr);
                     var parent_node;
 
@@ -200,23 +207,6 @@ angular.module('alexandra')
                     }
 
                     parent_node.createChildNode("Mesh", mesh);
-
-                    if (item.position) {
-                        tr.position = item.position;
-                    }
-
-                    if (item.size) {
-                        tr.size = item.size;
-                    }
-
-                    if (item.rotation) {
-                        if (item.rotation.angle) {
-                            tr.rotation.angle = item.rotation.angle;
-                        }
-                        if (item.rotation.axis) {
-                            tr.rotation.axis = item.rotation.axis;
-                        }
-                    }
                     return trnode;
 
                 });
@@ -234,7 +224,7 @@ angular.module('alexandra')
 
                 var canvas = document.createElement("canvas");
                 var ctx = canvas.getContext("2d");
-
+                var TextureValue=$alexandraStore.textures;
                 textures.particle = {};
                 for (var key in TextureValue) {
                     var data = TextureValue[key];
