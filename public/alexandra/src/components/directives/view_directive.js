@@ -6,12 +6,12 @@ angular.module('alexandra')
         tree.configureLights();
         tree.configureMesh();
     }
-    
+
     var configureCustom=function(tree, source){
         tree.configureLights();
         tree.configureAndBuildCustomMesh(source);
     }
-    
+
     var configureParticle=function(tree){
         tree.configureParticle();
     }
@@ -27,13 +27,13 @@ angular.module('alexandra')
     var choose=function(tree, type, source, config){
         config=config||{}
         switch(type){
-                
+
             case "custom":{
                 configureCustom(tree, source);
-                
+
                 break;
             }
-                
+
             case "particle":{
                 if(config.reseteable){
                     tree.resetParticle();
@@ -96,7 +96,11 @@ angular.module('alexandra')
             if(config.grid){
                 tree.configureGrid();
             }
-            
+
+
+            tree.configureLabels();
+
+
             if(config.selector){
                 tree.configureSelector();
             }
@@ -133,7 +137,7 @@ angular.module('alexandra')
             $alexandraInteractor(tElement, tree.getCamera(), tree);
 
             if(config.autorun!==false){
-               tree.run();
+                tree.run();
             }
 
 

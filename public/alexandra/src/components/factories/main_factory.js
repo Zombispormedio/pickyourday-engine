@@ -6,7 +6,7 @@ angular.module('alexandra')
         var Tree = $alexandraForest.getTree(id);
         var config = c || {};
 
-        var camera, light, mesh, particle, axis, node_buffer = [], textures = {}, canvas;
+        var camera, light, mesh, particle, axis, node_buffer = [], textures = {}, canvas, labels={};
 
         return {
             setContext: function (c) {
@@ -86,7 +86,7 @@ angular.module('alexandra')
 
             configureAndBuildCustomMesh:function(items){
                 var self=this;
-                
+
                 if(!items)return;
 
 
@@ -210,8 +210,6 @@ angular.module('alexandra')
                     return trnode;
 
                 });
-
-
 
             },
 
@@ -339,6 +337,45 @@ angular.module('alexandra')
             configureSelector:function(){
                 Tree.createSelector({width:canvas.width, height:canvas.height})
             },
+
+
+            configureLabel:function(text, label_config){
+               /* var mesh_config = {};
+                mesh_config.mesh=;
+
+                var materials=$alexandraStore.materials;
+                
+                var color_type=label_config.color?"variable":"default";
+
+                mesh_config.material =materials[colortype];
+                
+                
+                var mesh=Tree.createMesh(mesh_config);
+
+                var tr =  self.configureTransform(item);
+
+                var trnode = Tree.createMainChildNode("TrMesh", tr);
+
+                var parent_node;
+
+                switch (color_type) {
+                    case "variable":
+                        var diffuse = Tree.createDiffuse(item.color);
+                        parent_node = trnode.createChildNode("Diffuse", diffuse);
+                        break;
+                    default:
+                        parent_node = trnode;
+                }
+
+
+                parent_node.createChildNode("Mesh", mesh);
+               return parent_node;*/
+            },
+
+            configureLabels:function(){
+
+            },
+
 
             select:function(pos){
                 return Tree.select(pos);

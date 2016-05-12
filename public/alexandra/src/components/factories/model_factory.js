@@ -37,6 +37,7 @@ angular.module('alexandra')
 
 
     var Text=function(text, parameters) {
+        parameters=parameters||{};
         parameters.font = font;
 
         var obj = new THREE.TextGeometry(text, parameters);

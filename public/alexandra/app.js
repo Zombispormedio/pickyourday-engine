@@ -8,7 +8,7 @@ angular.module('alexandraExample')
         mesh:$alexandraModel.TorusKnot(20, 6, 100, 16),
         position:RandPosition(),
         color: RandColor()
-    },{
+    }/*,{
         mesh:$alexandraModel.Box(15,15,15),
         position:RandPosition(),
         color: RandColor()
@@ -66,6 +66,42 @@ angular.module('alexandraExample')
         }),
        position:[50,0,50],
         color: RandColor()
+    }*/, {
+        mesh:$alexandraModel.Text("Picks Cancelados/Terminados", {
+            size:8,
+            height:0.1
+        }),
+         position:[50,0,0],
+        color: [1,1,0,1]
+    },{
+        mesh:$alexandraModel.Text("Cantidad de Picks", {
+            size:8,
+            height:0.1
+        }),
+         position:[0,50,0],
+        rotation:{
+            angle:90,
+            axis: [0,0,1]
+        },
+        color: [0,1,0,1]
+    },{
+        mesh:$alexandraModel.Text("Servicios", {
+            size:8,
+            height:0.1
+        }),
+        rotation:{
+            angle:90,
+            axis: [0,1,0]
+        },
+         position:[0,0,100],
+        color: [0,0,1,1]
+    },{
+        mesh:$alexandraModel.Text("0", {
+            size:5,
+            height:0.1
+        }),
+         position:[0,0,0],
+        color: [1,1,1,1]
     }];
 
 
