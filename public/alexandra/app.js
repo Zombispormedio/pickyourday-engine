@@ -4,11 +4,11 @@ angular.module('alexandraExample')
     .controller('AlexandraExampleController', function($rootScope, $scope, $interval, $timeout, $alexandraModel) {
 
 
-    $scope.data=[{
+    $scope.data=[/*{
         mesh:$alexandraModel.TorusKnot(20, 6, 100, 16),
         position:RandPosition(),
         color: RandColor()
-    }/*,{
+    },{
         mesh:$alexandraModel.Box(15,15,15),
         position:RandPosition(),
         color: RandColor()
@@ -66,35 +66,6 @@ angular.module('alexandraExample')
         }),
        position:[50,0,50],
         color: RandColor()
-    }*/, {
-        mesh:$alexandraModel.Text("Picks Cancelados/Terminados", {
-            size:8,
-            height:0.1
-        }),
-         position:[50,0,0],
-        color: [1,1,0,1]
-    },{
-        mesh:$alexandraModel.Text("Cantidad de Picks", {
-            size:8,
-            height:0.1
-        }),
-         position:[0,50,0],
-        rotation:{
-            angle:90,
-            axis: [0,0,1]
-        },
-        color: [0,1,0,1]
-    },{
-        mesh:$alexandraModel.Text("Servicios", {
-            size:8,
-            height:0.1
-        }),
-        rotation:{
-            angle:90,
-            axis: [0,1,0]
-        },
-         position:[0,0,100],
-        color: [0,0,1,1]
     },{
         mesh:$alexandraModel.Text("0", {
             size:5,
@@ -102,7 +73,7 @@ angular.module('alexandraExample')
         }),
          position:[0,0,0],
         color: [1,1,1,1]
-    }];
+    }*/];
 
 
 
@@ -120,7 +91,61 @@ angular.module('alexandraExample')
             lines:60,
             dim:500
         },
-        fullpage:true
+        fullpage:true,
+        LabelX:"Picks Cancelados/Terminados",
+        LabelXConfig:{
+            offset:15
+        },
+
+        LabelY:"Cantidad de Picks",
+        LabelYConfig:{
+            offset:15
+        },
+
+        LabelZ:"Servicios",
+
+        LabelZConfig:{
+            offset:15
+        },
+
+        OriginLabel:true,
+        OriginLabelConfig:{
+            offset:1
+
+        },
+
+
+        ValueAxisXLabel:[
+            {
+                value:15,
+                label:1
+            }
+        ],
+
+        ValueAxisXLabelConfig:{
+            offset:1
+        },
+
+        ValueAxisZLabel:[
+            {
+                value:9,
+                label:1
+            }
+        ],
+
+        ValueAxisZLabelConfig:{
+            offset:1
+        },
+         ValueAxisYLabel:[
+            {
+                value:9,
+                label:1
+            }
+        ],
+
+        ValueAxisYLabelConfig:{
+            offset:1
+        }
 
 
 

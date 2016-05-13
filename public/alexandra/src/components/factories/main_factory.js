@@ -1,5 +1,5 @@
 angular.module('alexandra')
-    .factory('$alexandraMain', function ($alexandraForest, $interval, $alexandraStore) {
+    .factory('$alexandraMain', function ($alexandraForest, $interval, $alexandraStore, $alexandraModel) {
 
     return function (id, c) {
 
@@ -242,8 +242,6 @@ angular.module('alexandra')
 
                 }
 
-
-
             },
 
             buildParticle: function (source) {
@@ -339,40 +337,216 @@ angular.module('alexandra')
             },
 
 
-            configureLabel:function(text, label_config){
-               /* var mesh_config = {};
-                mesh_config.mesh=;
+            createLabelNode:function(label){
+                var self=this;
+                var mesh_config = {};
+                mesh_config.mesh=$alexandraModel.Text(label.text, {
+                    size:label.wordSize||8,
+                    height:label.wordHeight||0.1
+                });
 
                 var materials=$alexandraStore.materials;
-                
-                var color_type=label_config.color?"variable":"default";
 
-                mesh_config.material =materials[colortype];
-                
-                
+                mesh_config.material =materials.variable;
+
                 var mesh=Tree.createMesh(mesh_config);
 
-                var tr =  self.configureTransform(item);
+                var tr =  self.configureTransform(label);
 
                 var trnode = Tree.createMainChildNode("TrMesh", tr);
 
-                var parent_node;
+                var diffuse = Tree.createDiffuse(label.color||[1,1,1,1]);
+                var label_node = trnode.createChildNode("Diffuse", diffuse);
 
-                switch (color_type) {
-                    case "variable":
-                        var diffuse = Tree.createDiffuse(item.color);
-                        parent_node = trnode.createChildNode("Diffuse", diffuse);
-                        break;
-                    default:
-                        parent_node = trnode;
-                }
+                label_node.createChildNode("Mesh", mesh);
 
-
-                parent_node.createChildNode("Mesh", mesh);
-               return parent_node;*/
+                return label_node;
             },
 
             configureLabels:function(){
+                var self=this;
+                if(config.LabelX){
+                    var label_x={};
+                    label_x.text=config.LabelX;
+                    label_x.color=[1,1,0,1];
+
+                    var c_x=config.LabelXConfig||{};
+
+                    label_x.position=[c_x.nearAxis||50,c_x.offset||0,0];
+
+                    if(c_x.wordSize){
+                        label_x.wordSize=c_x.wordSize;
+                    }
+
+                    if(c_x.wordHeight){
+                        label_x.wordHeight=c_x.wordHeight;
+                    }
+
+                    labels.x=self.createLabelNode(label_x);
+                }
+
+                if(config.LabelY){
+                    var label_y={};
+                    label_y.text=config.LabelY;
+                    label_y.color=[0,1,0,1];
+
+                    var c_y=config.LabelYConfig||{};
+
+                    label_y.position=[c_y.offset||0, c_y.nearAxis||50*3,0];
+
+                    label_y.rotation={
+                        angle:-90,
+                        axis: [0,0,1]
+                    };
+
+
+                    if(c_y.wordSize){
+                        label_y.wordSize=c_y.wordSize;
+                    }
+
+                    if(c_y.wordHeight){
+                        label_y.wordHeight=c_y.wordHeight;
+                    }
+
+                    labels.y=self.createLabelNode(label_y);
+                }
+
+                if(config.LabelZ){
+                    var label_z={};
+                    label_z.text=config.LabelZ;
+                    label_z.color=[0,0,1,1];
+
+                    var c_z=config.LabelZConfig||{};
+
+                    label_z.position=[0,c_z.offset||0, c_z.nearAxis||50*2];
+
+                    label_z.rotation={
+                        angle:90,
+                        axis: [0,1,0]
+                    };
+
+
+                    if(c_z.wordSize){
+                        label_z.wordSize=c_z.wordSize;
+                    }
+
+                    if(c_z.wordHeight){
+                        label_z.wordHeight=c_z.wordHeight;
+                    }
+
+                    labels.z=self.createLabelNode(label_z);
+                }
+
+                if(config.OriginLabel){
+
+                    var label_o={};
+                    label_o.text="0";
+                    label_o.color=[1,1,1,1];
+
+                    var c_o=config.OriginLabelConfig||{};
+
+                    label_o.position=[0,c_o.offset||0, 0];
+
+
+                    label_o.wordSize=c_o.wordSize||5;
+
+
+                    if(c_o.wordHeight){
+                        label_o.wordHeight=c_o.wordHeight;
+                    }
+
+                    labels.o=self.createLabelNode(label_o);
+
+
+                }
+
+                if(config.ValueAxisXLabel){
+                    labels.valuesX=config.ValueAxisXLabel.map(function(item){
+
+                        var label_nx={};
+
+                        label_nx.text=item.label;
+
+                        label_nx.color=[1,1,1,1];
+
+                        var c_nx=config.ValueAxisXLabelConfig||{};
+                        label_nx.wordSize=c_nx.wordSize||5;
+
+
+                        label_nx.position=[item.value,c_nx.offset||0, 0 ];
+
+                        if(c_nx.wordHeight){
+                            label_nx.wordHeight=c_nx.wordHeight;
+                        }
+
+
+                        return self.createLabelNode(label_nx);
+
+                    });
+                }
+
+                if(config.ValueAxisZLabel){
+                    labels.valuesZ=config.ValueAxisZLabel.map(function(item){
+
+                        var label_nz={};
+
+                        label_nz.text=item.label;
+
+                        label_nz.color=[1,1,1,1];
+
+                        var c_nz=config.ValueAxisZLabelConfig||{};
+                        label_nz.wordSize=c_nz.wordSize||5;
+
+
+                        label_nz.position=[0,c_nz.offset||0, item.value*2 ];
+
+                        label_nz.rotation={
+                            angle:90,
+                            axis: [0,1,0]
+                        };
+
+                        if(c_nz.wordHeight){
+                            label_nz.wordHeight=c_nz.wordHeight;
+                        }
+
+
+                        return self.createLabelNode(label_nz);
+
+                    });
+                }
+                
+                
+                
+                if(config.ValueAxisYLabel){
+                    labels.valuesY=config.ValueAxisYLabel.map(function(item){
+
+                        var label_ny={};
+
+                        label_ny.text=item.label;
+
+                        label_ny.color=[1,1,1,1];
+
+                        var c_ny=config.ValueAxisYLabelConfig||{};
+                        label_ny.wordSize=c_ny.wordSize||5;
+
+
+                        label_ny.position=[c_ny.offset||0,item.value*2,0 ];
+
+                        label_ny.rotation={
+                            angle:-90,
+                            axis: [0,0,1]
+                        };
+
+                        if(c_ny.wordHeight){
+                            label_ny.wordHeight=c_ny.wordHeight;
+                        }
+
+
+                        return self.createLabelNode(label_ny);
+
+                    });
+                }
+
 
             },
 
