@@ -82,6 +82,8 @@ angular.module('alexandraExample')
         engine:"phong",
         colortype:"variable",
         type:"custom",
+        effect:"no",
+        
         axis:true,
         axisLength:500,
         streaming:true,

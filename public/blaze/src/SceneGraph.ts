@@ -2,6 +2,8 @@ class SceneGraph extends Renderable {
     private _scene: NodeElement;
     private _matrixStack: MatrixStack;
     private _selector: Selector;
+    private _effects: Effects;
+
     private _oid: string;
 
     private _loaderBuffer: Array<MeshEntity>;
@@ -25,9 +27,12 @@ class SceneGraph extends Renderable {
         "uWireframe",
         "uPerVertexColor",
         "uSelectColor",
-        "uOffscreen"
+        "uOffscreen",
+        "uInverseTextureSize",
+        "uNoiseSampler",
+        "uTime"
     ];
-    private static ATTRIBUTES = ['a_position', 'a_normal', "a_color"];
+    private static ATTRIBUTES = ['a_position', 'a_normal', "a_color", "a_texture_coords"];
 
     constructor() {
         var oid = utils.uuid();
@@ -38,6 +43,8 @@ class SceneGraph extends Renderable {
         this._loaderBuffer = [];
         Ketch.createView(this._oid);
         this._selector = null;
+        this._effects = null;
+
     }
 
 
@@ -62,12 +69,25 @@ class SceneGraph extends Renderable {
     }
 
     public render(): void {
+
+        if (this._effects) {
+
+            this.drawWithEffects();
+
+
+        } else {
+            this.drawScene();
+
+        }
+
+    }
+
+    public drawScene(): void {
         var gl = this.gl;
-
-        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
+        this.useProgram();
         var draw = (function () {
+            gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             this._scene.draw(this._matrixStack);
         }).bind(this);
 
@@ -76,8 +96,22 @@ class SceneGraph extends Renderable {
         }
 
         draw();
+    }
 
+    public drawWithEffects(): void {
+        this._effects.Size();
+        this._effects.bindFrameBuffer();
 
+        this.drawScene();
+
+        this._effects.unbindFrameBuffer();
+
+        this._effects.Bind();
+        this._effects.draw();
+    }
+
+    public useProgram() {
+        Ketch.useProgram(this.oid);
     }
 
     public createMainChildNode(type: string, entity: Entity): NodeElement {
@@ -103,8 +137,8 @@ class SceneGraph extends Renderable {
         type = type || "Phong";
 
         Ketch.createProgram(this._oid, {
-            fragment: Shaders.Fragment[type] ||  Shaders.Fragment["Phong"],
-            vertex: Shaders.Vertex[type]  || Shaders.Vertex["Phong"]
+            fragment: Shaders.Fragment[type] || Shaders.Fragment["Phong"],
+            vertex: Shaders.Vertex[type] || Shaders.Vertex["Phong"]
         });
     }
 
@@ -163,6 +197,8 @@ class SceneGraph extends Renderable {
     }
 
 
+
+
     public createSelector(dimensions: { height: number, width: number }) {
         this._selector = new Selector(this.oid, dimensions);
     }
@@ -179,12 +215,27 @@ class SceneGraph extends Renderable {
         }
     }
 
-    public select(pos:{x:number, y:number}) {
+    public select(pos: { x: number, y: number }) {
         if (this._selector) {
-           return this._selector.find(pos);
+            return this._selector.find(pos);
         }
     }
 
+
+    public createEffects(canvas, type?: string) {
+        this._effects = new Effects(this.oid, canvas, type);
+        console.log(this._effects);
+    }
+
+    public setNoiseEffect(texture) {
+        if (this._effects)
+            this._effects.setNoiseTexture(texture);
+    }
+
+    public setEffect(type) {
+        if (this._effects)
+            this._effects.setEffect(type);
+    }
 
 
     public set MainCamera(camera: CameraEntity) {

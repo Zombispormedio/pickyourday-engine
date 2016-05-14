@@ -42,9 +42,6 @@ angular.module('alexandra')
                 if(config.configurable){
                     configureParticle(tree);
                 }
-                if(config.texturizable){
-                    tree.configureParticleTexture();
-                }
 
                 buildParticle(tree, source);
 
@@ -99,6 +96,11 @@ angular.module('alexandra')
 
 
             tree.configureLabels();
+            tree.configureTextures();
+            
+            if(config.effect){
+                tree.configureEffects();
+            }
 
 
             if(config.selector){
@@ -106,7 +108,7 @@ angular.module('alexandra')
             }
 
 
-            choose(tree, config.type, scope.source, {configurable:true, texturizable:true});
+            choose(tree, config.type, scope.source, {configurable:true});
 
             tree.configureRenderer();
 

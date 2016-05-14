@@ -102,9 +102,21 @@ module WebGLUtils {
         }
         return shader;
     }
+    
+     export function createFragmentShader(gl, shaderSource) {
+       
+        return createShader(gl, gl.FRAGMENT_SHADER, shaderSource);
+     }
+     
+      export function createVertexShader(gl, shaderSource) {
+       
+        return createShader(gl, gl.VERTEX_SHADER, shaderSource);
+     }
+    
+    
     export function createProgram(gl, shaders) {
-        var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shaders.fragment);
-        var vertexShader = createShader(gl, gl.VERTEX_SHADER, shaders.vertex);
+        var fragmentShader = createFragmentShader(gl, shaders.fragment);
+        var vertexShader = createVertexShader(gl, shaders.vertex);
 
         var program = gl.createProgram();
         gl.attachShader(program, vertexShader);
@@ -113,8 +125,6 @@ module WebGLUtils {
 
         if (!gl.getProgramParameter(program, gl.LINK_STATUS))
               console.log(gl.getProgramInfoLog(program));
-
-        gl.useProgram(program);
 
         return program;
 

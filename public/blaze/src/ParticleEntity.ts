@@ -13,7 +13,7 @@ class ParticleEntity extends Entity {
         this._texture_id="";
     }
 
-    public configure(data_mesh: Array<number>, data_texture: Array<number>) {
+    public configure(data_mesh: Array<number>, data_texture) {
         var gl = this.gl;
 
         this._buffer = gl.createBuffer();

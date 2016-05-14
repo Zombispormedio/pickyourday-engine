@@ -105,16 +105,23 @@ var Blaze;
             return shader;
         }
         WebGLUtils.createShader = createShader;
+        function createFragmentShader(gl, shaderSource) {
+            return createShader(gl, gl.FRAGMENT_SHADER, shaderSource);
+        }
+        WebGLUtils.createFragmentShader = createFragmentShader;
+        function createVertexShader(gl, shaderSource) {
+            return createShader(gl, gl.VERTEX_SHADER, shaderSource);
+        }
+        WebGLUtils.createVertexShader = createVertexShader;
         function createProgram(gl, shaders) {
-            var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shaders.fragment);
-            var vertexShader = createShader(gl, gl.VERTEX_SHADER, shaders.vertex);
+            var fragmentShader = createFragmentShader(gl, shaders.fragment);
+            var vertexShader = createVertexShader(gl, shaders.vertex);
             var program = gl.createProgram();
             gl.attachShader(program, vertexShader);
             gl.attachShader(program, fragmentShader);
             gl.linkProgram(program);
             if (!gl.getProgramParameter(program, gl.LINK_STATUS))
                 console.log(gl.getProgramInfoLog(program));
-            gl.useProgram(program);
             return program;
         }
         WebGLUtils.createProgram = createProgram;
@@ -248,6 +255,12 @@ var Blaze;
         };
         Ketch.getProgram = function (key) {
             return Ketch._views[key].program;
+        };
+        Ketch.useProgram = function (key) {
+            var view = Ketch._views[key];
+            var gl = view.context;
+            var prg = view.program;
+            gl.useProgram(prg);
         };
         Ketch.createView = function (key) {
             Ketch._views[key] = {};
@@ -784,16 +797,21 @@ var Blaze;
         var Fragment = (function () {
             function Fragment() {
             }
+            Fragment.Blur_effect = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform sampler2D uSampler;\nuniform vec2 uInverseTextureSize;\n\nvarying vec2 vTextureCoord;\n\nvec4 offsetLookup(float xOff, float yOff){\n\n    float x=vTextureCoord.x+xOff*uInverseTextureSize.x;\n    float y=vTextureCoord.y+yOff*uInverseTextureSize.y;\n    return texture2D(uSampler, vec2(x, y))\n\n}\n\nvoid main(){\n\n    vec4 frameColor = offsetLookup(-4.0, 0.0) * 0.05;\n    frameColor += offsetLookup(-3.0, 0.0) * 0.09;\n    frameColor += offsetLookup(-2.0, 0.0) * 0.12;\n    frameColor += offsetLookup(-1.0, 0.0) * 0.15;\n    frameColor += offsetLookup(0.0, 0.0) * 0.16;\n    frameColor += offsetLookup(1.0, 0.0) * 0.15;\n    frameColor += offsetLookup(2.0, 0.0) * 0.12;\n    frameColor += offsetLookup(3.0, 0.0) * 0.09;\n    frameColor += offsetLookup(4.0, 0.0) * 0.05;\n\n    gl_FragColor = frameColor;\n\n\n    \n}";
+            Fragment.Film_effect = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform sampler2D uSampler;\nuniform sampler2D uNoiseSampler;\nuniform vec2 uInverseTextureSize;\nuniform float uTime;\n\nvarying vec2 vTextureCoord;\n\nconst float grainIntensity = 0.1;\nconst float scrollSpeed = 4000.0;\n\n\nvoid main()\n{\n    vec4 frameColor=texture2D(uSampler, vTextureCoord);\n    vec4 grain=texture2D(uNoiseSampler, vTextureCoord*2.0+uTime*scrollSpeed*uInverseTextureSize);\n    gl_FragColor=frameColor-(grain*grainIntensity);\n\n}";
+            Fragment.No_effect = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform sampler2D uSampler;\nvarying vec2 vTextureCoord;\n\nvoid main(){\n    vec4 frameColor=texture2D(uSampler, vTextureCoord);\n    \n    gl_FragColor=frameColor;\n\n}\n";
             Fragment.Particle = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform bool uWireframe;\n\nuniform sampler2D uSampler;\n\nvarying vec4 vColor;\n\n\nbool isBlack(vec4 color){\nreturn color.r==0.0 &&color.g==0.0&&color.b==0.0;\n}\nvoid main(void) { \n     if(uWireframe){\n         gl_FragColor = vColor;\n        }else{\n    gl_FragColor = texture2D(uSampler, gl_PointCoord);\n    if(gl_FragColor.a < 0.5 || isBlack(gl_FragColor)) discard;\n    }\n}";
             Fragment.Phong = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform float uShininess;\nuniform vec3 uLightDirection;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\nuniform vec4 uLightSpecular;\n\nuniform bool uWireframe;\n\nuniform bool uOffscreen;\nuniform vec4 uSelectColor;\n\nuniform vec4 uMaterialAmbient;\nuniform vec4 uMaterialDiffuse;\nuniform vec4 uMaterialSpecular;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\nvarying vec4 vColor;\n\nvoid main(){\n\n        if(uWireframe){\n            gl_FragColor = vColor;\n            return;\n        }\n      \n\n        if(uOffscreen){\n            gl_FragColor=uSelectColor;\n            return;\n        }\n\n       \n        vec3 L= normalize(uLightDirection);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient*uMaterialAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        if(lambertTerm>0.0)\n        {\n            Id=uLightDiffuse*uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightSpecular*uMaterialSpecular*specular;\n        }\n        \n        vec4 finalColor=Ia+Id+Is;\n        finalColor.a=1.0;\n    \n        gl_FragColor =finalColor;\n        \n        \n}\n\n\n";
             Fragment.Phong_positional = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform float uShininess;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\n\n\nuniform bool uWireframe;\n\nuniform bool uOffscreen;\nuniform vec4 uSelectColor;\n\n\nuniform vec4 uMaterialDiffuse;\n\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\nvarying vec3 vLightDir;\nvarying vec4 vColor;\n\nvoid main(){\n\n        if(uWireframe){\n            gl_FragColor = vColor;\n            return;\n        }\n      \n\n        if(uOffscreen){\n            gl_FragColor=uSelectColor;\n            return;\n        }\n\n       \n        vec3 L= normalize(vLightDir);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        if(lambertTerm>0.0)\n        {\n            Id=uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightDiffuse*specular;\n        }\n        \n        vec4 finalColor=Ia+Id+Is;\n        finalColor.a=1.0;\n    \n        gl_FragColor =finalColor;\n        \n        \n}\n\n\n";
             Fragment.Toon = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform float uShininess;\nuniform vec3 uLightDirection;\n\nuniform mat4 uMVMatrix;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\nuniform vec4 uMaterialDiffuse;\n\nuniform bool uWireframe;\n\nuniform bool uOffscreen;\nuniform vec4 uSelectColor;\n\nvarying vec4 vColor;\n\nvarying vec3 vNormal;\nvarying vec3 vVertex;\n\nvoid main(){\n\n       if(uWireframe){\n            gl_FragColor = vColor;\n            return;\n        }\n      \n\n        if(uOffscreen){\n            gl_FragColor=uSelectColor;\n            return;\n        }\n\n        vec4 color0=vec4(uMaterialDiffuse.rgb,1.0);\n        vec4 color1=vec4(0.0,0.0,0.0, 1.0);\n        vec4 color2=vec4(uMaterialDiffuse.rgb, 1.0);\n        \n        vec3 N= vNormal;\n        vec3 L = normalize(uLightDirection);\n        \n        vec4 eyePos= uMVMatrix*vec4(0.0,0.0,0.0,1.0);\n        \n        vec3 EyeVert = normalize(-eyePos.xyz);\n        \n        vec3 EyeLight=normalize(L+EyeVert);\n        \n        float sil= max(dot(N, EyeVert), 0.0);\n        \n        if( sil<0.4){\n            gl_FragColor=color1;\n        }else{\n             gl_FragColor=color0;\n             \n             float spec=pow(max(dot(N, EyeLight), 0.0), uShininess);\n             \n             if(spec<0.2) gl_FragColor*=0.8;\n             else gl_FragColor=color2;\n             \n             float diffuse=max(dot(N, L), 0.0);\n             if(diffuse<0.5)gl_FragColor*=0.8;\n        }\n\n\n\n\n\n}\n\n\n\n";
+            Fragment.Wavy_effect = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\n\nuniform sampler2D uSampler;\nuniform float uTime;\n\nvarying vec2 vTextureCoord;\n\nconst float speed = 15.0;\nconst float magnitude = 0.015;\n\nvoid main(){\n    \n    vec2 wavyCoord;\n    wavyCoord.s=vTextureCoord.s+(sin(uTime+vTextureCoord.t*speed)*magnitude);\n    wavyCoord.t=vTextureCoord.t+(sin(uTime+vTextureCoord.s*speed)*magnitude);\n    \n    vec4 frameColor=texture2D(uSampler, wavyCoord);\n    gl_FragColor=frameColor;\n\n\n}";
             return Fragment;
         }());
         Shaders.Fragment = Fragment;
         var Vertex = (function () {
             function Vertex() {
             }
+            Vertex.Effect = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nattribute vec2 a_position;\nattribute vec2 a_texture_coords;\n\nvarying vec2 vTextureCoord;\n\nvoid main(){\n    vTextureCoord=a_texture_coords;\n\n    gl_Position=vec4(a_position, 0.0,1.0);\n    \n}";
             Vertex.Particle = "#ifdef GL_ES\nprecision mediump float;\n#endif\nattribute vec3 a_position;\nattribute vec4 a_color;\n\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nuniform float uPointSize;\n\nuniform bool uWireframe;\nuniform bool uPerVertexColor;\nuniform vec4 uMaterialDiffuse;\n\n\nvarying vec4 vColor;\n\nvoid main(void) {\n\n if(uWireframe){\n\t \n\t \tif(uPerVertexColor){\n\t \t\t vColor=a_color;\n\t \t}else{\n\t \t\tvColor=uMaterialDiffuse;\n\t \t}\n\t \n\t\n\t }\n    \n    gl_Position = uPMatrix * uMVMatrix * vec4(a_position.xyz, 1.0);\n    gl_PointSize = uPointSize;\n}";
             Vertex.Phong = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nattribute vec3 a_position;\nattribute vec3 a_normal;\nattribute vec4 a_color;\n\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nuniform mat4 uNMatrix;\n\nuniform bool uWireframe;\nuniform bool uPerVertexColor;\nuniform vec4 uMaterialDiffuse;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\nvarying vec4 vColor;\n\nvoid main(){\n\n    vec4 vertex = uMVMatrix * vec4(a_position, 1.0);\n\t\n\t\n\t if(uWireframe){\n\t \n\t \tif(uPerVertexColor){\n\t \t\t vColor=a_color;\n\t \t}else{\n\t \t\tvColor=uMaterialDiffuse;\n\t \t}\n\t \n\t\n\t }else{\n\t\n\tvNormal = vec3(uNMatrix * vec4(a_normal, 1.0));\n\tvEyeVec=-vec3(vertex.xyz);  \n\t\n\t}\n\t \n\tgl_Position =uPMatrix * vertex;\n\n}\n\n\n";
             Vertex.Phong_positional = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nattribute vec3 a_position;\nattribute vec3 a_normal;\nattribute vec4 a_color;\n\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nuniform mat4 uNMatrix;\n\nuniform vec3 uLightPosition;\n\nuniform bool uWireframe;\nuniform bool uPerVertexColor;\nuniform vec4 uMaterialDiffuse;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\nvarying vec3 vLightDir;\n\nvarying vec4 vColor;\n\nvoid main(){\n\n    vec4 vertex = uMVMatrix * vec4(a_position, 1.0);\n\t\n\t\n\t if(uWireframe){\n\t \n\t \tif(uPerVertexColor){\n\t \t\t vColor=a_color;\n\t \t}else{\n\t \t\tvColor=uMaterialDiffuse;\n\t \t}\n\t \n\t\n\t }else{\n\t\n\tvNormal = vec3(uNMatrix * vec4(a_normal, 1.0));\n    vLightDir=vertex.xyz-uLightPosition;  \n\tvEyeVec=-vec3(vertex.xyz);  \n\t\n\t}\n\t \n\tgl_Position =uPMatrix * vertex;\n\n}\n\n\n";
@@ -1647,6 +1665,170 @@ var Blaze;
     }(Renderable));
     Blaze.Selector = Selector;
     ;
+    var Effects = (function (_super) {
+        __extends(Effects, _super);
+        function Effects(graph_id, canvas, type) {
+            _super.call(this, graph_id);
+            this._texture = null;
+            this._framebuffer = null;
+            this._renderbuffer = null;
+            this._vbo = null;
+            this._tbo = null;
+            this._shader = null;
+            this._uniforms = null;
+            this._attribs = null;
+            this._noisetexture = null;
+            this._start = Date.now();
+            this._canvas = canvas;
+            this._type = type || "no";
+            this.configure();
+            this.Geometry();
+            this.setEffect();
+        }
+        Effects.prototype.configure = function () {
+            var gl = this.gl;
+            var width = this._canvas.width;
+            var height = this._canvas.height;
+            this._texture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, this._texture);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            this._renderbuffer = gl.createRenderbuffer();
+            gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
+            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height);
+            this._framebuffer = gl.createFramebuffer();
+            gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this._texture, 0);
+            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._renderbuffer);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+            gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        };
+        Effects.prototype.Geometry = function () {
+            var gl = this.gl;
+            var vertices = [
+                -1.0, -1.0,
+                1.0, -1.0,
+                -1.0, 1.0,
+                -1.0, 1.0,
+                1.0, -1.0,
+                1.0, 1.0
+            ];
+            var textureCoords = [
+                0.0, 0.0,
+                1.0, 0.0,
+                0.0, 1.0,
+                0.0, 1.0,
+                1.0, 0.0,
+                1.0, 1.0
+            ];
+            this._vbo = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._vbo);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+            this._tbo = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._tbo);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        };
+        Effects.prototype.setEffect = function (type) {
+            this._type = type || this._type;
+            var gl = this.gl;
+            var source = {};
+            source.vertex = Shaders.Vertex["Effect"];
+            switch (this._type) {
+                case "blur":
+                    source.fragment = Shaders.Fragment["Blur_effect"];
+                    break;
+                case "film":
+                    source.fragment = Shaders.Fragment["Film_effect"];
+                    break;
+                case "wavy":
+                    source.fragment = Shaders.Fragment["Wavy_effect"];
+                    break;
+                case "no":
+                default:
+                    source.fragment = Shaders.Fragment["No_effect"];
+            }
+            if (this._shader) {
+                gl.deleteProgram(this._shader);
+            }
+            this._shader = WebGLUtils.createProgram(gl, source);
+            var count;
+            this._attribs = {};
+            count = gl.getProgramParameter(this._shader, gl.ACTIVE_ATTRIBUTES);
+            for (var i = 0; i < count; i++) {
+                var attrib = gl.getActiveAttrib(this._shader, i);
+                this._attribs[attrib.name] = gl.getAttribLocation(this._shader, attrib.name);
+            }
+            this._uniforms = {};
+            count = gl.getProgramParameter(this._shader, gl.ACTIVE_UNIFORMS);
+            for (var i = 0; i < count; i++) {
+                var uniform = gl.getActiveUniform(this._shader, i);
+                this._uniforms[attrib.name] = gl.getUniformLocation(this._shader, uniform.name);
+            }
+        };
+        Effects.prototype.Size = function () {
+            var gl = this.gl;
+            var width = this._canvas.width;
+            var height = this._canvas.height;
+            gl.bindTexture(gl.TEXTURE_2D, this._texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+            gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
+            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+            gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+        };
+        Effects.prototype.setNoiseTexture = function (data_texture) {
+            var gl = this.gl;
+            this._noisetexture = WebGLUtils.createTexture(gl, data_texture);
+        };
+        Effects.prototype.Bind = function () {
+            var gl = this.gl;
+            var width = this._canvas.width;
+            var height = this._canvas.height;
+            gl.useProgram(this._shader);
+            gl.enableVertexAttribArray(this._attribs.a_position);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._vbo);
+            gl.vertexAttribPointer(this._attribs.a_position, 2, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(this._attribs.a_texture_coords);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._tbo);
+            gl.vertexAttribPointer(this._attribs.a_texture_coords, 2, gl.FLOAT, false, 0, 0);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, this._texture);
+            gl.uniform1i(this._uniforms.uSampler, 0);
+            if (this._uniforms.uTime) {
+                gl.uniform1f(this._uniforms.uTime, (Date.now() - this._start) / 1000.0);
+            }
+            if (this._uniforms.uInverseTextureSize) {
+                gl.uniform2f(this._uniforms.uInverseTextureSize, 1.0 / width, 1.0 / height);
+            }
+            if (this._uniforms.uNoiseSampler && this._noisetexture) {
+                gl.activeTexture(gl.TEXTURE1);
+                gl.bindTexture(gl.TEXTURE_2D, this._noisetexture);
+                gl.uniform1i(this._uniforms.uNoiseSampler, 1);
+            }
+        };
+        Effects.prototype.bindFrameBuffer = function () {
+            var gl = this.gl;
+            gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+        };
+        Effects.prototype.unbindFrameBuffer = function () {
+            var gl = this.gl;
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        };
+        Effects.prototype.draw = function () {
+            var gl = this.gl;
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+            gl.disableVertexAttribArray(this._attribs.a_position);
+            gl.disableVertexAttribArray(this._attribs.a_texture_coords);
+        };
+        return Effects;
+    }(Renderable));
+    Blaze.Effects = Effects;
     var NodeElement = (function () {
         function NodeElement(parent, type, entity) {
             this._parentNode = parent;
@@ -1787,6 +1969,7 @@ var Blaze;
             this._loaderBuffer = [];
             Ketch.createView(this._oid);
             this._selector = null;
+            this._effects = null;
         }
         Object.defineProperty(SceneGraph.prototype, "scene", {
             get: function () {
@@ -1807,16 +1990,36 @@ var Blaze;
             gl.clearDepth(1.0);
         };
         SceneGraph.prototype.render = function () {
+            if (this._effects) {
+                this.drawWithEffects();
+            }
+            else {
+                this.drawScene();
+            }
+        };
+        SceneGraph.prototype.drawScene = function () {
             var gl = this.gl;
-            gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            this.useProgram();
             var draw = (function () {
+                gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
                 this._scene.draw(this._matrixStack);
             }).bind(this);
             if (this._selector) {
                 this._selector.render(draw);
             }
             draw();
+        };
+        SceneGraph.prototype.drawWithEffects = function () {
+            this._effects.Size();
+            this._effects.bindFrameBuffer();
+            this.drawScene();
+            this._effects.unbindFrameBuffer();
+            this._effects.Bind();
+            this._effects.draw();
+        };
+        SceneGraph.prototype.useProgram = function () {
+            Ketch.useProgram(this.oid);
         };
         SceneGraph.prototype.createMainChildNode = function (type, entity) {
             return this._scene.createChildNode(type, entity);
@@ -1898,6 +2101,18 @@ var Blaze;
                 return this._selector.find(pos);
             }
         };
+        SceneGraph.prototype.createEffects = function (canvas, type) {
+            this._effects = new Effects(this.oid, canvas, type);
+            console.log(this._effects);
+        };
+        SceneGraph.prototype.setNoiseEffect = function (texture) {
+            if (this._effects)
+                this._effects.setNoiseTexture(texture);
+        };
+        SceneGraph.prototype.setEffect = function (type) {
+            if (this._effects)
+                this._effects.setEffect(type);
+        };
         Object.defineProperty(SceneGraph.prototype, "MainCamera", {
             set: function (camera) {
                 this._matrixStack.MainCamera = camera;
@@ -1949,9 +2164,12 @@ var Blaze;
             "uWireframe",
             "uPerVertexColor",
             "uSelectColor",
-            "uOffscreen"
+            "uOffscreen",
+            "uInverseTextureSize",
+            "uNoiseSampler",
+            "uTime"
         ];
-        SceneGraph.ATTRIBUTES = ['a_position', 'a_normal', "a_color"];
+        SceneGraph.ATTRIBUTES = ['a_position', 'a_normal', "a_color", "a_texture_coords"];
         return SceneGraph;
     }(Renderable));
     Blaze.SceneGraph = SceneGraph;

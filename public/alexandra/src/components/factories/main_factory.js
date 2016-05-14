@@ -218,12 +218,12 @@ angular.module('alexandra')
                 particle = Tree.createParticle(config.particle.size || 5);
             },
 
-            configureParticleTexture: function () {
+            configureTextures: function () {
 
                 var canvas = document.createElement("canvas");
                 var ctx = canvas.getContext("2d");
                 var TextureValue=$alexandraStore.textures;
-                textures.particle = {};
+
                 for (var key in TextureValue) {
                     var data = TextureValue[key];
                     var len = data.length;
@@ -238,7 +238,10 @@ angular.module('alexandra')
                         imgData.data[i + 3] = data[i + 3];
                     }
 
-                    textures.particle[key] = imgData;
+
+                    textures[key] = imgData;
+
+
 
                 }
 
@@ -257,28 +260,28 @@ angular.module('alexandra')
 
                 switch (config.particle.type) {
                     case "fire":
-                        texture = textures.particle.Fire;
+                        texture = textures.Fire;
                         break;
                     case "fog":
-                        texture = textures.particle.Fog;
+                        texture = textures.Fog;
                         break;
                     case "energy":
-                        texture = textures.particle.Energy;
+                        texture = textures.Energy;
                         break;
                     case "smoke":
-                        texture = textures.particle.Smoke;
+                        texture = textures.Smoke;
                         break;
                     case "water":
-                        texture = textures.particle.Water;
+                        texture = textures.Water;
                         break;
                     case "water2":
-                        texture = textures.particle.Water2;
+                        texture = textures.Water2;
                         break;
                     case "drop":
-                        texture = textures.particle.Drop;
+                        texture = textures.Drop;
                         break;
                     default:
-                        texture = textures.particle.Default;
+                        texture = textures.Default;
                 }
 
 
@@ -514,9 +517,9 @@ angular.module('alexandra')
 
                     });
                 }
-                
-                
-                
+
+
+
                 if(config.ValueAxisYLabel){
                     labels.valuesY=config.ValueAxisYLabel.map(function(item){
 
@@ -547,6 +550,12 @@ angular.module('alexandra')
                     });
                 }
 
+
+            },
+
+            configureEffects:function(){
+                Tree.createEffects(canvas, config.effect);
+                Tree.setNoiseEffect(textures.Noise);
 
             },
 

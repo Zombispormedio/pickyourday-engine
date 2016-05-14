@@ -103,9 +103,21 @@ export module WebGLUtils {
         }
         return shader;
     }
+    
+     export function createFragmentShader(gl, shaderSource) {
+       
+        return createShader(gl, gl.FRAGMENT_SHADER, shaderSource);
+     }
+     
+      export function createVertexShader(gl, shaderSource) {
+       
+        return createShader(gl, gl.VERTEX_SHADER, shaderSource);
+     }
+    
+    
     export function createProgram(gl, shaders) {
-        var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, shaders.fragment);
-        var vertexShader = createShader(gl, gl.VERTEX_SHADER, shaders.vertex);
+        var fragmentShader = createFragmentShader(gl, shaders.fragment);
+        var vertexShader = createVertexShader(gl, shaders.vertex);
 
         var program = gl.createProgram();
         gl.attachShader(program, vertexShader);
@@ -114,8 +126,6 @@ export module WebGLUtils {
 
         if (!gl.getProgramParameter(program, gl.LINK_STATUS))
               console.log(gl.getProgramInfoLog(program));
-
-        gl.useProgram(program);
 
         return program;
 
@@ -276,6 +286,13 @@ export class Ketch {
         return Ketch._views[key].program;
     }
 
+    static useProgram(key) {
+        var view = Ketch._views[key];
+        var gl = view.context;
+        var prg = view.program;
+        gl.useProgram(prg);
+    }
+
     static createView(key) {
         Ketch._views[key] = {};
     }
@@ -284,8 +301,7 @@ export class Ketch {
         var view = Ketch._views[key];
         var gl = view.context;
         var prg = view.program;
-
-
+        
         view.attribs = attribs_names.reduce(function (prev, attr) {
             prev[attr] = gl.getAttribLocation(prg, attr);
             return prev;
@@ -377,7 +393,7 @@ export class Ketch {
         Ketch._views[view_key].offscreen = true;
     }
 
-    static fillSelectorBuffer(view_key, obj:SelectEntity) {
+    static fillSelectorBuffer(view_key, obj: SelectEntity) {
         var view = Ketch._views[view_key];
         view.selectObjects = view.selectObjects || [];
         view.selectObjects.push(obj);
@@ -388,10 +404,10 @@ export class Ketch {
         view.selectObjects = [];
     }
 
-    static getSelectByColor(view_key, color) :SelectEntity {
+    static getSelectByColor(view_key, color): SelectEntity {
         var view = Ketch._views[view_key];
         view.selectObjects = view.selectObjects || [];
-       return  _.find(view.selectObjects , function(o){
+        return _.find(view.selectObjects, function (o) {
             return _.isEqual(o.color, color);
         });
     }
@@ -848,6 +864,76 @@ export module Resources {
 }
 export module Shaders{
 export class Fragment{
+static Blur_effect:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform sampler2D uSampler;
+uniform vec2 uInverseTextureSize;
+
+varying vec2 vTextureCoord;
+
+vec4 offsetLookup(float xOff, float yOff){
+
+    float x=vTextureCoord.x+xOff*uInverseTextureSize.x;
+    float y=vTextureCoord.y+yOff*uInverseTextureSize.y;
+    return texture2D(uSampler, vec2(x, y))
+
+}
+
+void main(){
+
+    vec4 frameColor = offsetLookup(-4.0, 0.0) * 0.05;
+    frameColor += offsetLookup(-3.0, 0.0) * 0.09;
+    frameColor += offsetLookup(-2.0, 0.0) * 0.12;
+    frameColor += offsetLookup(-1.0, 0.0) * 0.15;
+    frameColor += offsetLookup(0.0, 0.0) * 0.16;
+    frameColor += offsetLookup(1.0, 0.0) * 0.15;
+    frameColor += offsetLookup(2.0, 0.0) * 0.12;
+    frameColor += offsetLookup(3.0, 0.0) * 0.09;
+    frameColor += offsetLookup(4.0, 0.0) * 0.05;
+
+    gl_FragColor = frameColor;
+
+
+    
+}`;
+static Film_effect:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform sampler2D uSampler;
+uniform sampler2D uNoiseSampler;
+uniform vec2 uInverseTextureSize;
+uniform float uTime;
+
+varying vec2 vTextureCoord;
+
+const float grainIntensity = 0.1;
+const float scrollSpeed = 4000.0;
+
+
+void main()
+{
+    vec4 frameColor=texture2D(uSampler, vTextureCoord);
+    vec4 grain=texture2D(uNoiseSampler, vTextureCoord*2.0+uTime*scrollSpeed*uInverseTextureSize);
+    gl_FragColor=frameColor-(grain*grainIntensity);
+
+}`;
+static No_effect:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform sampler2D uSampler;
+varying vec2 vTextureCoord;
+
+void main(){
+    vec4 frameColor=texture2D(uSampler, vTextureCoord);
+    
+    gl_FragColor=frameColor;
+
+}
+`;
 static Particle:string=`#ifdef GL_ES
 precision mediump float;
 #endif
@@ -1078,8 +1164,47 @@ void main(){
 
 
 `;
+static Wavy_effect:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+
+uniform sampler2D uSampler;
+uniform float uTime;
+
+varying vec2 vTextureCoord;
+
+const float speed = 15.0;
+const float magnitude = 0.015;
+
+void main(){
+    
+    vec2 wavyCoord;
+    wavyCoord.s=vTextureCoord.s+(sin(uTime+vTextureCoord.t*speed)*magnitude);
+    wavyCoord.t=vTextureCoord.t+(sin(uTime+vTextureCoord.s*speed)*magnitude);
+    
+    vec4 frameColor=texture2D(uSampler, wavyCoord);
+    gl_FragColor=frameColor;
+
+
+}`;
 }
 export class Vertex{
+static Effect:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+attribute vec2 a_position;
+attribute vec2 a_texture_coords;
+
+varying vec2 vTextureCoord;
+
+void main(){
+    vTextureCoord=a_texture_coords;
+
+    gl_Position=vec4(a_position, 0.0,1.0);
+    
+}`;
 static Particle:string=`#ifdef GL_ES
 precision mediump float;
 #endif
@@ -1809,7 +1934,7 @@ export class ParticleEntity extends Entity {
         this._texture_id="";
     }
 
-    public configure(data_mesh: Array<number>, data_texture: Array<number>) {
+    public configure(data_mesh: Array<number>, data_texture) {
         var gl = this.gl;
 
         this._buffer = gl.createBuffer();
@@ -2385,6 +2510,248 @@ export class Selector extends Renderable {
 
 
 };
+export class Effects extends Renderable {
+    private _canvas;
+    private _texture;
+    private _framebuffer;
+    private _renderbuffer;
+    private _vbo;
+    private _tbo;
+    private _shader;
+    private _uniforms;
+    private _attribs;
+    private _start;
+    private _type;
+    private _noisetexture;
+
+
+    constructor(graph_id: string, canvas, type?: string) {
+        super(graph_id);
+
+        this._texture = null;
+        this._framebuffer = null;
+        this._renderbuffer = null;
+        this._vbo = null;
+        this._tbo = null;
+        this._shader = null;
+        this._uniforms = null;
+        this._attribs = null;
+        this._noisetexture = null;
+
+        this._start = Date.now();
+
+        this._canvas = canvas;
+
+        this._type = type || "no";
+
+        this.configure();
+
+        this.Geometry();
+
+        this.setEffect();
+
+
+    }
+
+
+    configure() {
+        var gl = this.gl;
+        var width = this._canvas.width;
+        var height = this._canvas.height;
+
+        this._texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this._texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+        this._renderbuffer = gl.createRenderbuffer();
+        gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
+        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height);
+
+        this._framebuffer = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this._texture, 0);
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._renderbuffer);
+
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+
+
+    public Geometry() {
+        var gl = this.gl;
+
+        var vertices = [
+            -1.0, -1.0,
+            1.0, -1.0,
+            -1.0, 1.0,
+
+            -1.0, 1.0,
+            1.0, -1.0,
+            1.0, 1.0
+        ];
+
+        var textureCoords = [
+            0.0, 0.0,
+            1.0, 0.0,
+            0.0, 1.0,
+
+            0.0, 1.0,
+            1.0, 0.0,
+            1.0, 1.0
+        ];
+
+        this._vbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+        this._tbo = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._tbo);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    }
+
+    public setEffect(type?: string) {
+        this._type = type || this._type;
+
+        var gl = this.gl;
+        var source: { vertex?: string, fragment?: string } = {};
+        source.vertex = Shaders.Vertex["Effect"];
+
+        switch (this._type) {
+
+            case "blur":
+                source.fragment = Shaders.Fragment["Blur_effect"];
+                break;
+
+            case "film":
+                source.fragment = Shaders.Fragment["Film_effect"];
+                break;
+
+            case "wavy":
+                source.fragment = Shaders.Fragment["Wavy_effect"];
+                break;
+
+            case "no":
+            default:
+                source.fragment = Shaders.Fragment["No_effect"];
+        }
+
+
+        if (this._shader) {
+            gl.deleteProgram(this._shader);
+        }
+
+
+        this._shader = WebGLUtils.createProgram(gl, source);
+        var count;
+        this._attribs = {};
+        count = gl.getProgramParameter(this._shader, gl.ACTIVE_ATTRIBUTES);
+
+        for (var i = 0; i < count; i++) {
+            var attrib = gl.getActiveAttrib(this._shader, i);
+            this._attribs[attrib.name] = gl.getAttribLocation(this._shader, attrib.name);
+        }
+
+
+        this._uniforms = {};
+        count = gl.getProgramParameter(this._shader, gl.ACTIVE_UNIFORMS);
+
+        for (var i = 0; i < count; i++) {
+            var uniform = gl.getActiveUniform(this._shader, i);
+            this._uniforms[attrib.name] = gl.getUniformLocation(this._shader, uniform.name);
+        }
+
+    }
+
+    public Size() {
+
+        var gl = this.gl;
+        var width = this._canvas.width;
+        var height = this._canvas.height;
+
+        gl.bindTexture(gl.TEXTURE_2D, this._texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+
+        gl.bindRenderbuffer(gl.RENDERBUFFER, this._renderbuffer);
+        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height);
+
+
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+
+    }
+
+    setNoiseTexture(data_texture) {
+        var gl = this.gl;
+        this._noisetexture = WebGLUtils.createTexture(gl, data_texture);
+    }
+
+    public Bind() {
+        var gl = this.gl;
+
+        var width = this._canvas.width;
+        var height = this._canvas.height;
+
+        gl.useProgram(this._shader);
+
+        gl.enableVertexAttribArray(this._attribs.a_position);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._vbo);
+        gl.vertexAttribPointer(this._attribs.a_position, 2, gl.FLOAT, false, 0, 0);
+
+        gl.enableVertexAttribArray(this._attribs.a_texture_coords);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._tbo);
+        gl.vertexAttribPointer(this._attribs.a_texture_coords, 2, gl.FLOAT, false, 0, 0);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this._texture);
+        gl.uniform1i(this._uniforms.uSampler, 0);
+
+        if (this._uniforms.uTime) {
+            gl.uniform1f(this._uniforms.uTime, (Date.now() - this._start) / 1000.0);
+        }
+
+        if (this._uniforms.uInverseTextureSize) {
+            gl.uniform2f(this._uniforms.uInverseTextureSize, 1.0 / width, 1.0 / height);
+        }
+
+        if (this._uniforms.uNoiseSampler && this._noisetexture) {
+            gl.activeTexture(gl.TEXTURE1);
+            gl.bindTexture(gl.TEXTURE_2D, this._noisetexture);
+            gl.uniform1i(this._uniforms.uNoiseSampler, 1);
+        }
+
+
+    }
+
+    public bindFrameBuffer() {
+        var gl = this.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+    }
+
+    public unbindFrameBuffer() {
+        var gl = this.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+
+    draw() {
+        var gl = this.gl;
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+        gl.disableVertexAttribArray(this._attribs.a_position);
+        gl.disableVertexAttribArray(this._attribs.a_texture_coords);
+
+    }
+
+}
 export interface INodeElement {
     _entity: Entity;
     _childNodes: INodeElement[];
@@ -2538,6 +2905,8 @@ export class SceneGraph extends Renderable {
     private _scene: NodeElement;
     private _matrixStack: MatrixStack;
     private _selector: Selector;
+    private _effects: Effects;
+
     private _oid: string;
 
     private _loaderBuffer: Array<MeshEntity>;
@@ -2561,9 +2930,12 @@ export class SceneGraph extends Renderable {
         "uWireframe",
         "uPerVertexColor",
         "uSelectColor",
-        "uOffscreen"
+        "uOffscreen",
+        "uInverseTextureSize",
+        "uNoiseSampler",
+        "uTime"
     ];
-    private static ATTRIBUTES = ['a_position', 'a_normal', "a_color"];
+    private static ATTRIBUTES = ['a_position', 'a_normal', "a_color", "a_texture_coords"];
 
     constructor() {
         var oid = utils.uuid();
@@ -2574,6 +2946,8 @@ export class SceneGraph extends Renderable {
         this._loaderBuffer = [];
         Ketch.createView(this._oid);
         this._selector = null;
+        this._effects = null;
+
     }
 
 
@@ -2598,12 +2972,25 @@ export class SceneGraph extends Renderable {
     }
 
     public render(): void {
+
+        if (this._effects) {
+
+            this.drawWithEffects();
+
+
+        } else {
+            this.drawScene();
+
+        }
+
+    }
+
+    public drawScene(): void {
         var gl = this.gl;
-
-        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
+        this.useProgram();
         var draw = (function () {
+            gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             this._scene.draw(this._matrixStack);
         }).bind(this);
 
@@ -2612,8 +2999,22 @@ export class SceneGraph extends Renderable {
         }
 
         draw();
+    }
 
+    public drawWithEffects(): void {
+        this._effects.Size();
+        this._effects.bindFrameBuffer();
 
+        this.drawScene();
+
+        this._effects.unbindFrameBuffer();
+
+        this._effects.Bind();
+        this._effects.draw();
+    }
+
+    public useProgram() {
+        Ketch.useProgram(this.oid);
     }
 
     public createMainChildNode(type: string, entity: Entity): NodeElement {
@@ -2639,8 +3040,8 @@ export class SceneGraph extends Renderable {
         type = type || "Phong";
 
         Ketch.createProgram(this._oid, {
-            fragment: Shaders.Fragment[type] ||  Shaders.Fragment["Phong"],
-            vertex: Shaders.Vertex[type]  || Shaders.Vertex["Phong"]
+            fragment: Shaders.Fragment[type] || Shaders.Fragment["Phong"],
+            vertex: Shaders.Vertex[type] || Shaders.Vertex["Phong"]
         });
     }
 
@@ -2699,6 +3100,8 @@ export class SceneGraph extends Renderable {
     }
 
 
+
+
     public createSelector(dimensions: { height: number, width: number }) {
         this._selector = new Selector(this.oid, dimensions);
     }
@@ -2715,12 +3118,27 @@ export class SceneGraph extends Renderable {
         }
     }
 
-    public select(pos:{x:number, y:number}) {
+    public select(pos: { x: number, y: number }) {
         if (this._selector) {
-           return this._selector.find(pos);
+            return this._selector.find(pos);
         }
     }
 
+
+    public createEffects(canvas, type?: string) {
+        this._effects = new Effects(this.oid, canvas, type);
+        console.log(this._effects);
+    }
+
+    public setNoiseEffect(texture) {
+        if (this._effects)
+            this._effects.setNoiseTexture(texture);
+    }
+
+    public setEffect(type) {
+        if (this._effects)
+            this._effects.setEffect(type);
+    }
 
 
     public set MainCamera(camera: CameraEntity) {

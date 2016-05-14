@@ -25,6 +25,13 @@ class Ketch {
         return Ketch._views[key].program;
     }
 
+    static useProgram(key) {
+        var view = Ketch._views[key];
+        var gl = view.context;
+        var prg = view.program;
+        gl.useProgram(prg);
+    }
+
     static createView(key) {
         Ketch._views[key] = {};
     }
@@ -33,8 +40,7 @@ class Ketch {
         var view = Ketch._views[key];
         var gl = view.context;
         var prg = view.program;
-
-
+        
         view.attribs = attribs_names.reduce(function (prev, attr) {
             prev[attr] = gl.getAttribLocation(prg, attr);
             return prev;
@@ -126,7 +132,7 @@ class Ketch {
         Ketch._views[view_key].offscreen = true;
     }
 
-    static fillSelectorBuffer(view_key, obj:SelectEntity) {
+    static fillSelectorBuffer(view_key, obj: SelectEntity) {
         var view = Ketch._views[view_key];
         view.selectObjects = view.selectObjects || [];
         view.selectObjects.push(obj);
@@ -137,10 +143,10 @@ class Ketch {
         view.selectObjects = [];
     }
 
-    static getSelectByColor(view_key, color) :SelectEntity {
+    static getSelectByColor(view_key, color): SelectEntity {
         var view = Ketch._views[view_key];
         view.selectObjects = view.selectObjects || [];
-       return  _.find(view.selectObjects , function(o){
+        return _.find(view.selectObjects, function (o) {
             return _.isEqual(o.color, color);
         });
     }

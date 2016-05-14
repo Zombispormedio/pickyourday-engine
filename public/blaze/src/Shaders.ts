@@ -1,5 +1,75 @@
 module Shaders{
 export class Fragment{
+static Blur_effect:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform sampler2D uSampler;
+uniform vec2 uInverseTextureSize;
+
+varying vec2 vTextureCoord;
+
+vec4 offsetLookup(float xOff, float yOff){
+
+    float x=vTextureCoord.x+xOff*uInverseTextureSize.x;
+    float y=vTextureCoord.y+yOff*uInverseTextureSize.y;
+    return texture2D(uSampler, vec2(x, y))
+
+}
+
+void main(){
+
+    vec4 frameColor = offsetLookup(-4.0, 0.0) * 0.05;
+    frameColor += offsetLookup(-3.0, 0.0) * 0.09;
+    frameColor += offsetLookup(-2.0, 0.0) * 0.12;
+    frameColor += offsetLookup(-1.0, 0.0) * 0.15;
+    frameColor += offsetLookup(0.0, 0.0) * 0.16;
+    frameColor += offsetLookup(1.0, 0.0) * 0.15;
+    frameColor += offsetLookup(2.0, 0.0) * 0.12;
+    frameColor += offsetLookup(3.0, 0.0) * 0.09;
+    frameColor += offsetLookup(4.0, 0.0) * 0.05;
+
+    gl_FragColor = frameColor;
+
+
+    
+}`;
+static Film_effect:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform sampler2D uSampler;
+uniform sampler2D uNoiseSampler;
+uniform vec2 uInverseTextureSize;
+uniform float uTime;
+
+varying vec2 vTextureCoord;
+
+const float grainIntensity = 0.1;
+const float scrollSpeed = 4000.0;
+
+
+void main()
+{
+    vec4 frameColor=texture2D(uSampler, vTextureCoord);
+    vec4 grain=texture2D(uNoiseSampler, vTextureCoord*2.0+uTime*scrollSpeed*uInverseTextureSize);
+    gl_FragColor=frameColor-(grain*grainIntensity);
+
+}`;
+static No_effect:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform sampler2D uSampler;
+varying vec2 vTextureCoord;
+
+void main(){
+    vec4 frameColor=texture2D(uSampler, vTextureCoord);
+    
+    gl_FragColor=frameColor;
+
+}
+`;
 static Particle:string=`#ifdef GL_ES
 precision mediump float;
 #endif
@@ -230,8 +300,47 @@ void main(){
 
 
 `;
+static Wavy_effect:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+
+uniform sampler2D uSampler;
+uniform float uTime;
+
+varying vec2 vTextureCoord;
+
+const float speed = 15.0;
+const float magnitude = 0.015;
+
+void main(){
+    
+    vec2 wavyCoord;
+    wavyCoord.s=vTextureCoord.s+(sin(uTime+vTextureCoord.t*speed)*magnitude);
+    wavyCoord.t=vTextureCoord.t+(sin(uTime+vTextureCoord.s*speed)*magnitude);
+    
+    vec4 frameColor=texture2D(uSampler, wavyCoord);
+    gl_FragColor=frameColor;
+
+
+}`;
 }
 export class Vertex{
+static Effect:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+attribute vec2 a_position;
+attribute vec2 a_texture_coords;
+
+varying vec2 vTextureCoord;
+
+void main(){
+    vTextureCoord=a_texture_coords;
+
+    gl_Position=vec4(a_position, 0.0,1.0);
+    
+}`;
 static Particle:string=`#ifdef GL_ES
 precision mediump float;
 #endif

@@ -4,7 +4,7 @@
    "AnimationEntity.ts",  "MeshEntity.ts", "TransformEntity.ts", "MaterialEntity.ts",
    "LightEntity.ts", "DiffuseEntity.ts", "ParticleEntity.ts",
    "CameraEntity.ts", "AxisEntity.ts", "GridEntity.ts",
-   "SelectEntity.ts", "Selector.ts",
+   "SelectEntity.ts", "Selector.ts", "Effects.ts",
    "INodeElement.ts", "NodeElement.ts",  "SceneGraph.ts"
 
 ]
