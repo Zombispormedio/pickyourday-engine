@@ -224,7 +224,7 @@ class SceneGraph extends Renderable {
 
     public createEffects(canvas, type?: string) {
         this._effects = new Effects(this.oid, canvas, type);
-        console.log(this._effects);
+      
     }
 
     public setNoiseEffect(texture) {

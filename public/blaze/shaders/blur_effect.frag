@@ -11,7 +11,7 @@ vec4 offsetLookup(float xOff, float yOff){
 
     float x=vTextureCoord.x+xOff*uInverseTextureSize.x;
     float y=vTextureCoord.y+yOff*uInverseTextureSize.y;
-    return texture2D(uSampler, vec2(x, y))
+    return texture2D(uSampler, vec2(x, y));
 
 }
 

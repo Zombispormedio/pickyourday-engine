@@ -82,7 +82,7 @@ angular.module('alexandraExample')
         engine:"phong",
         colortype:"variable",
         type:"custom",
-        effect:"no",
+        //effect:"wavy",
         
         axis:true,
         axisLength:500,
