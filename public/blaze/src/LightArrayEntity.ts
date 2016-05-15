@@ -9,14 +9,22 @@ class LightArrayEntity extends Entity {
     addLight(light: LightEntity): void {
         this._lights.push(light);
     }
+    
+     removeLights(): void {
+        this._lights=[];
+    }
 
     getArraysObject(): any {
         return this._lights.reduce(function (prev, item) {
-            prev.ambient = prev.ambient.concat(item.ambient);
-            prev.diffuse = prev.diffuse.concat(item.diffuse);
-            prev.specular = prev.specular.concat(item.specular);
-            prev.direction = prev.direction.concat(item.direction);
-            prev.cutoff = prev.cutOff.concat(item.cutoff);
+            var ambient = Array.prototype.slice.call(item.ambient);
+            var diffuse = Array.prototype.slice.call(item.diffuse);
+            var specular = Array.prototype.slice.call(item.specular);
+            var direction = Array.prototype.slice.call(item.direction);
+            prev.ambient = prev.ambient.concat(ambient);
+            prev.diffuse = prev.diffuse.concat(diffuse);
+            prev.specular = prev.specular.concat(specular);
+            prev.direction = prev.direction.concat(direction);
+            prev.cutoff = prev.cutoff.concat(item.cutoff);
             return prev;
         }, {
                 ambient: [],
@@ -31,9 +39,6 @@ class LightArrayEntity extends Entity {
         var gl = this.gl;
 
         if (this._lights.length > 0) {
-            var uNumLights = this.getUniform("uNumLights");
-            if (uNumLights)
-                gl.uniform1(uNumLights, this._lights.length);
 
             var lights = this.getArraysObject();
 

@@ -1,7 +1,7 @@
 var app = angular.module('alexandraExample', [ "alexandra"]);
 
 angular.module('alexandraExample')
-    .controller('AlexandraExampleController', function($rootScope, $scope, $interval, $timeout, $alexandraModel) {
+    .controller('AlexandraExampleController', function($rootScope, $scope, $interval, $timeout, $alexandraModel, $alexandraStore) {
 
 
     $scope.data=[{
@@ -79,7 +79,7 @@ angular.module('alexandraExample')
 
     $scope.config={
 
-        engine:"phong",
+        engine:"phong_lights",
         colortype:"variable",
         type:"custom",
         
@@ -144,9 +144,12 @@ angular.module('alexandraExample')
 
         ValueAxisYLabelConfig:{
             offset:1
-        }
-
-
+        },
+        lightSequence:[
+            $alexandraStore.lights.blue,
+            $alexandraStore.lights.green,
+            $alexandraStore.lights.red
+        ]
 
     };
 

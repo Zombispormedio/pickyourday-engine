@@ -1088,15 +1088,15 @@ static Phong_lights:string=`#ifdef GL_ES
 precision mediump float;
 #endif
 
-uniform int uNumLights;
+const int NumLights=16;
 
 uniform float uShininess;
-uniform vec3 uLightDirection[uNumLights];
-uniform float uCutOff[uNumLights];
+uniform vec3 uLightDirection[NumLights];
+uniform float uCutOff[NumLights];
 
-uniform vec4 uLightAmbient[uNumLights];
-uniform vec4 uLightDiffuse[uNumLights];
-uniform vec4 uLightSpecular[uNumLights];
+uniform vec4 uLightAmbient[NumLights];
+uniform vec4 uLightDiffuse[NumLights];
+uniform vec4 uLightSpecular[NumLights];
 
 uniform bool uWireframe;
 
@@ -1125,7 +1125,7 @@ void main(){
         }
 
         vec4 finalColor=vec4(0.0,0.0,0.0,1.0);
-        for(int i=0; i<uNumLights;i++){
+        for(int i=0; i<NumLights;i++){
         
         vec3 L= normalize(uLightDirection[i]);
         vec3 N= normalize(vNormal);
@@ -2193,11 +2193,15 @@ export class LightArrayEntity extends Entity {
 
     getArraysObject(): any {
         return this._lights.reduce(function (prev, item) {
-            prev.ambient = prev.ambient.concat(item.ambient);
-            prev.diffuse = prev.diffuse.concat(item.diffuse);
-            prev.specular = prev.specular.concat(item.specular);
-            prev.direction = prev.direction.concat(item.direction);
-            prev.cutoff = prev.cutOff.concat(item.cutoff);
+            var ambient = Array.prototype.slice.call(item.ambient);
+            var diffuse = Array.prototype.slice.call(item.diffuse);
+            var specular = Array.prototype.slice.call(item.specular);
+            var direction = Array.prototype.slice.call(item.direction);
+            prev.ambient = prev.ambient.concat(ambient);
+            prev.diffuse = prev.diffuse.concat(diffuse);
+            prev.specular = prev.specular.concat(specular);
+            prev.direction = prev.direction.concat(direction);
+            prev.cutoff = prev.cutoff.concat(item.cutoff);
             return prev;
         }, {
                 ambient: [],
@@ -2212,9 +2216,6 @@ export class LightArrayEntity extends Entity {
         var gl = this.gl;
 
         if (this._lights.length > 0) {
-            var uNumLights = this.getUniform("uNumLights");
-            if (uNumLights)
-                gl.uniform1(uNumLights, this._lights.length);
 
             var lights = this.getArraysObject();
 
@@ -3201,8 +3202,7 @@ export class SceneGraph extends Renderable {
         "uOffscreen",
         "uInverseTextureSize",
         "uNoiseSampler",
-        "uTime",
-        "uNumLights"
+        "uTime"
     ];
     private static ATTRIBUTES = ['a_position', 'a_normal', "a_color", "a_texture_coords"];
 

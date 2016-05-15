@@ -6,7 +6,7 @@ angular.module('alexandra')
         var Tree = $alexandraForest.getTree(id);
         var config = c || {};
 
-        var camera, light, mesh, particle, axis, node_buffer = [], textures = {}, canvas, labels={};
+        var camera, light, mesh, particle, axis, node_buffer = [], textures = {}, canvas, labels={}, light_array;
 
         return {
             setContext: function (c) {
@@ -29,6 +29,7 @@ angular.module('alexandra')
 
             },
             configureLights: function () {
+                var self=this;
                 var custom=config.light||{};
                 var _default=$alexandraStore.lights.default;
                 var values=Object.keys(_default).reduce(function(prev, key){
@@ -40,8 +41,39 @@ angular.module('alexandra')
                 }, {});
 
                 light = Tree.createLight(values);
-                Tree.createMainChildNode("Light", light);
+
+                if(config.engine=="phong_lights"){
+
+                    light_array = Tree.createLightArray();
+
+                    light_array.addLight(light);
+                    Tree.createMainChildNode("LightArray", light_array); 
+                    self.addLight();
+
+                }else{
+                    Tree.createMainChildNode("Light", light); 
+                }
+
             },
+            
+            addLight:function(){
+                
+                if(config.lightSequence){
+                    config.lightSequence.forEach(function(item){
+                        var l=Tree.createLight(item);
+                       light_array.addLight(l); 
+                    });
+                }
+                
+            },
+            
+            removeLights:function(){
+                if(light_array){
+                    light_array.removeLights();
+                }
+            },
+            
+            
 
             configureTransform:function(item){
                 var tr = Tree.createTransform();
@@ -148,7 +180,9 @@ angular.module('alexandra')
                     case "toon":
                         renderConfig.typeShader = "Toon";
                         break;
-
+                    case "phong_lights":
+                        renderConfig.typeShader = "Phong_lights";
+                        break;                       
                     case "phong":
                         renderConfig.typeShader = "Phong";
                     case "phong_positional":

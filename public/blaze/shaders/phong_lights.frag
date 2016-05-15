@@ -2,15 +2,15 @@
 precision mediump float;
 #endif
 
-uniform int uNumLights;
+const int NumLights=16;
 
 uniform float uShininess;
-uniform vec3 uLightDirection[uNumLights];
-uniform float uCutOff[uNumLights];
+uniform vec3 uLightDirection[NumLights];
+uniform float uCutOff[NumLights];
 
-uniform vec4 uLightAmbient[uNumLights];
-uniform vec4 uLightDiffuse[uNumLights];
-uniform vec4 uLightSpecular[uNumLights];
+uniform vec4 uLightAmbient[NumLights];
+uniform vec4 uLightDiffuse[NumLights];
+uniform vec4 uLightSpecular[NumLights];
 
 uniform bool uWireframe;
 
@@ -39,7 +39,7 @@ void main(){
         }
 
         vec4 finalColor=vec4(0.0,0.0,0.0,1.0);
-        for(int i=0; i<uNumLights;i++){
+        for(int i=0; i<NumLights;i++){
         
         vec3 L= normalize(uLightDirection[i]);
         vec3 N= normalize(vNormal);

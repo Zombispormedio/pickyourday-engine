@@ -30,8 +30,7 @@ class SceneGraph extends Renderable {
         "uOffscreen",
         "uInverseTextureSize",
         "uNoiseSampler",
-        "uTime",
-        "uNumLights"
+        "uTime"
     ];
     private static ATTRIBUTES = ['a_position', 'a_normal', "a_color", "a_texture_coords"];
 
