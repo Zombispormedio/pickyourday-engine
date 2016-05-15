@@ -30,7 +30,8 @@ class SceneGraph extends Renderable {
         "uOffscreen",
         "uInverseTextureSize",
         "uNoiseSampler",
-        "uTime"
+        "uTime",
+        "uNumLights"
     ];
     private static ATTRIBUTES = ['a_position', 'a_normal', "a_color", "a_texture_coords"];
 
@@ -196,9 +197,6 @@ class SceneGraph extends Renderable {
         return new SelectEntity(this.oid, data);
     }
 
-
-
-
     public createSelector(dimensions: { height: number, width: number }) {
         this._selector = new Selector(this.oid, dimensions);
     }
@@ -236,7 +234,11 @@ class SceneGraph extends Renderable {
         if (this._effects)
             this._effects.setEffect(type);
     }
-
+    
+    public createLightArray(){
+        return new LightArrayEntity(this.oid);
+    }
+  
 
     public set MainCamera(camera: CameraEntity) {
         this._matrixStack.MainCamera = camera;

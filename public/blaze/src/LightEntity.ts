@@ -13,7 +13,7 @@ class LightEntity extends Entity {
         this._position = position ? vec3.create(position) : null;
         this._specular = specular ? vec4.create(specular) : null;
         this._direction = direction ? vec3.create(direction) : null;
-        this._cutoff = cutoff;
+        this._cutoff = cutoff||0.0;
     }
 
 

@@ -112,6 +112,17 @@ class Effects extends Renderable {
         source.vertex = Shaders.Vertex["Effect"];
 
         switch (this._type) {
+              case "all":
+                source.fragment = Shaders.Fragment["All_effect"];
+                break;
+            
+             case "invert":
+                source.fragment = Shaders.Fragment["Invert_effect"];
+                break;
+            
+             case "grey":
+                source.fragment = Shaders.Fragment["Grey_effect"];
+                break;
 
             case "blur":
                 source.fragment = Shaders.Fragment["Blur_effect"];
@@ -152,7 +163,7 @@ class Effects extends Renderable {
 
         for (var i = 0; i < count; i++) {
             var uniform = gl.getActiveUniform(this._shader, i);
-            this._uniforms[attrib.name] = gl.getUniformLocation(this._shader, uniform.name);
+            this._uniforms[uniform.name] = gl.getUniformLocation(this._shader, uniform.name);
         }
 
     }
@@ -204,7 +215,7 @@ class Effects extends Renderable {
         if (this._uniforms.uTime) {
             gl.uniform1f(this._uniforms.uTime, (Date.now() - this._start) / 1000.0);
         }
-
+            
         if (this._uniforms.uInverseTextureSize) {
             gl.uniform2f(this._uniforms.uInverseTextureSize, 1.0 / width, 1.0 / height);
         }

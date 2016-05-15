@@ -1,5 +1,48 @@
 module Shaders{
 export class Fragment{
+static All_effect:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform sampler2D uSampler;
+uniform float uTime;
+uniform sampler2D uNoiseSampler;
+uniform vec2 uInverseTextureSize;
+
+varying vec2 vTextureCoord;
+
+const float speed = 15.0;
+const float magnitude = 0.015;
+
+const float grainIntensity = 0.1;
+const float scrollSpeed = 4000.0;
+
+vec4 offsetLookup(float xOff, float yOff) {
+    return texture2D(uSampler, vec2(vTextureCoord.x + xOff*uInverseTextureSize.x, vTextureCoord.y + yOff*uInverseTextureSize.y));
+}
+
+void main(){
+
+     vec4 frameColor = offsetLookup(-4.0, 0.0) * 0.05;
+    frameColor += offsetLookup(-3.0, 0.0) * 0.09;
+    frameColor += offsetLookup(-2.0, 0.0) * 0.12;
+    frameColor += offsetLookup(-1.0, 0.0) * 0.15;
+    frameColor += offsetLookup(0.0, 0.0) * 0.16;
+    frameColor += offsetLookup(1.0, 0.0) * 0.15;
+    frameColor += offsetLookup(2.0, 0.0) * 0.12;
+    frameColor += offsetLookup(3.0, 0.0) * 0.09;
+    frameColor += offsetLookup(4.0, 0.0) * 0.05;
+    
+    vec4 grain=texture2D(uNoiseSampler, vTextureCoord*2.0+uTime*scrollSpeed*uInverseTextureSize);
+     
+      frameColor +=texture2D(uSampler, vTextureCoord)-(grain*grainIntensity);
+          vec2 wavyCoord;
+    wavyCoord.s=vTextureCoord.s+(sin(uTime+vTextureCoord.t*speed)*magnitude);
+    wavyCoord.t=vTextureCoord.t+(sin(uTime+vTextureCoord.s*speed)*magnitude);
+    
+    frameColor+=texture2D(uSampler, wavyCoord);
+    gl_FragColor=frameColor;
+}`;
 static Blur_effect:string=`#ifdef GL_ES
 precision mediump float;
 #endif
@@ -9,16 +52,12 @@ uniform vec2 uInverseTextureSize;
 
 varying vec2 vTextureCoord;
 
-vec4 offsetLookup(float xOff, float yOff){
-
-    float x=vTextureCoord.x+xOff*uInverseTextureSize.x;
-    float y=vTextureCoord.y+yOff*uInverseTextureSize.y;
-    return texture2D(uSampler, vec2(x, y));
-
+vec4 offsetLookup(float xOff, float yOff) {
+    return texture2D(uSampler, vec2(vTextureCoord.x + xOff*uInverseTextureSize.x, vTextureCoord.y + yOff*uInverseTextureSize.y));
 }
 
-void main(){
-
+void main(void)
+{
     vec4 frameColor = offsetLookup(-4.0, 0.0) * 0.05;
     frameColor += offsetLookup(-3.0, 0.0) * 0.09;
     frameColor += offsetLookup(-2.0, 0.0) * 0.12;
@@ -30,9 +69,6 @@ void main(){
     frameColor += offsetLookup(4.0, 0.0) * 0.05;
 
     gl_FragColor = frameColor;
-
-
-    
 }`;
 static Film_effect:string=`#ifdef GL_ES
 precision mediump float;
@@ -55,6 +91,32 @@ void main()
     vec4 grain=texture2D(uNoiseSampler, vTextureCoord*2.0+uTime*scrollSpeed*uInverseTextureSize);
     gl_FragColor=frameColor-(grain*grainIntensity);
 
+}`;
+static Grey_effect:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform sampler2D uSampler;
+
+varying vec2 vTextureCoord;
+
+void main(void)
+{
+    vec4 frameColor = texture2D(uSampler, vTextureCoord);
+    float luminance = frameColor.r * 0.3 + frameColor.g * 0.59 + frameColor.b * 0.11;
+    gl_FragColor = vec4(luminance, luminance, luminance, frameColor.a);
+}`;
+static Invert_effect:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+uniform sampler2D uSampler;
+
+varying vec2 vTextureCoord;
+
+void main(void)
+{
+    vec4 frameColor = texture2D(uSampler, vTextureCoord);
+    gl_FragColor = vec4(1.0-frameColor.r, 1.0-frameColor.g, 1.0-frameColor.b, frameColor.a);
 }`;
 static No_effect:string=`#ifdef GL_ES
 precision mediump float;
@@ -149,6 +211,81 @@ void main(){
         }
         
         vec4 finalColor=Ia+Id+Is;
+        finalColor.a=1.0;
+    
+        gl_FragColor =finalColor;
+        
+        
+}
+
+
+`;
+static Phong_lights:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform int uNumLights;
+
+uniform float uShininess;
+uniform vec3 uLightDirection[uNumLights];
+uniform float uCutOff[uNumLights];
+
+uniform vec4 uLightAmbient[uNumLights];
+uniform vec4 uLightDiffuse[uNumLights];
+uniform vec4 uLightSpecular[uNumLights];
+
+uniform bool uWireframe;
+
+uniform bool uOffscreen;
+uniform vec4 uSelectColor;
+
+uniform vec4 uMaterialAmbient;
+uniform vec4 uMaterialDiffuse;
+uniform vec4 uMaterialSpecular;
+
+varying vec3 vNormal;
+varying vec3 vEyeVec;
+varying vec4 vColor;
+
+void main(){
+
+        if(uWireframe){
+            gl_FragColor = vColor;
+            return;
+        }
+      
+
+        if(uOffscreen){
+            gl_FragColor=uSelectColor;
+            return;
+        }
+
+        vec4 finalColor=vec4(0.0,0.0,0.0,1.0);
+        for(int i=0; i<uNumLights;i++){
+        
+        vec3 L= normalize(uLightDirection[i]);
+        vec3 N= normalize(vNormal);
+        float lambertTerm=dot(N, -L);
+        
+        vec4 Ia= uLightAmbient[i]*uMaterialAmbient;
+        
+        vec4 Id=vec4(0.0,0.0,0.0,1.0);
+        
+        vec4 Is=vec4(0.0,0.0,0.0,1.0);
+        
+        if(lambertTerm>uCutOff[i])
+        {
+            Id=uLightDiffuse[i]*uMaterialDiffuse*lambertTerm;
+            
+            vec3 E= normalize(vEyeVec);
+            vec3 R= reflect(L, N);
+            float specular=pow(max(dot(R,E),0.0), uShininess);
+            Is=uLightSpecular[i]*uMaterialSpecular*specular;
+        }
+        
+        finalColor+=Ia+Id+Is;
+        
+        }
         finalColor.a=1.0;
     
         gl_FragColor =finalColor;
@@ -375,6 +512,53 @@ void main(void) {
     gl_PointSize = uPointSize;
 }`;
 static Phong:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+attribute vec3 a_position;
+attribute vec3 a_normal;
+attribute vec4 a_color;
+
+uniform mat4 uMVMatrix;
+uniform mat4 uPMatrix;
+uniform mat4 uNMatrix;
+
+uniform bool uWireframe;
+uniform bool uPerVertexColor;
+uniform vec4 uMaterialDiffuse;
+
+varying vec3 vNormal;
+varying vec3 vEyeVec;
+varying vec4 vColor;
+
+void main(){
+
+    vec4 vertex = uMVMatrix * vec4(a_position, 1.0);
+	
+	
+	 if(uWireframe){
+	 
+	 	if(uPerVertexColor){
+	 		 vColor=a_color;
+	 	}else{
+	 		vColor=uMaterialDiffuse;
+	 	}
+	 
+	
+	 }else{
+	
+	vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));
+	vEyeVec=-vec3(vertex.xyz);  
+	
+	}
+	 
+	gl_Position =uPMatrix * vertex;
+
+}
+
+
+`;
+static Phong_lights:string=`#ifdef GL_ES
 precision mediump float;
 #endif
 

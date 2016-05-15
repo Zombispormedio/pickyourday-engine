@@ -797,11 +797,15 @@ var Blaze;
         var Fragment = (function () {
             function Fragment() {
             }
-            Fragment.Blur_effect = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform sampler2D uSampler;\nuniform vec2 uInverseTextureSize;\n\nvarying vec2 vTextureCoord;\n\nvec4 offsetLookup(float xOff, float yOff){\n\n    float x=vTextureCoord.x+xOff*uInverseTextureSize.x;\n    float y=vTextureCoord.y+yOff*uInverseTextureSize.y;\n    return texture2D(uSampler, vec2(x, y));\n\n}\n\nvoid main(){\n\n    vec4 frameColor = offsetLookup(-4.0, 0.0) * 0.05;\n    frameColor += offsetLookup(-3.0, 0.0) * 0.09;\n    frameColor += offsetLookup(-2.0, 0.0) * 0.12;\n    frameColor += offsetLookup(-1.0, 0.0) * 0.15;\n    frameColor += offsetLookup(0.0, 0.0) * 0.16;\n    frameColor += offsetLookup(1.0, 0.0) * 0.15;\n    frameColor += offsetLookup(2.0, 0.0) * 0.12;\n    frameColor += offsetLookup(3.0, 0.0) * 0.09;\n    frameColor += offsetLookup(4.0, 0.0) * 0.05;\n\n    gl_FragColor = frameColor;\n\n\n    \n}";
+            Fragment.All_effect = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform sampler2D uSampler;\nuniform float uTime;\nuniform sampler2D uNoiseSampler;\nuniform vec2 uInverseTextureSize;\n\nvarying vec2 vTextureCoord;\n\nconst float speed = 15.0;\nconst float magnitude = 0.015;\n\nconst float grainIntensity = 0.1;\nconst float scrollSpeed = 4000.0;\n\nvec4 offsetLookup(float xOff, float yOff) {\n    return texture2D(uSampler, vec2(vTextureCoord.x + xOff*uInverseTextureSize.x, vTextureCoord.y + yOff*uInverseTextureSize.y));\n}\n\nvoid main(){\n\n     vec4 frameColor = offsetLookup(-4.0, 0.0) * 0.05;\n    frameColor += offsetLookup(-3.0, 0.0) * 0.09;\n    frameColor += offsetLookup(-2.0, 0.0) * 0.12;\n    frameColor += offsetLookup(-1.0, 0.0) * 0.15;\n    frameColor += offsetLookup(0.0, 0.0) * 0.16;\n    frameColor += offsetLookup(1.0, 0.0) * 0.15;\n    frameColor += offsetLookup(2.0, 0.0) * 0.12;\n    frameColor += offsetLookup(3.0, 0.0) * 0.09;\n    frameColor += offsetLookup(4.0, 0.0) * 0.05;\n    \n    vec4 grain=texture2D(uNoiseSampler, vTextureCoord*2.0+uTime*scrollSpeed*uInverseTextureSize);\n     \n      frameColor +=texture2D(uSampler, vTextureCoord)-(grain*grainIntensity);\n          vec2 wavyCoord;\n    wavyCoord.s=vTextureCoord.s+(sin(uTime+vTextureCoord.t*speed)*magnitude);\n    wavyCoord.t=vTextureCoord.t+(sin(uTime+vTextureCoord.s*speed)*magnitude);\n    \n    frameColor+=texture2D(uSampler, wavyCoord);\n    gl_FragColor=frameColor;\n}";
+            Fragment.Blur_effect = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform sampler2D uSampler;\nuniform vec2 uInverseTextureSize;\n\nvarying vec2 vTextureCoord;\n\nvec4 offsetLookup(float xOff, float yOff) {\n    return texture2D(uSampler, vec2(vTextureCoord.x + xOff*uInverseTextureSize.x, vTextureCoord.y + yOff*uInverseTextureSize.y));\n}\n\nvoid main(void)\n{\n    vec4 frameColor = offsetLookup(-4.0, 0.0) * 0.05;\n    frameColor += offsetLookup(-3.0, 0.0) * 0.09;\n    frameColor += offsetLookup(-2.0, 0.0) * 0.12;\n    frameColor += offsetLookup(-1.0, 0.0) * 0.15;\n    frameColor += offsetLookup(0.0, 0.0) * 0.16;\n    frameColor += offsetLookup(1.0, 0.0) * 0.15;\n    frameColor += offsetLookup(2.0, 0.0) * 0.12;\n    frameColor += offsetLookup(3.0, 0.0) * 0.09;\n    frameColor += offsetLookup(4.0, 0.0) * 0.05;\n\n    gl_FragColor = frameColor;\n}";
             Fragment.Film_effect = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform sampler2D uSampler;\nuniform sampler2D uNoiseSampler;\nuniform vec2 uInverseTextureSize;\nuniform float uTime;\n\nvarying vec2 vTextureCoord;\n\nconst float grainIntensity = 0.1;\nconst float scrollSpeed = 4000.0;\n\n\nvoid main()\n{\n    vec4 frameColor=texture2D(uSampler, vTextureCoord);\n    vec4 grain=texture2D(uNoiseSampler, vTextureCoord*2.0+uTime*scrollSpeed*uInverseTextureSize);\n    gl_FragColor=frameColor-(grain*grainIntensity);\n\n}";
+            Fragment.Grey_effect = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform sampler2D uSampler;\n\nvarying vec2 vTextureCoord;\n\nvoid main(void)\n{\n    vec4 frameColor = texture2D(uSampler, vTextureCoord);\n    float luminance = frameColor.r * 0.3 + frameColor.g * 0.59 + frameColor.b * 0.11;\n    gl_FragColor = vec4(luminance, luminance, luminance, frameColor.a);\n}";
+            Fragment.Invert_effect = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform sampler2D uSampler;\n\nvarying vec2 vTextureCoord;\n\nvoid main(void)\n{\n    vec4 frameColor = texture2D(uSampler, vTextureCoord);\n    gl_FragColor = vec4(1.0-frameColor.r, 1.0-frameColor.g, 1.0-frameColor.b, frameColor.a);\n}";
             Fragment.No_effect = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform sampler2D uSampler;\nvarying vec2 vTextureCoord;\n\nvoid main(){\n    vec4 frameColor=texture2D(uSampler, vTextureCoord);\n    \n    gl_FragColor=frameColor;\n\n}\n";
             Fragment.Particle = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform bool uWireframe;\n\nuniform sampler2D uSampler;\n\nvarying vec4 vColor;\n\n\nbool isBlack(vec4 color){\nreturn color.r==0.0 &&color.g==0.0&&color.b==0.0;\n}\nvoid main(void) { \n     if(uWireframe){\n         gl_FragColor = vColor;\n        }else{\n    gl_FragColor = texture2D(uSampler, gl_PointCoord);\n    if(gl_FragColor.a < 0.5 || isBlack(gl_FragColor)) discard;\n    }\n}";
             Fragment.Phong = "#ifdef GL_ES\nprecision mediump float;\n#endif\nuniform float uShininess;\nuniform vec3 uLightDirection;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\nuniform vec4 uLightSpecular;\n\nuniform bool uWireframe;\n\nuniform bool uOffscreen;\nuniform vec4 uSelectColor;\n\nuniform vec4 uMaterialAmbient;\nuniform vec4 uMaterialDiffuse;\nuniform vec4 uMaterialSpecular;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\nvarying vec4 vColor;\n\nvoid main(){\n\n        if(uWireframe){\n            gl_FragColor = vColor;\n            return;\n        }\n      \n\n        if(uOffscreen){\n            gl_FragColor=uSelectColor;\n            return;\n        }\n\n       \n        vec3 L= normalize(uLightDirection);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient*uMaterialAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        if(lambertTerm>0.0)\n        {\n            Id=uLightDiffuse*uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightSpecular*uMaterialSpecular*specular;\n        }\n        \n        vec4 finalColor=Ia+Id+Is;\n        finalColor.a=1.0;\n    \n        gl_FragColor =finalColor;\n        \n        \n}\n\n\n";
+            Fragment.Phong_lights = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform int uNumLights;\n\nuniform float uShininess;\nuniform vec3 uLightDirection[uNumLights];\nuniform float uCutOff[uNumLights];\n\nuniform vec4 uLightAmbient[uNumLights];\nuniform vec4 uLightDiffuse[uNumLights];\nuniform vec4 uLightSpecular[uNumLights];\n\nuniform bool uWireframe;\n\nuniform bool uOffscreen;\nuniform vec4 uSelectColor;\n\nuniform vec4 uMaterialAmbient;\nuniform vec4 uMaterialDiffuse;\nuniform vec4 uMaterialSpecular;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\nvarying vec4 vColor;\n\nvoid main(){\n\n        if(uWireframe){\n            gl_FragColor = vColor;\n            return;\n        }\n      \n\n        if(uOffscreen){\n            gl_FragColor=uSelectColor;\n            return;\n        }\n\n        vec4 finalColor=vec4(0.0,0.0,0.0,1.0);\n        for(int i=0; i<uNumLights;i++){\n        \n        vec3 L= normalize(uLightDirection[i]);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient[i]*uMaterialAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        if(lambertTerm>uCutOff[i])\n        {\n            Id=uLightDiffuse[i]*uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightSpecular[i]*uMaterialSpecular*specular;\n        }\n        \n        finalColor+=Ia+Id+Is;\n        \n        }\n        finalColor.a=1.0;\n    \n        gl_FragColor =finalColor;\n        \n        \n}\n\n\n";
             Fragment.Phong_positional = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform float uShininess;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\n\n\nuniform bool uWireframe;\n\nuniform bool uOffscreen;\nuniform vec4 uSelectColor;\n\n\nuniform vec4 uMaterialDiffuse;\n\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\nvarying vec3 vLightDir;\nvarying vec4 vColor;\n\nvoid main(){\n\n        if(uWireframe){\n            gl_FragColor = vColor;\n            return;\n        }\n      \n\n        if(uOffscreen){\n            gl_FragColor=uSelectColor;\n            return;\n        }\n\n       \n        vec3 L= normalize(vLightDir);\n        vec3 N= normalize(vNormal);\n        float lambertTerm=dot(N, -L);\n        \n        vec4 Ia= uLightAmbient;\n        \n        vec4 Id=vec4(0.0,0.0,0.0,1.0);\n        \n        vec4 Is=vec4(0.0,0.0,0.0,1.0);\n        \n        if(lambertTerm>0.0)\n        {\n            Id=uMaterialDiffuse*lambertTerm;\n            \n            vec3 E= normalize(vEyeVec);\n            vec3 R= reflect(L, N);\n            float specular=pow(max(dot(R,E),0.0), uShininess);\n            Is=uLightDiffuse*specular;\n        }\n        \n        vec4 finalColor=Ia+Id+Is;\n        finalColor.a=1.0;\n    \n        gl_FragColor =finalColor;\n        \n        \n}\n\n\n";
             Fragment.Toon = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nuniform float uShininess;\nuniform vec3 uLightDirection;\n\nuniform mat4 uMVMatrix;\n\nuniform vec4 uLightAmbient;\nuniform vec4 uLightDiffuse;\nuniform vec4 uMaterialDiffuse;\n\nuniform bool uWireframe;\n\nuniform bool uOffscreen;\nuniform vec4 uSelectColor;\n\nvarying vec4 vColor;\n\nvarying vec3 vNormal;\nvarying vec3 vVertex;\n\nvoid main(){\n\n       if(uWireframe){\n            gl_FragColor = vColor;\n            return;\n        }\n      \n\n        if(uOffscreen){\n            gl_FragColor=uSelectColor;\n            return;\n        }\n\n        vec4 color0=vec4(uMaterialDiffuse.rgb,1.0);\n        vec4 color1=vec4(0.0,0.0,0.0, 1.0);\n        vec4 color2=vec4(uMaterialDiffuse.rgb, 1.0);\n        \n        vec3 N= vNormal;\n        vec3 L = normalize(uLightDirection);\n        \n        vec4 eyePos= uMVMatrix*vec4(0.0,0.0,0.0,1.0);\n        \n        vec3 EyeVert = normalize(-eyePos.xyz);\n        \n        vec3 EyeLight=normalize(L+EyeVert);\n        \n        float sil= max(dot(N, EyeVert), 0.0);\n        \n        if( sil<0.4){\n            gl_FragColor=color1;\n        }else{\n             gl_FragColor=color0;\n             \n             float spec=pow(max(dot(N, EyeLight), 0.0), uShininess);\n             \n             if(spec<0.2) gl_FragColor*=0.8;\n             else gl_FragColor=color2;\n             \n             float diffuse=max(dot(N, L), 0.0);\n             if(diffuse<0.5)gl_FragColor*=0.8;\n        }\n\n\n\n\n\n}\n\n\n\n";
             Fragment.Wavy_effect = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\n\nuniform sampler2D uSampler;\nuniform float uTime;\n\nvarying vec2 vTextureCoord;\n\nconst float speed = 15.0;\nconst float magnitude = 0.015;\n\nvoid main(){\n    \n    vec2 wavyCoord;\n    wavyCoord.s=vTextureCoord.s+(sin(uTime+vTextureCoord.t*speed)*magnitude);\n    wavyCoord.t=vTextureCoord.t+(sin(uTime+vTextureCoord.s*speed)*magnitude);\n    \n    vec4 frameColor=texture2D(uSampler, wavyCoord);\n    gl_FragColor=frameColor;\n\n\n}";
@@ -814,6 +818,7 @@ var Blaze;
             Vertex.Effect = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nattribute vec2 a_position;\nattribute vec2 a_texture_coords;\n\nvarying vec2 vTextureCoord;\n\nvoid main(){\n    vTextureCoord=a_texture_coords;\n\n    gl_Position=vec4(a_position, 0.0,1.0);\n    \n}";
             Vertex.Particle = "#ifdef GL_ES\nprecision mediump float;\n#endif\nattribute vec3 a_position;\nattribute vec4 a_color;\n\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nuniform float uPointSize;\n\nuniform bool uWireframe;\nuniform bool uPerVertexColor;\nuniform vec4 uMaterialDiffuse;\n\n\nvarying vec4 vColor;\n\nvoid main(void) {\n\n if(uWireframe){\n\t \n\t \tif(uPerVertexColor){\n\t \t\t vColor=a_color;\n\t \t}else{\n\t \t\tvColor=uMaterialDiffuse;\n\t \t}\n\t \n\t\n\t }\n    \n    gl_Position = uPMatrix * uMVMatrix * vec4(a_position.xyz, 1.0);\n    gl_PointSize = uPointSize;\n}";
             Vertex.Phong = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nattribute vec3 a_position;\nattribute vec3 a_normal;\nattribute vec4 a_color;\n\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nuniform mat4 uNMatrix;\n\nuniform bool uWireframe;\nuniform bool uPerVertexColor;\nuniform vec4 uMaterialDiffuse;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\nvarying vec4 vColor;\n\nvoid main(){\n\n    vec4 vertex = uMVMatrix * vec4(a_position, 1.0);\n\t\n\t\n\t if(uWireframe){\n\t \n\t \tif(uPerVertexColor){\n\t \t\t vColor=a_color;\n\t \t}else{\n\t \t\tvColor=uMaterialDiffuse;\n\t \t}\n\t \n\t\n\t }else{\n\t\n\tvNormal = vec3(uNMatrix * vec4(a_normal, 1.0));\n\tvEyeVec=-vec3(vertex.xyz);  \n\t\n\t}\n\t \n\tgl_Position =uPMatrix * vertex;\n\n}\n\n\n";
+            Vertex.Phong_lights = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nattribute vec3 a_position;\nattribute vec3 a_normal;\nattribute vec4 a_color;\n\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nuniform mat4 uNMatrix;\n\nuniform bool uWireframe;\nuniform bool uPerVertexColor;\nuniform vec4 uMaterialDiffuse;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\nvarying vec4 vColor;\n\nvoid main(){\n\n    vec4 vertex = uMVMatrix * vec4(a_position, 1.0);\n\t\n\t\n\t if(uWireframe){\n\t \n\t \tif(uPerVertexColor){\n\t \t\t vColor=a_color;\n\t \t}else{\n\t \t\tvColor=uMaterialDiffuse;\n\t \t}\n\t \n\t\n\t }else{\n\t\n\tvNormal = vec3(uNMatrix * vec4(a_normal, 1.0));\n\tvEyeVec=-vec3(vertex.xyz);  \n\t\n\t}\n\t \n\tgl_Position =uPMatrix * vertex;\n\n}\n\n\n";
             Vertex.Phong_positional = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nattribute vec3 a_position;\nattribute vec3 a_normal;\nattribute vec4 a_color;\n\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nuniform mat4 uNMatrix;\n\nuniform vec3 uLightPosition;\n\nuniform bool uWireframe;\nuniform bool uPerVertexColor;\nuniform vec4 uMaterialDiffuse;\n\nvarying vec3 vNormal;\nvarying vec3 vEyeVec;\nvarying vec3 vLightDir;\n\nvarying vec4 vColor;\n\nvoid main(){\n\n    vec4 vertex = uMVMatrix * vec4(a_position, 1.0);\n\t\n\t\n\t if(uWireframe){\n\t \n\t \tif(uPerVertexColor){\n\t \t\t vColor=a_color;\n\t \t}else{\n\t \t\tvColor=uMaterialDiffuse;\n\t \t}\n\t \n\t\n\t }else{\n\t\n\tvNormal = vec3(uNMatrix * vec4(a_normal, 1.0));\n    vLightDir=vertex.xyz-uLightPosition;  \n\tvEyeVec=-vec3(vertex.xyz);  \n\t\n\t}\n\t \n\tgl_Position =uPMatrix * vertex;\n\n}\n\n\n";
             Vertex.Toon = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\nattribute vec3 a_position;\nattribute vec3 a_normal;\nattribute vec4 a_color;\n\nuniform mat4 uMVMatrix;\nuniform mat4 uPMatrix;\nuniform mat4 uNMatrix;\n\nuniform bool uWireframe;\nuniform bool uPerVertexColor;\nuniform vec4 uMaterialDiffuse;\n\nvarying vec3 vNormal;\nvarying vec3 vVertex;\nvarying vec4 vColor;\n\nvoid main(){\n    \n    vec4 normal= uNMatrix * vec4(a_normal,1.0);\n    \n     if(uWireframe){\n\t \n\t \tif(uPerVertexColor){\n\t \t\t vColor=a_color;\n\t \t}else{\n\t \t\tvColor=uMaterialDiffuse;\n\t \t}\n\t \n\t\n\t }else{\n    \n    vNormal=normal.xyz;\n    vVertex=a_position;\n    }\n    \n    gl_Position=uPMatrix*uMVMatrix*vec4(a_position, 1.0);\n    \n    \n    \n    \n\n}";
             return Vertex;
@@ -1120,7 +1125,7 @@ var Blaze;
             this._position = position ? vec3.create(position) : null;
             this._specular = specular ? vec4.create(specular) : null;
             this._direction = direction ? vec3.create(direction) : null;
-            this._cutoff = cutoff;
+            this._cutoff = cutoff || 0.0;
         }
         Object.defineProperty(LightEntity.prototype, "ambient", {
             get: function () {
@@ -1305,6 +1310,68 @@ var Blaze;
         return ParticleEntity;
     }(Entity));
     Blaze.ParticleEntity = ParticleEntity;
+    var LightArrayEntity = (function (_super) {
+        __extends(LightArrayEntity, _super);
+        function LightArrayEntity(graph_id) {
+            _super.call(this, graph_id);
+            this._lights = [];
+        }
+        LightArrayEntity.prototype.addLight = function (light) {
+            this._lights.push(light);
+        };
+        LightArrayEntity.prototype.getArraysObject = function () {
+            return this._lights.reduce(function (prev, item) {
+                prev.ambient = prev.ambient.concat(item.ambient);
+                prev.diffuse = prev.diffuse.concat(item.diffuse);
+                prev.specular = prev.specular.concat(item.specular);
+                prev.direction = prev.direction.concat(item.direction);
+                prev.cutoff = prev.cutOff.concat(item.cutoff);
+                return prev;
+            }, {
+                ambient: [],
+                diffuse: [],
+                specular: [],
+                direction: [],
+                cutoff: []
+            });
+        };
+        LightArrayEntity.prototype.beginDraw = function () {
+            var gl = this.gl;
+            if (this._lights.length > 0) {
+                var uNumLights = this.getUniform("uNumLights");
+                if (uNumLights)
+                    gl.uniform1(uNumLights, this._lights.length);
+                var lights = this.getArraysObject();
+                if (lights.ambient) {
+                    var uLightAmbient = this.getUniform("uLightAmbient");
+                    if (uLightAmbient)
+                        gl.uniform4fv(uLightAmbient, lights.ambient);
+                }
+                if (lights.diffuse) {
+                    var uLightDiffuse = this.getUniform("uLightDiffuse");
+                    if (uLightDiffuse)
+                        gl.uniform4fv(uLightDiffuse, lights.diffuse);
+                }
+                if (lights.specular) {
+                    var uLightSpecular = this.getUniform("uLightSpecular");
+                    if (uLightSpecular)
+                        gl.uniform4fv(uLightSpecular, lights.specular);
+                }
+                if (lights.direction) {
+                    var uDirection = this.getUniform("uLightDirection");
+                    if (uDirection)
+                        gl.uniform3fv(uDirection, lights.direction);
+                }
+                if (lights.cutoff) {
+                    var uCutOff = this.getUniform("uCutOff");
+                    if (uCutOff)
+                        gl.uniform1f(uCutOff, lights.cutoff);
+                }
+            }
+        };
+        return LightArrayEntity;
+    }(Entity));
+    Blaze.LightArrayEntity = LightArrayEntity;
     var CameraEntity = (function (_super) {
         __extends(CameraEntity, _super);
         function CameraEntity(graph_id, type) {
@@ -1739,6 +1806,15 @@ var Blaze;
             var source = {};
             source.vertex = Shaders.Vertex["Effect"];
             switch (this._type) {
+                case "all":
+                    source.fragment = Shaders.Fragment["All_effect"];
+                    break;
+                case "invert":
+                    source.fragment = Shaders.Fragment["Invert_effect"];
+                    break;
+                case "grey":
+                    source.fragment = Shaders.Fragment["Grey_effect"];
+                    break;
                 case "blur":
                     source.fragment = Shaders.Fragment["Blur_effect"];
                     break;
@@ -1767,7 +1843,7 @@ var Blaze;
             count = gl.getProgramParameter(this._shader, gl.ACTIVE_UNIFORMS);
             for (var i = 0; i < count; i++) {
                 var uniform = gl.getActiveUniform(this._shader, i);
-                this._uniforms[attrib.name] = gl.getUniformLocation(this._shader, uniform.name);
+                this._uniforms[uniform.name] = gl.getUniformLocation(this._shader, uniform.name);
             }
         };
         Effects.prototype.Size = function () {
@@ -2112,6 +2188,9 @@ var Blaze;
             if (this._effects)
                 this._effects.setEffect(type);
         };
+        SceneGraph.prototype.createLightArray = function () {
+            return new LightArrayEntity(this.oid);
+        };
         Object.defineProperty(SceneGraph.prototype, "MainCamera", {
             set: function (camera) {
                 this._matrixStack.MainCamera = camera;
@@ -2166,7 +2245,8 @@ var Blaze;
             "uOffscreen",
             "uInverseTextureSize",
             "uNoiseSampler",
-            "uTime"
+            "uTime",
+            "uNumLights"
         ];
         SceneGraph.ATTRIBUTES = ['a_position', 'a_normal', "a_color", "a_texture_coords"];
         return SceneGraph;

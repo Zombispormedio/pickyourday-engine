@@ -4,11 +4,11 @@ angular.module('alexandraExample')
     .controller('AlexandraExampleController', function($rootScope, $scope, $interval, $timeout, $alexandraModel) {
 
 
-    $scope.data=[/*{
+    $scope.data=[{
         mesh:$alexandraModel.TorusKnot(20, 6, 100, 16),
         position:RandPosition(),
         color: RandColor()
-    },{
+    }/*,{
         mesh:$alexandraModel.Box(15,15,15),
         position:RandPosition(),
         color: RandColor()
@@ -82,7 +82,6 @@ angular.module('alexandraExample')
         engine:"phong",
         colortype:"variable",
         type:"custom",
-        //effect:"wavy",
         
         axis:true,
         axisLength:500,
@@ -115,8 +114,6 @@ angular.module('alexandraExample')
             offset:1
 
         },
-
-
         ValueAxisXLabel:[
             {
                 value:15,

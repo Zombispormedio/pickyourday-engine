@@ -864,6 +864,49 @@ export module Resources {
 }
 export module Shaders{
 export class Fragment{
+static All_effect:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform sampler2D uSampler;
+uniform float uTime;
+uniform sampler2D uNoiseSampler;
+uniform vec2 uInverseTextureSize;
+
+varying vec2 vTextureCoord;
+
+const float speed = 15.0;
+const float magnitude = 0.015;
+
+const float grainIntensity = 0.1;
+const float scrollSpeed = 4000.0;
+
+vec4 offsetLookup(float xOff, float yOff) {
+    return texture2D(uSampler, vec2(vTextureCoord.x + xOff*uInverseTextureSize.x, vTextureCoord.y + yOff*uInverseTextureSize.y));
+}
+
+void main(){
+
+     vec4 frameColor = offsetLookup(-4.0, 0.0) * 0.05;
+    frameColor += offsetLookup(-3.0, 0.0) * 0.09;
+    frameColor += offsetLookup(-2.0, 0.0) * 0.12;
+    frameColor += offsetLookup(-1.0, 0.0) * 0.15;
+    frameColor += offsetLookup(0.0, 0.0) * 0.16;
+    frameColor += offsetLookup(1.0, 0.0) * 0.15;
+    frameColor += offsetLookup(2.0, 0.0) * 0.12;
+    frameColor += offsetLookup(3.0, 0.0) * 0.09;
+    frameColor += offsetLookup(4.0, 0.0) * 0.05;
+    
+    vec4 grain=texture2D(uNoiseSampler, vTextureCoord*2.0+uTime*scrollSpeed*uInverseTextureSize);
+     
+      frameColor +=texture2D(uSampler, vTextureCoord)-(grain*grainIntensity);
+          vec2 wavyCoord;
+    wavyCoord.s=vTextureCoord.s+(sin(uTime+vTextureCoord.t*speed)*magnitude);
+    wavyCoord.t=vTextureCoord.t+(sin(uTime+vTextureCoord.s*speed)*magnitude);
+    
+    frameColor+=texture2D(uSampler, wavyCoord);
+    gl_FragColor=frameColor;
+}`;
 static Blur_effect:string=`#ifdef GL_ES
 precision mediump float;
 #endif
@@ -873,16 +916,12 @@ uniform vec2 uInverseTextureSize;
 
 varying vec2 vTextureCoord;
 
-vec4 offsetLookup(float xOff, float yOff){
-
-    float x=vTextureCoord.x+xOff*uInverseTextureSize.x;
-    float y=vTextureCoord.y+yOff*uInverseTextureSize.y;
-    return texture2D(uSampler, vec2(x, y));
-
+vec4 offsetLookup(float xOff, float yOff) {
+    return texture2D(uSampler, vec2(vTextureCoord.x + xOff*uInverseTextureSize.x, vTextureCoord.y + yOff*uInverseTextureSize.y));
 }
 
-void main(){
-
+void main(void)
+{
     vec4 frameColor = offsetLookup(-4.0, 0.0) * 0.05;
     frameColor += offsetLookup(-3.0, 0.0) * 0.09;
     frameColor += offsetLookup(-2.0, 0.0) * 0.12;
@@ -894,9 +933,6 @@ void main(){
     frameColor += offsetLookup(4.0, 0.0) * 0.05;
 
     gl_FragColor = frameColor;
-
-
-    
 }`;
 static Film_effect:string=`#ifdef GL_ES
 precision mediump float;
@@ -919,6 +955,32 @@ void main()
     vec4 grain=texture2D(uNoiseSampler, vTextureCoord*2.0+uTime*scrollSpeed*uInverseTextureSize);
     gl_FragColor=frameColor-(grain*grainIntensity);
 
+}`;
+static Grey_effect:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform sampler2D uSampler;
+
+varying vec2 vTextureCoord;
+
+void main(void)
+{
+    vec4 frameColor = texture2D(uSampler, vTextureCoord);
+    float luminance = frameColor.r * 0.3 + frameColor.g * 0.59 + frameColor.b * 0.11;
+    gl_FragColor = vec4(luminance, luminance, luminance, frameColor.a);
+}`;
+static Invert_effect:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+uniform sampler2D uSampler;
+
+varying vec2 vTextureCoord;
+
+void main(void)
+{
+    vec4 frameColor = texture2D(uSampler, vTextureCoord);
+    gl_FragColor = vec4(1.0-frameColor.r, 1.0-frameColor.g, 1.0-frameColor.b, frameColor.a);
 }`;
 static No_effect:string=`#ifdef GL_ES
 precision mediump float;
@@ -1013,6 +1075,81 @@ void main(){
         }
         
         vec4 finalColor=Ia+Id+Is;
+        finalColor.a=1.0;
+    
+        gl_FragColor =finalColor;
+        
+        
+}
+
+
+`;
+static Phong_lights:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform int uNumLights;
+
+uniform float uShininess;
+uniform vec3 uLightDirection[uNumLights];
+uniform float uCutOff[uNumLights];
+
+uniform vec4 uLightAmbient[uNumLights];
+uniform vec4 uLightDiffuse[uNumLights];
+uniform vec4 uLightSpecular[uNumLights];
+
+uniform bool uWireframe;
+
+uniform bool uOffscreen;
+uniform vec4 uSelectColor;
+
+uniform vec4 uMaterialAmbient;
+uniform vec4 uMaterialDiffuse;
+uniform vec4 uMaterialSpecular;
+
+varying vec3 vNormal;
+varying vec3 vEyeVec;
+varying vec4 vColor;
+
+void main(){
+
+        if(uWireframe){
+            gl_FragColor = vColor;
+            return;
+        }
+      
+
+        if(uOffscreen){
+            gl_FragColor=uSelectColor;
+            return;
+        }
+
+        vec4 finalColor=vec4(0.0,0.0,0.0,1.0);
+        for(int i=0; i<uNumLights;i++){
+        
+        vec3 L= normalize(uLightDirection[i]);
+        vec3 N= normalize(vNormal);
+        float lambertTerm=dot(N, -L);
+        
+        vec4 Ia= uLightAmbient[i]*uMaterialAmbient;
+        
+        vec4 Id=vec4(0.0,0.0,0.0,1.0);
+        
+        vec4 Is=vec4(0.0,0.0,0.0,1.0);
+        
+        if(lambertTerm>uCutOff[i])
+        {
+            Id=uLightDiffuse[i]*uMaterialDiffuse*lambertTerm;
+            
+            vec3 E= normalize(vEyeVec);
+            vec3 R= reflect(L, N);
+            float specular=pow(max(dot(R,E),0.0), uShininess);
+            Is=uLightSpecular[i]*uMaterialSpecular*specular;
+        }
+        
+        finalColor+=Ia+Id+Is;
+        
+        }
         finalColor.a=1.0;
     
         gl_FragColor =finalColor;
@@ -1239,6 +1376,53 @@ void main(void) {
     gl_PointSize = uPointSize;
 }`;
 static Phong:string=`#ifdef GL_ES
+precision mediump float;
+#endif
+
+attribute vec3 a_position;
+attribute vec3 a_normal;
+attribute vec4 a_color;
+
+uniform mat4 uMVMatrix;
+uniform mat4 uPMatrix;
+uniform mat4 uNMatrix;
+
+uniform bool uWireframe;
+uniform bool uPerVertexColor;
+uniform vec4 uMaterialDiffuse;
+
+varying vec3 vNormal;
+varying vec3 vEyeVec;
+varying vec4 vColor;
+
+void main(){
+
+    vec4 vertex = uMVMatrix * vec4(a_position, 1.0);
+	
+	
+	 if(uWireframe){
+	 
+	 	if(uPerVertexColor){
+	 		 vColor=a_color;
+	 	}else{
+	 		vColor=uMaterialDiffuse;
+	 	}
+	 
+	
+	 }else{
+	
+	vNormal = vec3(uNMatrix * vec4(a_normal, 1.0));
+	vEyeVec=-vec3(vertex.xyz);  
+	
+	}
+	 
+	gl_Position =uPMatrix * vertex;
+
+}
+
+
+`;
+static Phong_lights:string=`#ifdef GL_ES
 precision mediump float;
 #endif
 
@@ -1778,7 +1962,7 @@ export class LightEntity extends Entity {
         this._position = position ? vec3.create(position) : null;
         this._specular = specular ? vec4.create(specular) : null;
         this._direction = direction ? vec3.create(direction) : null;
-        this._cutoff = cutoff;
+        this._cutoff = cutoff||0.0;
     }
 
 
@@ -1992,6 +2176,79 @@ export class ParticleEntity extends Entity {
         Ketch.disableAttrib(this.graphID, "a_position");
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
+    }
+
+}
+export class LightArrayEntity extends Entity {
+    private _lights: Array<LightEntity>;
+
+    constructor(graph_id: string) {
+        super(graph_id);
+        this._lights = [];
+    }
+
+    addLight(light: LightEntity): void {
+        this._lights.push(light);
+    }
+
+    getArraysObject(): any {
+        return this._lights.reduce(function (prev, item) {
+            prev.ambient = prev.ambient.concat(item.ambient);
+            prev.diffuse = prev.diffuse.concat(item.diffuse);
+            prev.specular = prev.specular.concat(item.specular);
+            prev.direction = prev.direction.concat(item.direction);
+            prev.cutoff = prev.cutOff.concat(item.cutoff);
+            return prev;
+        }, {
+                ambient: [],
+                diffuse: [],
+                specular: [],
+                direction: [],
+                cutoff: []
+            });
+    }
+
+    beginDraw() {
+        var gl = this.gl;
+
+        if (this._lights.length > 0) {
+            var uNumLights = this.getUniform("uNumLights");
+            if (uNumLights)
+                gl.uniform1(uNumLights, this._lights.length);
+
+            var lights = this.getArraysObject();
+
+            if (lights.ambient) {
+                var uLightAmbient = this.getUniform("uLightAmbient");
+                if (uLightAmbient)
+                    gl.uniform4fv(uLightAmbient, lights.ambient);
+            }
+
+            if (lights.diffuse) {
+                var uLightDiffuse = this.getUniform("uLightDiffuse");
+                if (uLightDiffuse)
+                    gl.uniform4fv(uLightDiffuse, lights.diffuse);
+            }
+
+            if (lights.specular) {
+                var uLightSpecular = this.getUniform("uLightSpecular");
+                if (uLightSpecular)
+                    gl.uniform4fv(uLightSpecular, lights.specular);
+            }
+
+            if (lights.direction) {
+                var uDirection = this.getUniform("uLightDirection");
+                if (uDirection)
+                    gl.uniform3fv(uDirection, lights.direction);
+            }
+
+            if (lights.cutoff) {
+                var uCutOff = this.getUniform("uCutOff");
+                if (uCutOff)
+                    gl.uniform1f(uCutOff, lights.cutoff);
+            }
+
+        }
     }
 
 }
@@ -2624,6 +2881,17 @@ export class Effects extends Renderable {
         source.vertex = Shaders.Vertex["Effect"];
 
         switch (this._type) {
+              case "all":
+                source.fragment = Shaders.Fragment["All_effect"];
+                break;
+            
+             case "invert":
+                source.fragment = Shaders.Fragment["Invert_effect"];
+                break;
+            
+             case "grey":
+                source.fragment = Shaders.Fragment["Grey_effect"];
+                break;
 
             case "blur":
                 source.fragment = Shaders.Fragment["Blur_effect"];
@@ -2664,7 +2932,7 @@ export class Effects extends Renderable {
 
         for (var i = 0; i < count; i++) {
             var uniform = gl.getActiveUniform(this._shader, i);
-            this._uniforms[attrib.name] = gl.getUniformLocation(this._shader, uniform.name);
+            this._uniforms[uniform.name] = gl.getUniformLocation(this._shader, uniform.name);
         }
 
     }
@@ -2716,7 +2984,7 @@ export class Effects extends Renderable {
         if (this._uniforms.uTime) {
             gl.uniform1f(this._uniforms.uTime, (Date.now() - this._start) / 1000.0);
         }
-
+            
         if (this._uniforms.uInverseTextureSize) {
             gl.uniform2f(this._uniforms.uInverseTextureSize, 1.0 / width, 1.0 / height);
         }
@@ -2933,7 +3201,8 @@ export class SceneGraph extends Renderable {
         "uOffscreen",
         "uInverseTextureSize",
         "uNoiseSampler",
-        "uTime"
+        "uTime",
+        "uNumLights"
     ];
     private static ATTRIBUTES = ['a_position', 'a_normal', "a_color", "a_texture_coords"];
 
@@ -3099,9 +3368,6 @@ export class SceneGraph extends Renderable {
         return new SelectEntity(this.oid, data);
     }
 
-
-
-
     public createSelector(dimensions: { height: number, width: number }) {
         this._selector = new Selector(this.oid, dimensions);
     }
@@ -3139,7 +3405,11 @@ export class SceneGraph extends Renderable {
         if (this._effects)
             this._effects.setEffect(type);
     }
-
+    
+    public createLightArray(){
+        return new LightArrayEntity(this.oid);
+    }
+  
 
     public set MainCamera(camera: CameraEntity) {
         this._matrixStack.MainCamera = camera;
