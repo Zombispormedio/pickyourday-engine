@@ -1319,6 +1319,9 @@ var Blaze;
         LightArrayEntity.prototype.addLight = function (light) {
             this._lights.push(light);
         };
+        LightArrayEntity.prototype.removeLights = function () {
+            this._lights = [];
+        };
         LightArrayEntity.prototype.getArraysObject = function () {
             return this._lights.reduce(function (prev, item) {
                 var ambient = Array.prototype.slice.call(item.ambient);
@@ -1801,6 +1804,13 @@ var Blaze;
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
         };
+        Object.defineProperty(Effects.prototype, "type", {
+            get: function () {
+                return this._type;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Effects.prototype.setEffect = function (type) {
             this._type = type || this._type;
             var gl = this.gl;
@@ -2047,6 +2057,7 @@ var Blaze;
             Ketch.createView(this._oid);
             this._selector = null;
             this._effects = null;
+            this._useSelector = false;
         }
         Object.defineProperty(SceneGraph.prototype, "scene", {
             get: function () {
@@ -2067,7 +2078,7 @@ var Blaze;
             gl.clearDepth(1.0);
         };
         SceneGraph.prototype.render = function () {
-            if (this._effects) {
+            if (this._effects && this._effects.type !== "no") {
                 this.drawWithEffects();
             }
             else {
@@ -2082,7 +2093,7 @@ var Blaze;
                 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
                 this._scene.draw(this._matrixStack);
             }).bind(this);
-            if (this._selector) {
+            if (this._selector && this._useSelector) {
                 this._selector.render(draw);
             }
             draw();
@@ -2162,7 +2173,15 @@ var Blaze;
         };
         SceneGraph.prototype.createSelector = function (dimensions) {
             this._selector = new Selector(this.oid, dimensions);
+            this._useSelector = true;
         };
+        Object.defineProperty(SceneGraph.prototype, "useSelector", {
+            set: function (v) {
+                this._useSelector = v;
+            },
+            enumerable: true,
+            configurable: true
+        });
         SceneGraph.prototype.fillSelector = function (obj) {
             if (this._selector) {
                 this._selector.fill(obj);

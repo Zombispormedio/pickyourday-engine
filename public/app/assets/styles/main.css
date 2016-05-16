@@ -40,3 +40,7 @@ md-menu-content md-icon{
 .button-stats{
         margin-top: -5.3%!important;
 }
+
+.hidden{
+    visibility: hidden;
+}

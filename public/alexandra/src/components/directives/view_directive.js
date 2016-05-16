@@ -1,167 +1,201 @@
 angular.module('alexandra')
-    .directive('alexandraView', function($alexandraUtils, $alexandraForest, $alexandraMain, $alexandraInteractor, $alexandra) {
+    .directive('alexandraView', function ($alexandraUtils, $alexandraForest, $alexandraMain, $alexandraInteractor, $alexandra) {
 
 
-    var configureMesh=function(tree){
-        tree.configureLights();
-        tree.configureMesh();
-    }
-
-    var configureCustom=function(tree, source){
-        tree.configureLights();
-        tree.configureAndBuildCustomMesh(source);
-    }
-
-    var configureParticle=function(tree){
-        tree.configureParticle();
-    }
-
-    var buildMesh=function(tree, source){
-        tree.buildMeshBranch(source);
-    }
-
-    var buildParticle=function(tree, source){
-        tree.buildParticle(source);
-    }
-
-    var choose=function(tree, type, source, config){
-        config=config||{}
-        switch(type){
-
-            case "custom":{
-                configureCustom(tree, source);
-
-                break;
-            }
-
-            case "particle":{
-                if(config.reseteable){
-                    tree.resetParticle();
-                }
-
-                if(config.configurable){
-                    configureParticle(tree);
-                }
-
-                buildParticle(tree, source);
-
-                break;
-            }
-            default:{
-                if(config.reseteable){
-                    tree.resetMesh();
-                }
-                if(config.configurable){
-                    configureMesh(tree);
-                }
-                buildMesh(tree, source);  
-            }
-
+        var configureMesh = function (tree) {
+            tree.configureLights();
+            tree.configureMesh();
         }
-    }
 
-    return {
-        restrict: 'A',
-        scope:{
-            source:"=alexandraSource",
-            config:"=alexandraConfig"
-        },
-        link:function(scope, tElement, attrs){
-            var element=tElement[0];
-            var config=scope.config || {};
+        var configureCustom = function (tree, source) {
+            tree.configureLights();
+            tree.configureAndBuildCustomMesh(source);
+        }
 
-            if(config.fullpage){
-                $alexandraUtils.fullPage(element);
+        var configureParticle = function (tree) {
+            tree.configureParticle();
+        }
+
+        var buildMesh = function (tree, source) {
+            tree.buildMeshBranch(source);
+        }
+
+        var buildParticle = function (tree, source) {
+            tree.buildParticle(source);
+        }
+
+        var choose = function (tree, type, source, config) {
+            config = config || {}
+            switch (type) {
+
+                case "custom": {
+                    configureCustom(tree, source);
+
+                    break;
+                }
+
+                case "particle": {
+                    if (config.reseteable) {
+                        tree.resetParticle();
+                    }
+
+                    if (config.configurable) {
+                        configureParticle(tree);
+                    }
+
+                    buildParticle(tree, source);
+
+                    break;
+                }
+                default: {
+                    if (config.reseteable) {
+                        tree.resetMesh();
+                    }
+                    if (config.configurable) {
+                        configureMesh(tree);
+                    }
+                    buildMesh(tree, source);
+                }
+
             }
-            
-             if(config.fullWidth){
-                $alexandraUtils.fullWidth(element);
-            }
-             if(config.fullHeight){
-                $alexandraUtils.fullHeight(element);
-            }
+        }
 
-            var TreeId=attrs.id||$alexandraUtils.createForestID();
+        return {
+            restrict: 'A',
+            scope: {
+                source: "=alexandraSource",
+                config: "=alexandraConfig"
+            },
+            link: function (scope, tElement, attrs) {
+                var element = tElement[0];
+                var config = scope.config || {};
 
-            $alexandraForest.createTree(TreeId);
+                if (config.fullpage) {
+                    $alexandraUtils.fullPage(element);
+                }
 
-            var tree=$alexandraMain(TreeId, config);
+                if (config.fullWidth) {
+                    $alexandraUtils.fullWidth(element);
+                }
+                if (config.fullHeight) {
+                    $alexandraUtils.fullHeight(element);
+                }
 
-            $alexandra.setView(TreeId, tree);
+                var TreeId = attrs.id || $alexandraUtils.createForestID();
 
-            tree.setContext(element);
+                $alexandraForest.createTree(TreeId);
 
-            tree.configureCamera();
+                var tree = $alexandraMain(TreeId, config);
 
-            if(config.axis){
-                tree.configureAxis();
-            }
+                $alexandra.setView(TreeId, tree);
 
-            if(config.grid){
-                tree.configureGrid();
-            }
+                tree.setContext(element);
 
+                tree.configureCamera();
 
-            tree.configureLabels();
-            tree.configureTextures();
+                if (config.axis) {
+                    tree.configureAxis();
+                }
 
-            if(config.effect){
-                tree.configureEffects();
-            }
-
-
-            if(config.selector){
-                tree.configureSelector();
-            }
+                if (config.grid) {
+                    tree.configureGrid();
+                }
 
 
-            choose(tree, config.type, scope.source, {configurable:true});
+                tree.configureLabels();
+                tree.configureTextures();
 
-            tree.configureRenderer();
+                if (config.effect || config.permitEffects) {
+                    if (!config.effect || config.effect == "") {
+                        config.effect = "no";
+                    }
 
-            if(config.streaming){
-                $alexandraUtils.watch(scope, "source", function(){
-                    tree.reset();
-                    choose(tree, config.type, scope.source);
-                });
-            }
 
-            $alexandraUtils.watch(scope, "config.type", function(){
-                tree.setConfig(scope.config);
-                tree.reset();
-                choose(tree, config.type, scope.source, {configurable:true, reseteable:true});
+                    tree.configureEffects();
+                }
+
+
+                if (config.selector) {
+                    tree.configureSelector();
+                }
+
+
+                choose(tree, config.type, scope.source, { configurable: true });
+
                 tree.configureRenderer();
-            });
 
-            if(config.type==="particle"){
-                $alexandraUtils.watch(scope, "config.particle.type", function(){
+                if (config.streaming) {
+                    $alexandraUtils.watch(scope, "source", function () {
+                        tree.reset();
+                        choose(tree, config.type, scope.source);
+                    });
+                }
+
+                $alexandraUtils.watch(scope, "config.type", function () {
                     tree.setConfig(scope.config);
                     tree.reset();
-                    choose(tree, config.type, scope.source, {configurable:true, reseteable:true});
+                    choose(tree, config.type, scope.source, { configurable: true, reseteable: true });
+                    tree.configureRenderer();
                 });
+
+                if (config.type === "particle") {
+                    $alexandraUtils.watch(scope, "config.particle.type", function () {
+                        tree.setConfig(scope.config);
+                        tree.reset();
+                        choose(tree, config.type, scope.source, { configurable: true, reseteable: true });
+                    });
+                }
+
+
+                $alexandraUtils.watch(scope, "config.LabelX", function () {
+                    tree.configureLabelX();
+                });
+
+                $alexandraUtils.watch(scope, "config.LabelY", function () {
+                    tree.configureLabelY();
+                });
+
+                $alexandraUtils.watch(scope, "config.LabelZ", function () {
+                    tree.configureLabelZ();
+                });
+                $alexandraUtils.watch(scope, "config.ValueAxisXLabel", function () {
+                    tree.configureValueAxisXLabel();
+                });
+                $alexandraUtils.watch(scope, "config.ValueAxisYLabel", function () {
+                    tree.configureValueAxisZLabel();
+                });
+                $alexandraUtils.watch(scope, "config.ValueAxisZLabel", function () {
+                    tree.configureValueAxisYLabel();
+                });
+
+                $alexandraUtils.watch(scope, "config.engine", function () {
+                    tree.resetLights();
+                    tree.configureLights();
+                    tree.configureRenderer();
+                });
+
+                $alexandraUtils.watch(scope, "config.effect", function () {
+
+                    tree.setEffect();
+                });
+
+
+
+                $alexandraUtils.watch(scope, "config.selector", function () {
+
+                    tree.setUseSelector();
+                });
+
+
+                $alexandraInteractor(tElement, tree.getCamera(), tree);
+
+                if (config.autorun !== false) {
+                    tree.run();
+                }
+
+
+
+
             }
-
-
-            $alexandraUtils.watch(scope, "config.LabelX", tree.configureLabelX);
-
-            $alexandraUtils.watch(scope, "config.LabelY", tree.configureLabelY);
-            $alexandraUtils.watch(scope, "config.LabelZ", tree.configureLabelZ);
-            $alexandraUtils.watch(scope, "config.ValueAxisXLabel", tree.configureValueAxisXLabel);
-            $alexandraUtils.watch(scope, "config.ValueAxisYLabel", tree.configureValueAxisZLabel);
-            $alexandraUtils.watch(scope, "config.ValueAxisZLabel", tree.configureValueAxisYLabel);
-
-
-
-
-            $alexandraInteractor(tElement, tree.getCamera(), tree);
-
-            if(config.autorun!==false){
-                tree.run();
-            }
-
-
-
-
-        }
-    };
-});
+        };
+    });

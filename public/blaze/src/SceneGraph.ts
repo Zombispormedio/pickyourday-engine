@@ -3,6 +3,7 @@ class SceneGraph extends Renderable {
     private _matrixStack: MatrixStack;
     private _selector: Selector;
     private _effects: Effects;
+    private _useSelector:Boolean;
 
     private _oid: string;
 
@@ -44,6 +45,7 @@ class SceneGraph extends Renderable {
         Ketch.createView(this._oid);
         this._selector = null;
         this._effects = null;
+        this._useSelector=false;
 
     }
 
@@ -70,8 +72,8 @@ class SceneGraph extends Renderable {
 
     public render(): void {
 
-        if (this._effects) {
-
+        if (this._effects&&this._effects.type!=="no") {
+      
             this.drawWithEffects();
 
 
@@ -91,7 +93,8 @@ class SceneGraph extends Renderable {
             this._scene.draw(this._matrixStack);
         }).bind(this);
 
-        if (this._selector) {
+        if (this._selector &&   this._useSelector) {
+            
             this._selector.render(draw);
         }
 
@@ -197,8 +200,16 @@ class SceneGraph extends Renderable {
     }
 
     public createSelector(dimensions: { height: number, width: number }) {
+        
         this._selector = new Selector(this.oid, dimensions);
+          this._useSelector=true;
     }
+    
+    
+    public set useSelector(v : Boolean) {
+        this._useSelector = v;
+    }
+    
 
     public fillSelector(obj: SelectEntity) {
         if (this._selector) {

@@ -2190,6 +2190,10 @@ export class LightArrayEntity extends Entity {
     addLight(light: LightEntity): void {
         this._lights.push(light);
     }
+    
+     removeLights(): void {
+        this._lights=[];
+    }
 
     getArraysObject(): any {
         return this._lights.reduce(function (prev, item) {
@@ -2873,10 +2877,16 @@ export class Effects extends Renderable {
 
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
     }
+    
+    
+    public get type() : string {
+        return this._type;
+    }
+    
 
     public setEffect(type?: string) {
         this._type = type || this._type;
-
+      
         var gl = this.gl;
         var source: { vertex?: string, fragment?: string } = {};
         source.vertex = Shaders.Vertex["Effect"];
@@ -3175,6 +3185,7 @@ export class SceneGraph extends Renderable {
     private _matrixStack: MatrixStack;
     private _selector: Selector;
     private _effects: Effects;
+    private _useSelector:Boolean;
 
     private _oid: string;
 
@@ -3216,6 +3227,7 @@ export class SceneGraph extends Renderable {
         Ketch.createView(this._oid);
         this._selector = null;
         this._effects = null;
+        this._useSelector=false;
 
     }
 
@@ -3242,8 +3254,8 @@ export class SceneGraph extends Renderable {
 
     public render(): void {
 
-        if (this._effects) {
-
+        if (this._effects&&this._effects.type!=="no") {
+      
             this.drawWithEffects();
 
 
@@ -3263,7 +3275,8 @@ export class SceneGraph extends Renderable {
             this._scene.draw(this._matrixStack);
         }).bind(this);
 
-        if (this._selector) {
+        if (this._selector &&   this._useSelector) {
+            
             this._selector.render(draw);
         }
 
@@ -3369,8 +3382,16 @@ export class SceneGraph extends Renderable {
     }
 
     public createSelector(dimensions: { height: number, width: number }) {
+        
         this._selector = new Selector(this.oid, dimensions);
+          this._useSelector=true;
     }
+    
+    
+    public set useSelector(v : Boolean) {
+        this._useSelector = v;
+    }
+    
 
     public fillSelector(obj: SelectEntity) {
         if (this._selector) {

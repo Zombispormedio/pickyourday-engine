@@ -152,15 +152,45 @@ module.run(['$templateCache', function($templateCache) {
     '        <md-option value="money">Empleado/Dinero/Servicio</md-option>\n' +
     '        <md-option value="work">Empleado/Tiempo Trabajado/Servicio</md-option>\n' +
     '    </md-select>\n' +
+    '    \n' +
+    '     <md-select flex="20" style="margin-right:5%;" ng-model="config.engine"  flex-offset="5" placeholder="Selecciona engine">\n' +
     '\n' +
-    '    <div ng-show="statsTime" flex layout="row" flex-offset="5">\n' +
+    '        <md-option value="phong">Phong</md-option>\n' +
+    '\n' +
+    '        <md-option value="phong_positional">Phong Positional</md-option>\n' +
+    '        <md-option value="toon">Toon</md-option>\n' +
+    '        <md-option value="phong_lights">Phong Several Lights</md-option>\n' +
+    '    </md-select>\n' +
+    '     <md-checkbox flex ng-model="config.selector" aria-label="Selector">\n' +
+    '            Use Selector\n' +
+    '          </md-checkbox>\n' +
+    '     <md-select flex="20" style="margin-right:5%;" ng-model="config.effect"  ng-if="!config.selector" flex-offset="5" placeholder="Selecciona effect">\n' +
+    '\n' +
+    '        <md-option value="no">No Effect</md-option>\n' +
+    '\n' +
+    '        <md-option value="invert">Negative</md-option>\n' +
+    '        <md-option value="grey">Greyscale</md-option>\n' +
+    '        <md-option value="blur">Blur</md-option>\n' +
+    '        <md-option value="film">Film</md-option>\n' +
+    '        <md-option value="wavy">Wavy</md-option>\n' +
+    '         <md-option value="all">Random</md-option>\n' +
+    '    </md-select>\n' +
+    '\n' +
+    '\n' +
+    '</div>\n' +
+    '\n' +
+    '\n' +
+    ' <div ng-if="statsTime" layout="row" style="position: fixed;\n' +
+    '    top: 50px;\n' +
+    '    left: 30px;\n' +
+    '    width: 410px;\n' +
+    '    background-color: white;\n' +
+    '    padding-left: 27px;\n' +
+    '    box-shadow: 0 1px 3px 0 rgba(0,0,0,.2),0 1px 1px 0 rgba(0,0,0,.14),0 2px 1px -1px rgba(0,0,0,.12);">\n' +
     '        <p flex="20">X: {{selectedInfo[0]||\'N/A\'}}</p>\n' +
     '        <p flex="10">Y: {{selectedInfo[1] || \'0\'}}</p>\n' +
-    '        <p flex="20">Z: {{selectedInfo[2]||\'N/A\'}}</p>\n' +
-    '    </div>\n' +
-    '\n' +
-    '\n' +
-    '</div>');
+    '        <p flex>Z: {{selectedInfo[2]||\'N/A\'}}</p>\n' +
+    '    </div>');
 }]);
 })();
 

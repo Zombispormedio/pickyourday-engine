@@ -103,10 +103,16 @@ class Effects extends Renderable {
 
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
     }
+    
+    
+    public get type() : string {
+        return this._type;
+    }
+    
 
     public setEffect(type?: string) {
         this._type = type || this._type;
-
+      
         var gl = this.gl;
         var source: { vertex?: string, fragment?: string } = {};
         source.vertex = Shaders.Vertex["Effect"];

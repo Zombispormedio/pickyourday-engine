@@ -1,13 +1,16 @@
 angular.module('Application')
-    .controller('NormalCtrl', function($scope, CompanyService, StatsService, $alexandraModel){
+    .controller('NormalCtrl', function($scope, CompanyService, StatsService, $alexandraModel,  $alexandraStore, $alexandraForest){
 
     $scope.loading=true;
     $scope.data=[];
     $scope.selectedInfo={};
     $scope.selected={
-        statType:"no"
+        statType:"no",
+        "engine":"phong"
     };
     
+
+
     $scope.statsTime=false;
     var calendar=[];
 
@@ -18,6 +21,8 @@ angular.module('Application')
         axisLength:500,
         streaming:true,
         fullWidth:true,
+       
+        permitEffects:true,
         background:[0.3,0.3,0.3],
         grid:true,
         gridConfig:{
@@ -28,7 +33,21 @@ angular.module('Application')
         onSelected:function(data){
             if(data)
                 $scope.selectedInfo=data;
-        }
+        },
+        LabelXConfig:{
+            offset:15
+        },
+        LabelYConfig:{
+            offset:15
+        },
+        LabelZConfig:{
+            offset:15
+        },
+        lightSequence:[
+            $alexandraStore.lights.blue,
+            $alexandraStore.lights.green,
+            $alexandraStore.lights.red
+        ]
 
     };
 
@@ -66,6 +85,12 @@ angular.module('Application')
         calendar=Immutable.List(data.stats);
         $scope.data=_.clone(calendar.get(0));
         $scope.loading=false; 
+
+        $scope.config.LabelX=data.legend.x;
+         $scope.config.LabelY=data.legend.y;
+         $scope.config.LabelZ=data.legend.z;
+       console.log( $alexandraForest. getTree("view_1"));
+
     }
 
 
@@ -74,7 +99,7 @@ angular.module('Application')
     $scope.changeStatType=function(){
         $scope.config.type="sphere";
         $scope.loading=true; 
-         $scope.statsTime=true;
+        $scope.statsTime=true;
         switch($scope.selected.statType){
             case "pick":
                 StatsService.Picks(fetch);
@@ -94,6 +119,7 @@ angular.module('Application')
                 break;
         }
     }
+    
 
 
 
