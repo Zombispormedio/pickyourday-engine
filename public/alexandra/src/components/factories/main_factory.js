@@ -55,25 +55,25 @@ angular.module('alexandra')
                 }
 
             },
-            
+
             addLight:function(){
-                
+
                 if(config.lightSequence){
                     config.lightSequence.forEach(function(item){
                         var l=Tree.createLight(item);
-                       light_array.addLight(l); 
+                        light_array.addLight(l); 
                     });
                 }
-                
+
             },
-            
+
             removeLights:function(){
                 if(light_array){
                     light_array.removeLights();
                 }
             },
-            
-            
+
+
 
             configureTransform:function(item){
                 var tr = Tree.createTransform();
@@ -220,6 +220,7 @@ angular.module('alexandra')
             buildMeshBranch: function (source) {
                 var self=this;
                 source = source || [];
+                if(!_.isArray(source))return;
                 node_buffer = source.map(function (item) {
                     var tr =  self.configureTransform(item);
                     var trnode = Tree.createMainChildNode("TrMesh", tr);
@@ -400,7 +401,7 @@ angular.module('alexandra')
                 return label_node;
             },
 
-            configureLabels:function(){
+            configureLabelX:function(){
                 var self=this;
                 if(config.LabelX){
                     var label_x={};
@@ -421,7 +422,10 @@ angular.module('alexandra')
 
                     labels.x=self.createLabelNode(label_x);
                 }
+            },
 
+            configureLabelY:function(){
+                var self=this;
                 if(config.LabelY){
                     var label_y={};
                     label_y.text=config.LabelY;
@@ -447,7 +451,9 @@ angular.module('alexandra')
 
                     labels.y=self.createLabelNode(label_y);
                 }
-
+            },
+            configureLabelZ:function(){
+                var self=this;
                 if(config.LabelZ){
                     var label_z={};
                     label_z.text=config.LabelZ;
@@ -473,7 +479,10 @@ angular.module('alexandra')
 
                     labels.z=self.createLabelNode(label_z);
                 }
+            },
 
+            configureLabelOrigin:function(){
+                var self=this;
                 if(config.OriginLabel){
 
                     var label_o={};
@@ -496,7 +505,10 @@ angular.module('alexandra')
 
 
                 }
+            },
 
+            configureValueAxisXLabel:function(){
+                var self=this;
                 if(config.ValueAxisXLabel){
                     labels.valuesX=config.ValueAxisXLabel.map(function(item){
 
@@ -521,7 +533,10 @@ angular.module('alexandra')
 
                     });
                 }
+            },
 
+            configureValueAxisZLabel:function(){
+                var self=this;
                 if(config.ValueAxisZLabel){
                     labels.valuesZ=config.ValueAxisZLabel.map(function(item){
 
@@ -553,7 +568,10 @@ angular.module('alexandra')
                 }
 
 
+            },
 
+            configureValueAxisYLabel:function(){
+                var self=this;
                 if(config.ValueAxisYLabel){
                     labels.valuesY=config.ValueAxisYLabel.map(function(item){
 
@@ -583,14 +601,29 @@ angular.module('alexandra')
 
                     });
                 }
+            },
 
+            configureLabels:function(){
+                var self=this;
+                self.configureLabelX();
+                self.configureLabelY();
+                self.configureLabelZ();
+
+                self.configureLabelOrigin();
+                self.configureValueAxisXLabel();
+                self.configureValueAxisZLabel();
+                self.configureValueAxisYLabel();
 
             },
+
 
             configureEffects:function(){
                 Tree.createEffects(canvas, config.effect);
                 Tree.setNoiseEffect(textures.Noise);
-
+            },
+            
+            setEffect:function(){
+                Tree.setEffect(config.effect);
             },
 
 

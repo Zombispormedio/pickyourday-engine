@@ -32,9 +32,11 @@ angular.module('Application')
 
 
     CompanyService.Pick().stats(function(res){
+         $scope.loading=false; 
+        if(res.error)return console.log(res.error);
         calendar=Immutable.List(res.data.stats);
         $scope.data=_.cloneDeep(calendar.get(0));
-        $scope.loading=false; 
+       
     });
 
 

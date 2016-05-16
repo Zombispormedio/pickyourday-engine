@@ -14,6 +14,22 @@ angular.module('alexandra')
             };
 
         };
+        
+         var FullWidth = function (elem) {
+            return function () {
+                elem.width = window.innerWidth;
+              
+            };
+
+        };
+        
+         var FullHeight = function (elem) {
+            return function () {
+                
+                elem.height = window.innerHeight;
+            };
+
+        };
 
 
         var ID = function () {
@@ -29,6 +45,17 @@ angular.module('alexandra')
 
             fullPage: function (elem) {
                 var fn = FullPage(elem);
+                window.addEventListener('resize', fn, false);
+                fn();
+            },
+            
+             fullHeight: function (elem) {
+                var fn = FullHeight(elem);
+                window.addEventListener('resize', fn, false);
+                fn();
+            },
+             fullWidth: function (elem) {
+                var fn = FullWidth(elem);
                 window.addEventListener('resize', fn, false);
                 fn();
             },

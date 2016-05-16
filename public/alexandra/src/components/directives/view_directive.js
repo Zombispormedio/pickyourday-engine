@@ -73,6 +73,13 @@ angular.module('alexandra')
             if(config.fullpage){
                 $alexandraUtils.fullPage(element);
             }
+            
+             if(config.fullWidth){
+                $alexandraUtils.fullWidth(element);
+            }
+             if(config.fullHeight){
+                $alexandraUtils.fullHeight(element);
+            }
 
             var TreeId=attrs.id||$alexandraUtils.createForestID();
 
@@ -97,7 +104,7 @@ angular.module('alexandra')
 
             tree.configureLabels();
             tree.configureTextures();
-            
+
             if(config.effect){
                 tree.configureEffects();
             }
@@ -133,6 +140,16 @@ angular.module('alexandra')
                     choose(tree, config.type, scope.source, {configurable:true, reseteable:true});
                 });
             }
+
+
+            $alexandraUtils.watch(scope, "config.LabelX", tree.configureLabelX);
+
+            $alexandraUtils.watch(scope, "config.LabelY", tree.configureLabelY);
+            $alexandraUtils.watch(scope, "config.LabelZ", tree.configureLabelZ);
+            $alexandraUtils.watch(scope, "config.ValueAxisXLabel", tree.configureValueAxisXLabel);
+            $alexandraUtils.watch(scope, "config.ValueAxisYLabel", tree.configureValueAxisZLabel);
+            $alexandraUtils.watch(scope, "config.ValueAxisZLabel", tree.configureValueAxisYLabel);
+
 
 
 

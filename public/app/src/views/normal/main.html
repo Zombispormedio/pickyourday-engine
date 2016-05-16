@@ -1,9 +1,22 @@
 <md-progress-linear md-mode="indeterminate" ng-if="loading"></md-progress-linear>
-<div class="player-content" layout="row">
-<canvas alexandra-view data-id="view_1" alexandra-config="config" alexandra-source="data" width="800" height="600"></canvas>
-  <div flex="35" layout="column" layout-align="center center">
-	<p>X: {{selectedInfo[0]||'N/A'}}</p>
-	<p>Y: {{selectedInfo[1] || '0'}}</p>
-	<p>Z: {{selectedInfo[2]||'N/A'}}</p>
-  </div>
+
+<canvas alexandra-view data-id="view_1" alexandra-config="config" alexandra-source="data" width="800" height="500"></canvas>
+<div layout="row">
+
+    <md-select flex="20" ng-model="selected.statType"  flex-offset="5" placeholder="Selecciona x/y/z" ng-change="changeStatType()">
+
+        <md-option value="pick">Estado de Pick/Cantidad/Servicio</md-option>
+
+        <md-option value="score">Valoración/Cantidad/Servicio</md-option>
+        <md-option value="money">Empleado/Dinero/Servicio</md-option>
+        <md-option value="work">Empleado/Tiempo Trabajado/Servicio</md-option>
+    </md-select>
+
+    <div ng-show="statsTime" flex layout="row" flex-offset="5">
+        <p flex="20">X: {{selectedInfo[0]||'N/A'}}</p>
+        <p flex="10">Y: {{selectedInfo[1] || '0'}}</p>
+        <p flex="20">Z: {{selectedInfo[2]||'N/A'}}</p>
+    </div>
+
+
 </div>

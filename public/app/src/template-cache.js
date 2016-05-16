@@ -39,6 +39,12 @@ module.run(['$templateCache', function($templateCache) {
     '                        Height Map\n' +
     '                    </md-button>\n' +
     '                </md-menu-item>\n' +
+    '                 <md-menu-item>\n' +
+    '                    <md-button  ui-sref="app.special">\n' +
+    '                        <md-icon md-font-icon="mdi-castle" class="mdi"></md-icon>\n' +
+    '                        Special\n' +
+    '                    </md-button>\n' +
+    '                </md-menu-item>\n' +
     '            </md-menu-content>\n' +
     '        </md-menu>\n' +
     '        \n' +
@@ -134,13 +140,26 @@ try {
 module.run(['$templateCache', function($templateCache) {
   $templateCache.put('/views/normal/main.html',
     '<md-progress-linear md-mode="indeterminate" ng-if="loading"></md-progress-linear>\n' +
-    '<div class="player-content" layout="row">\n' +
-    '<canvas alexandra-view data-id="view_1" alexandra-config="config" alexandra-source="data" width="800" height="600"></canvas>\n' +
-    '  <div flex="35" layout="column" layout-align="center center">\n' +
-    '	<p>X: {{selectedInfo[0]||\'N/A\'}}</p>\n' +
-    '	<p>Y: {{selectedInfo[1] || \'0\'}}</p>\n' +
-    '	<p>Z: {{selectedInfo[2]||\'N/A\'}}</p>\n' +
-    '  </div>\n' +
+    '\n' +
+    '<canvas alexandra-view data-id="view_1" alexandra-config="config" alexandra-source="data" width="800" height="500"></canvas>\n' +
+    '<div layout="row">\n' +
+    '\n' +
+    '    <md-select flex="20" ng-model="selected.statType"  flex-offset="5" placeholder="Selecciona x/y/z" ng-change="changeStatType()">\n' +
+    '\n' +
+    '        <md-option value="pick">Estado de Pick/Cantidad/Servicio</md-option>\n' +
+    '\n' +
+    '        <md-option value="score">Valoración/Cantidad/Servicio</md-option>\n' +
+    '        <md-option value="money">Empleado/Dinero/Servicio</md-option>\n' +
+    '        <md-option value="work">Empleado/Tiempo Trabajado/Servicio</md-option>\n' +
+    '    </md-select>\n' +
+    '\n' +
+    '    <div ng-show="statsTime" flex layout="row" flex-offset="5">\n' +
+    '        <p flex="20">X: {{selectedInfo[0]||\'N/A\'}}</p>\n' +
+    '        <p flex="10">Y: {{selectedInfo[1] || \'0\'}}</p>\n' +
+    '        <p flex="20">Z: {{selectedInfo[2]||\'N/A\'}}</p>\n' +
+    '    </div>\n' +
+    '\n' +
+    '\n' +
     '</div>');
 }]);
 })();
@@ -197,5 +216,17 @@ module.run(['$templateCache', function($templateCache) {
     '<div class="player-content" layout="row">\n' +
     '    <canvas alexandra-view data-id="view_1" alexandra-config="config" alexandra-source="data" width="800" height="600"></canvas>\n' +
     '</div>');
+}]);
+})();
+
+(function(module) {
+try {
+  module = angular.module('Application');
+} catch (e) {
+  module = angular.module('Application', []);
+}
+module.run(['$templateCache', function($templateCache) {
+  $templateCache.put('/views/special/main.html',
+    '');
 }]);
 })();

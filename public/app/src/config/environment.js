@@ -89,6 +89,21 @@ angular.module('Application')
             }
         }  
     })
+    .state("app.special", {
+        url: 'special',
+        onEnter: function ($rootScope) {
+            if (!getJSONLocal("user")) {
+
+                $rootScope.go("login");
+            }
+        },
+        views: {
+            content: {
+                templateUrl: '/views/special/main.html',
+                controller: 'SpecialCtrl'
+            }
+        }  
+    })
 
     $urlRouterProvider.otherwise("/login");
 
