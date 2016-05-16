@@ -126,7 +126,7 @@ angular.module('alexandra')
                     var self = this;
 
                     if (!items) return;
-
+                 
 
                     function build(item) {
 
@@ -157,6 +157,8 @@ angular.module('alexandra')
 
                         parent_node.createChildNode("Mesh", mesh);
                         node_buffer.push(trnode);
+                        
+                       
 
                     }
 

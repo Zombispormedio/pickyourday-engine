@@ -6,13 +6,13 @@
     <md-select flex="20" ng-model="selected.statType"  flex-offset="5" placeholder="Selecciona x/y/z" ng-change="changeStatType()">
 
         <md-option value="pick">Estado de Pick/Cantidad/Servicio</md-option>
-
+        <md-option value="origin">Origen/Cantidad/Servicio</md-option>
         <md-option value="score">Valoración/Cantidad/Servicio</md-option>
         <md-option value="money">Empleado/Dinero/Servicio</md-option>
         <md-option value="work">Empleado/Tiempo Trabajado/Servicio</md-option>
     </md-select>
-    
-     <md-select flex="20" style="margin-right:5%;" ng-model="config.engine"  flex-offset="5" placeholder="Selecciona engine">
+
+    <md-select flex="20" style="margin-right:5%;" ng-model="config.engine"  flex-offset="5" placeholder="Selecciona engine">
 
         <md-option value="phong">Phong</md-option>
 
@@ -20,10 +20,10 @@
         <md-option value="toon">Toon</md-option>
         <md-option value="phong_lights">Phong Several Lights</md-option>
     </md-select>
-     <md-checkbox flex ng-model="config.selector" aria-label="Selector">
-            Use Selector
-          </md-checkbox>
-     <md-select flex="20" style="margin-right:5%;" ng-model="config.effect"  ng-if="!config.selector" flex-offset="5" placeholder="Selecciona effect">
+    <md-checkbox flex ng-model="config.selector" aria-label="Selector">
+        Use Selector
+    </md-checkbox>
+    <md-select flex="20" style="margin-right:5%;" ng-model="config.effect"  ng-if="!config.selector" flex-offset="5" placeholder="Selecciona effect">
 
         <md-option value="no">No Effect</md-option>
 
@@ -32,21 +32,21 @@
         <md-option value="blur">Blur</md-option>
         <md-option value="film">Film</md-option>
         <md-option value="wavy">Wavy</md-option>
-         <md-option value="all">Random</md-option>
+        <md-option value="all">Random</md-option>
     </md-select>
 
 
 </div>
 
 
- <div ng-if="statsTime" layout="row" style="position: fixed;
-    top: 50px;
-    left: 30px;
-    width: 410px;
-    background-color: white;
-    padding-left: 27px;
-    box-shadow: 0 1px 3px 0 rgba(0,0,0,.2),0 1px 1px 0 rgba(0,0,0,.14),0 2px 1px -1px rgba(0,0,0,.12);">
-        <p flex="20">X: {{selectedInfo[0]||'N/A'}}</p>
-        <p flex="10">Y: {{selectedInfo[1] || '0'}}</p>
-        <p flex>Z: {{selectedInfo[2]||'N/A'}}</p>
-    </div>
+<div ng-if="statsTime" layout="row" style="position: fixed;
+                                           top: 50px;
+                                           left: 30px;
+                                           width: 410px;
+                                           background-color: white;
+                                           padding-left: 27px;
+                                           box-shadow: 0 1px 3px 0 rgba(0,0,0,.2),0 1px 1px 0 rgba(0,0,0,.14),0 2px 1px -1px rgba(0,0,0,.12);">
+    <p flex="30">X: {{selectedInfo[0]||'N/A'}}</p>
+    <p flex="10">Y: {{selectedInfo[1] || '0'}}</p>
+    <p flex>Z: {{selectedInfo[2]||'N/A'}}</p>
+</div>

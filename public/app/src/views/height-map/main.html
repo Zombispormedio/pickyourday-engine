@@ -1,13 +1,43 @@
 <md-progress-linear md-mode="indeterminate" ng-if="loading"></md-progress-linear>
-<div class="player-content" layout="row">
-    <canvas alexandra-view data-id="view_1" alexandra-config="config" alexandra-source="data" width="800" height="600"></canvas>
-    <div flex="35" layout="column" layout-align="center strech">
-        <div>
-            <md-slider-container>
-               
-                <md-slider class="md-primary" md-discrete step="1" min="1" max="30" aria-label="rating" ng-show="!loading" ng-model="index" ng-change="select()">
-                </md-slider>
-            </md-slider-container>
-        </div>
+<canvas alexandra-view data-id="view_1" alexandra-config="config" alexandra-source="data" width="800" height="500"></canvas>
+
+
+<div layout="row">
+    <div flex="30"  flex-offset="5"  ng-show="statsTime">
+        <md-slider-container>
+            <label>Día del mes</label>
+            <md-slider class="md-primary" md-discrete step="1" min="1" max="30" aria-label="rating" ng-model="index" ng-change="select()">
+            </md-slider>
+        </md-slider-container>
     </div>
+
+    <md-select flex="20" ng-model="selected.statType"  flex-offset="5" placeholder="Selecciona x/y/z" ng-change="changeStatType()">
+
+        <md-option value="pick">Estado de Pick/Cantidad/Servicio</md-option>
+
+        <md-option value="score">Valoración/Cantidad/Servicio</md-option>
+        <md-option value="money">Empleado/Dinero/Servicio</md-option>
+        <md-option value="work">Empleado/Tiempo Trabajado/Servicio</md-option>
+    </md-select>
+    
+    <md-select flex="20" style="margin-right:5%;" ng-model="config.engine"  flex-offset="5" placeholder="Selecciona engine">
+
+        <md-option value="phong">Phong</md-option>
+
+        <md-option value="phong_positional">Phong Positional</md-option>
+        <md-option value="toon">Toon</md-option>
+        <md-option value="phong_lights">Phong Several Lights</md-option>
+    </md-select>
+  
+     <md-select flex="20" style="margin-right:5%;" ng-model="config.effect"  ng-if="!config.selector" flex-offset="5" placeholder="Selecciona effect">
+
+        <md-option value="no">No Effect</md-option>
+
+        <md-option value="invert">Negative</md-option>
+        <md-option value="grey">Greyscale</md-option>
+        <md-option value="blur">Blur</md-option>
+        <md-option value="film">Film</md-option>
+        <md-option value="wavy">Wavy</md-option>
+         <md-option value="all">Random</md-option>
+    </md-select>
 </div>

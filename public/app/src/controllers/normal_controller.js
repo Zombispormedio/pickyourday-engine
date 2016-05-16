@@ -89,7 +89,7 @@ angular.module('Application')
         $scope.config.LabelX=data.legend.x;
          $scope.config.LabelY=data.legend.y;
          $scope.config.LabelZ=data.legend.z;
-       console.log( $alexandraForest. getTree("view_1"));
+      
 
     }
 

@@ -29,6 +29,7 @@ angular.module('alexandra')
             switch (type) {
 
                 case "custom": {
+                  
                     configureCustom(tree, source);
 
                     break;
@@ -125,7 +126,9 @@ angular.module('alexandra')
                 tree.configureRenderer();
 
                 if (config.streaming) {
+                   
                     $alexandraUtils.watch(scope, "source", function () {
+                       
                         tree.reset();
                         choose(tree, config.type, scope.source);
                     });
