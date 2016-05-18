@@ -3,24 +3,25 @@ body{
 }
 
 md-card{
-   background-color: #009688;
+    background-color: #009688;
     color: white;
     width: 35%;
 }
-md-toolbar{
+/*md-toolbar{
     height:35px;
-        min-height: 35px!important;
-}
+    min-height: 35px!important;
+}*/
 
-md-icon{
+/*md-icon{
     color: white !important;
     font-size: 2em !important;
-}
-
+}*/
+/*
 md-menu{
-    
+
     margin: 0!important;
-}
+}*/
+/*
 md-menu-content{
     background-color: white !important;
 }
@@ -31,16 +32,25 @@ md-menu-content md-icon{
 
 .player-content md-icon{
     color:black !important;
-}
-
+}*/
+/*
 .button-power{
     margin-top: -0.5%!important;
 }
 
 .button-stats{
-        margin-top: -5.3%!important;
+    margin-top: -5.3%!important;
 }
 
 .hidden{
     visibility: hidden;
 }
+
+md-checkbox{
+    margin-top: 1%;
+}
+
+md-label{
+    margin-top: 8%;
+}*/
+

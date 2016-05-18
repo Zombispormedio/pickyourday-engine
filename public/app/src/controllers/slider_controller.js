@@ -9,6 +9,8 @@ angular.module('Application')
         "engine":"phong"
     };
 
+    $scope.index=1;
+
 
 
     $scope.statsTime=false;
@@ -83,7 +85,7 @@ angular.module('Application')
 
     var fetch=function(data){
         calendar=Immutable.List(data.stats);
-        $scope.data=_.clone(calendar.get(0));
+        $scope.data=calendar.get($scope.index-1);
         $scope.loading=false; 
 
         $scope.config.LabelX=data.legend.x;
@@ -93,7 +95,10 @@ angular.module('Application')
 
     }
 
-
+    $scope.select=function(){
+        var index=$scope.index-1;
+        $scope.data=calendar.get(index);
+    }
 
 
     $scope.changeStatType=function(){

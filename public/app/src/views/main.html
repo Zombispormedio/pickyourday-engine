@@ -1,40 +1,34 @@
 
-<md-toolbar class="md-accent md-whiteframe-1dp">
+<md-toolbar class="md-accent md-whiteframe-1dp" style=" height:35px;min-height: 35px!important;">
     <div class="md-toolbar-tools">
-        <md-menu flex="5">
+        <md-menu flex="5" style="margin: 0">
             <md-button aria-label="Type Stats" class="md-icon-button button-stats" ng-click="openMenu($mdOpenMenu, $event)">
-                <md-icon md-menu-origin md-font-icon="mdi-chart-areaspline" class="mdi"></md-icon>
+                <md-icon md-menu-origin md-font-icon="mdi-chart-areaspline" class="mdi" style="color: white; font-size: 2em; margin-top: -5.3%"></md-icon>
             </md-button>
-            <md-menu-content width="4">
+            <md-menu-content width="4" style="background-color: white">
                 <md-menu-item>
                     <md-button ui-sref="app.normal">
-                        <md-icon md-font-icon="mdi-chart-bubble" class="mdi"></md-icon>
+                        <md-icon md-font-icon="mdi-chart-bubble" class="mdi" style=" color: black; font-size: 2em"></md-icon>
                         Normal
                     </md-button>
                 </md-menu-item>
                 <md-menu-item>
                     <md-button  ui-sref="app.slider">
-                        <md-icon md-font-icon="mdi-clock-start" class="mdi"></md-icon>
+                        <md-icon md-font-icon="mdi-clock-start" class="mdi" style=" color: black; font-size: 2em"></md-icon>
                         Slider
                     </md-button>
                 </md-menu-item>
                 <md-menu-divider></md-menu-divider>
                 <md-menu-item>
                     <md-button  ui-sref="app.player">
-                        <md-icon md-font-icon="mdi-play-box-outline" class="mdi"></md-icon>
+                        <md-icon md-font-icon="mdi-play-box-outline" class="mdi" style=" color: black; font-size: 2em"></md-icon>
                         Player
                     </md-button>
                 </md-menu-item>
                 <md-menu-item>
                     <md-button  ui-sref="app.heightmap">
-                        <md-icon md-font-icon="mdi-airplane-landing" class="mdi"></md-icon>
+                        <md-icon md-font-icon="mdi-airplane-landing" class="mdi" style=" color: black; font-size: 2em"></md-icon>
                         Height Map
-                    </md-button>
-                </md-menu-item>
-                 <md-menu-item>
-                    <md-button  ui-sref="app.special">
-                        <md-icon md-font-icon="mdi-castle" class="mdi"></md-icon>
-                        Special
                     </md-button>
                 </md-menu-item>
             </md-menu-content>
@@ -44,8 +38,8 @@
             <span>Pickyourday 3D</span>
         </h2>
         <span flex></span>
-        <md-button aria-label="logout" class="md-icon-button button-power" style="margin-right: 0px;" ng-click="logout()">
-            <md-icon md-font-icon="mdi-power" class="mdi"></md-icon>
+        <md-button aria-label="logout" class="md-icon-buttonr" style="margin-right: 0px;  margin-top: -0.5%;" ng-click="logout()">
+            <md-icon md-font-icon="mdi-power" class="mdi" style=" color: white; font-size: 2em"></md-icon>
         </md-button>
     </div>
 </md-toolbar>
